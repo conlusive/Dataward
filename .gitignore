@@ -1,0 +1,26 @@
+# Data and secrets
+data/bronze/
+.env
+*.duckdb
+*.duckdb.wal
+mlruns/
+warehouse/target/
+warehouse/dbt_packages/
+warehouse/logs/
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+dist/
+*.egg-info/
+
+# Editors / OS
+.idea/
+.vscode/
+.DS_Store
