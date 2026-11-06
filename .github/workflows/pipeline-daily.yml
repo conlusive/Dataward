@@ -1,0 +1,77 @@
+name: pipeline-daily
+
+on:
+  schedule:
+    - cron: "0 4 * * *" # 04:00 UTC
+  workflow_dispatch:
+    inputs:
+      run_date:
+        description: "YYYY-MM-DD (empty = today, UTC)"
+        required: false
+        default: ""
+      max_pages:
+        description: "Cap listing pages per category (empty = no cap; use 1 for a smoke run)"
+        required: false
+        default: ""
+
+permissions:
+  contents: read
+
+# Two runs writing the same bronze partitions would race; queue instead of cancelling.
+concurrency:
+  group: pipeline-daily
+  cancel-in-progress: false
+
+jobs:
+  scrape:
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    env:
+      RUN_DATE: ${{ inputs.run_date }}
+      SCRAPE_MAX_LIST_PAGES: ${{ inputs.max_pages }}
+      SCRAPE_USER_AGENT: "jobmarket-research-bot (+https://github.com/${{ github.repository }})"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+
+      # Interim bronze storage until STORAGE_URI=s3:// (R2) lands in phase 5: a rolling cache.
+      # Each run restores the newest copy and saves a new one, so history survives as long as
+      # the pipeline keeps running daily. It is NOT durable storage.
+      - name: Restore bronze
+        uses: actions/cache/restore@v4
+        with:
+          path: |
+            data/bronze
+            data/jobmarket.duckdb
+          key: bronze-restore-${{ github.run_id }}
+          restore-keys: bronze-
+
+      - run: uv sync --frozen
+      - name: Scrape
+        run: make scrape
+
+      # Save even when the scrape failed part-way: what was downloaded is still valid bronze.
+      - name: Save bronze
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: |
+            data/bronze
+            data/jobmarket.duckdb
+          key: bronze-${{ github.run_id }}-${{ github.run_attempt }}
+
+      - name: Run metrics
+        if: always()
+        run: |
+          uv run python - <<'EOF'
+          import duckdb
+          con = duckdb.connect("data/jobmarket.duckdb", read_only=True)
+          rows = con.execute(
+              "SELECT run_id, status, pages, new_pages, skipped_pages, errors, http_429, http_403 "
+              "FROM ops_scrape_runs ORDER BY started_at DESC LIMIT 12"
+          ).fetchall()
+          for row in rows:
+              print(row)
+          EOF
