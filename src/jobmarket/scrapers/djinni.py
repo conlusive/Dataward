@@ -70,6 +70,10 @@ class DjinniScraper(BaseScraper):
                 if page is None or page_number == 1:
                     self.stats.errors += 1
                 break
+            if page.redirected:
+                # Past the last page Djinni redirects to the generic /jobs/ list, whose vacancies
+                # do not belong to this keyword.
+                break
             new_urls = [
                 u for u in parse_listing_urls(page.content.decode("utf-8")) if u not in seen
             ]

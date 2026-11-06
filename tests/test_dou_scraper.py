@@ -28,11 +28,18 @@ def test_xhr_response_gives_urls_batch_size_and_last_flag() -> None:
     assert len(urls) == 40 and size == 40 and last is False
 
 
+def test_other_categories_and_empty_xhr_parse() -> None:
+    assert len(parse_listing_urls(sample("dou/list_java.html").decode())) == 20
+    assert len(parse_listing_urls(sample("dou/list_dba.html").decode())) == 20
+    assert parse_xhr(sample("dou/xhr_ruby_empty.json")) == ([], 40, True)
+
+
 class _Site:
     """Fake jobs.dou.ua that records what the scraper asked for."""
 
-    def __init__(self, *, last_xhr: bool = True) -> None:
+    def __init__(self, *, last_xhr: bool = True, xhr_body: bytes | None = None) -> None:
         self.last_xhr = last_xhr
+        self.xhr_body = xhr_body
         self.posts: list[dict[str, list[str]]] = []
         self.gets: list[str] = []
 
@@ -41,7 +48,8 @@ class _Site:
             return robots
         if request.method == "POST":
             self.posts.append(parse_qs(request.content.decode()))
-            return httpx.Response(200, content=xhr_payload(last=self.last_xhr))
+            body = self.xhr_body if self.xhr_body is not None else xhr_payload(last=self.last_xhr)
+            return httpx.Response(200, content=body)
         self.gets.append(str(request.url))
         if request.url.path == "/vacancies/":
             return httpx.Response(
@@ -137,3 +145,15 @@ async def test_missing_csrf_cookie_is_reported_as_error(tmp_path: Path) -> None:
         await scraper.run()
 
     assert scraper.stats.errors == 1
+
+
+async def test_small_category_with_empty_xhr_stops_cleanly(tmp_path: Path) -> None:
+    site = _Site(xhr_body=sample("dou/xhr_ruby_empty.json"))
+
+    async with _scraper(tmp_path, site, date(2026, 11, 6)) as scraper:
+        await scraper.run()
+
+    assert len(site.posts) == 1
+    assert scraper.stats.errors == 0
+    vacancy_gets = [u for u in site.gets if u.rstrip("/").split("/")[-1].isdigit()]
+    assert len(vacancy_gets) == 20

@@ -168,3 +168,28 @@ async def test_robots_5xx_means_disallow_everything(tmp_path: Path) -> None:
     scraper = _make(tmp_path, handler, Sleeps())
 
     assert await scraper.fetch(PAGE) is None
+
+
+async def test_redirect_is_recorded_in_bronze_and_visible_from_cache(tmp_path: Path) -> None:
+    def handler(request: httpx.Request) -> httpx.Response:
+        if request.url.path == "/robots.txt":
+            return ROBOTS_ALLOW
+        if request.url.path == "/page":
+            return httpx.Response(302, headers={"Location": "/other"})
+        return httpx.Response(200, text="elsewhere")
+
+    client = httpx.AsyncClient(transport=httpx.MockTransport(handler), follow_redirects=True)
+    scraper = DummyScraper(
+        settings=Settings(bronze_dir=tmp_path),
+        store=BronzeStore(tmp_path),
+        run_id="run-1",
+        run_date=RUN_DATE,
+        client=client,
+        sleep=Sleeps(),
+    )
+
+    first = await scraper.fetch(PAGE)
+    again = await scraper.fetch(PAGE)
+
+    assert first is not None and first.redirected
+    assert again is not None and again.from_cache and again.redirected
