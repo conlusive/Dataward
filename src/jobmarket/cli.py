@@ -16,6 +16,7 @@ from jobmarket.ops import OpsStore
 from jobmarket.registry import DAILY_SOURCES, SOURCES
 from jobmarket.runner import run_source
 from jobmarket.silver.build import PARSERS, parse_source
+from jobmarket.silver.salary_step import apply_salaries
 from jobmarket.silver.store import SilverStore
 
 
@@ -77,6 +78,7 @@ def _parse(sources: Sequence[str], run_date: date) -> int:
                 rows_failed=stats.failed,
             )
             logger.info("{} {}: {}", task_id, status, stats)
+            logger.info("salaries {}: {}", source, apply_salaries(silver, source))
             if stats.failed:
                 exit_code = 1
     finally:
