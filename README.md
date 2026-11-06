@@ -25,6 +25,11 @@ Re-running a date is safe: pages already in bronze for that date are not downloa
 (`--refetch` forces it), and every run is recorded as a new attempt in `ops_scrape_runs`
 (`data/jobmarket.duckdb`).
 
+## Exploring the data
+
+`notebooks/01_eda_bronze.ipynb` summarises what is in `data/bronze`: volumes, statuses, distinct
+vacancies and salary coverage. Re-run it after more days accumulate.
+
 ## Automation
 
 - `ci.yml`: ruff, mypy, pytest on every PR and push to `main`.

@@ -38,6 +38,8 @@ class FetchResult:
     status: int
     content: bytes
     from_cache: bool
+    # True when the server redirected the request: the content belongs to another URL.
+    redirected: bool = False
 
 
 class BaseScraper:
@@ -114,7 +116,13 @@ class BaseScraper:
             if cached is not None:
                 self.stats.pages += 1
                 self.stats.skipped += 1
-                return FetchResult(url, int(cached.meta["status"]), cached.content, True)
+                return FetchResult(
+                    url,
+                    int(cached.meta["status"]),
+                    cached.content,
+                    True,
+                    bool(cached.meta.get("redirected", False)),
+                )
 
         if self.respect_robots and not await self._robots.allowed(url):
             logger.warning("robots.txt disallows {}", url)
@@ -141,6 +149,7 @@ class BaseScraper:
             run_id=self._run_id,
             fetched_at=datetime.now(UTC),
             suffix=suffix,
+            redirected=bool(response.history),
         )
         self.stats.pages += 1
         match outcome:
@@ -150,7 +159,9 @@ class BaseScraper:
                 self.stats.updated += 1
             case WriteOutcome.UNCHANGED:
                 self.stats.unchanged += 1
-        return FetchResult(url, response.status_code, response.content, False)
+        return FetchResult(
+            url, response.status_code, response.content, False, bool(response.history)
+        )
 
     async def _request_with_retry(self, url: str, form: Mapping[str, str] | None) -> httpx.Response:
         retrying = AsyncRetrying(
