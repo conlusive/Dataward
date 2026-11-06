@@ -21,9 +21,16 @@ def test_listing_urls_contain_only_vacancy_pages() -> None:
     assert not any("rss" in u or "europe-remote" in u or "primary_keyword" in u for u in urls)
 
 
+GENERIC_PAGE = (
+    b'<html><body><div class="job-item"><a href="/jobs/111111-unrelated-vacancy/">x</a></div>'
+    b"</body></html>"
+)
+
+
 class _Site:
-    def __init__(self, *, vacancy_status: int = 200) -> None:
+    def __init__(self, *, vacancy_status: int = 200, redirect_past_end: bool = False) -> None:
         self.vacancy_status = vacancy_status
+        self.redirect_past_end = redirect_past_end
         self.list_pages: list[str] = []
         self.vacancy_gets: list[str] = []
 
@@ -32,6 +39,11 @@ class _Site:
             return robots
         if request.url.path == "/jobs/":
             page = request.url.params.get("page", "1")
+            if self.redirect_past_end and page != "1":
+                self.list_pages.append(page)
+                return httpx.Response(302, headers={"Location": "/jobs/"})
+            if "primary_keyword" not in request.url.params:
+                return httpx.Response(200, content=GENERIC_PAGE)  # target of the redirect
             self.list_pages.append(page)
             body = sample("djinni/list_python.html") if page == "1" else EMPTY_PAGE
             return httpx.Response(200, content=body)
@@ -45,7 +57,7 @@ def _scraper(tmp_path: Path, site: _Site, settings: Settings | None = None) -> D
         store=BronzeStore(tmp_path),
         run_id="run-1",
         run_date=date(2026, 11, 6),
-        client=httpx.AsyncClient(transport=httpx.MockTransport(site)),
+        client=httpx.AsyncClient(transport=httpx.MockTransport(site), follow_redirects=True),
         sleep=NoSleep(),
     )
 
@@ -87,3 +99,18 @@ async def test_forbidden_vacancy_is_stored_with_status_and_counted(tmp_path: Pat
     url = "https://djinni.co/jobs/857083-python-spark-ai-developer_tt/"
     record = BronzeStore(tmp_path).read("djinni", date(2026, 11, 6), url)
     assert record is not None and record.meta["status"] == 403
+
+
+async def test_redirect_past_the_last_page_does_not_leak_unrelated_vacancies(
+    tmp_path: Path,
+) -> None:
+    site = _Site(redirect_past_end=True)
+
+    async with _scraper(tmp_path, site) as scraper:
+        await scraper.run()
+
+    assert site.list_pages == ["1", "2"]
+    assert "/jobs/111111-unrelated-vacancy/" not in site.vacancy_gets
+    expected = len(parse_listing_urls(sample("djinni/list_python.html").decode()))
+    assert len(site.vacancy_gets) == expected
+    assert scraper.stats.errors == 0

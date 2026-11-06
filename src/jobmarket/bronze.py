@@ -90,6 +90,7 @@ class BronzeStore:
         run_id: str,
         fetched_at: datetime,
         suffix: str = ".html",
+        redirected: bool = False,
     ) -> WriteOutcome:
         previous = self.read(source, run_date, url)
         new_hash = content_hash(content)
@@ -106,6 +107,7 @@ class BronzeStore:
         meta = {
             "url": url,
             "status": status,
+            "redirected": redirected,
             "fetched_at": fetched_at.isoformat(),
             "run_id": run_id,
             "content_hash": new_hash,
