@@ -25,6 +25,16 @@ Re-running a date is safe: pages already in bronze for that date are not downloa
 (`--refetch` forces it), and every run is recorded as a new attempt in `ops_scrape_runs`
 (`data/jobmarket.duckdb`).
 
+## Silver
+
+```bash
+uv run jobmarket parse all --run-date 2026-11-06   # bronze -> silver_vacancies (DuckDB)
+```
+
+Parses vacancy pages of one date into `silver_vacancies` (upsert by id; a backfill of an older date
+never overwrites newer data). Pages that no longer match the parser are counted as failed in
+`ops_task_runs` instead of stopping the run.
+
 ## Exploring the data
 
 `notebooks/01_eda_bronze.ipynb` summarises what is in `data/bronze`: volumes, statuses, distinct
