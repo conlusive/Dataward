@@ -14,6 +14,12 @@ _EXTERNAL_ID = re.compile(r"/vacancies/(\d+)/")
 _REMOTE_WORD = "віддалено"
 
 
+def vacancy_id(url: str) -> str | None:
+    """ "dou:359220" for a vacancy URL, None for any other URL."""
+    match = _EXTERNAL_ID.search(url)
+    return f"{SOURCE}:{match.group(1)}" if match else None
+
+
 def _text(node: object) -> str:
     return node.text(separator=" ", strip=True) if node is not None else ""  # type: ignore[attr-defined]
 

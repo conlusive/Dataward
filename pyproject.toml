@@ -19,6 +19,8 @@ jobmarket = "jobmarket.cli:main"
 
 [dependency-groups]
 dev = [
+    "dbt-core>=1.12.6",
+    "dbt-duckdb>=1.11.1",
     "ipykernel>=7.4.0",
     "matplotlib>=3.11.2",
     "mypy>=1.10",

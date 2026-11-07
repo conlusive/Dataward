@@ -62,6 +62,23 @@ jobs:
             data/jobmarket.duckdb
           key: bronze-${{ github.run_id }}-${{ github.run_attempt }}
 
+      # Silver and the dbt layer. The bronze above is already saved, so a failure here is red in
+      # the run but loses no scraped data; the state is saved again afterwards either way.
+      - name: Parse into silver
+        run: make parse
+
+      - name: dbt snapshot and build
+        run: make dbt-build
+
+      - name: Save bronze and silver
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: |
+            data/bronze
+            data/jobmarket.duckdb
+          key: bronze-${{ github.run_id }}-${{ github.run_attempt }}-silver
+
       - name: Run metrics
         if: always()
         run: |

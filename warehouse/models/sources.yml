@@ -1,0 +1,30 @@
+version: 2
+
+# Tables written by the Python pipeline (jobmarket parse). dbt reads them, never writes them.
+sources:
+  - name: silver
+    schema: main
+    tables:
+      - name: silver_vacancies
+        columns:
+          - name: id
+            data_tests: [unique, not_null]
+          - name: source
+            data_tests:
+              - accepted_values:
+                  arguments:
+                    values: [dou, djinni]
+          - name: title
+            data_tests: [not_null]
+          - name: content_hash
+            data_tests: [not_null]
+
+      - name: silver_vacancy_sightings
+        description: >
+          Which vacancies were listed on which day, read from the stored listing pages. A vacancy
+          missing for two days is treated as closed.
+        columns:
+          - name: vacancy_id
+            data_tests: [not_null]
+          - name: seen_date
+            data_tests: [not_null]
