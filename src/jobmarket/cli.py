@@ -16,6 +16,7 @@ from jobmarket.ops import OpsStore
 from jobmarket.registry import DAILY_SOURCES, SOURCES
 from jobmarket.runner import run_source
 from jobmarket.silver.build import PARSERS, parse_source
+from jobmarket.silver.dedup_step import apply_dedup
 from jobmarket.silver.rates import load_nbu_rates, missing_rate_dates, needed_rate_dates
 from jobmarket.silver.salary_step import apply_salaries
 from jobmarket.silver.store import SilverStore
@@ -151,6 +152,19 @@ def _parse(sources: Sequence[str], run_date: date) -> int:
                 logger.warning("no NBU rate for {}; run `jobmarket fetch-rates`", days)
             if stats.failed:
                 exit_code = 1
+        # Duplicates are found across sources, so this runs once, after every source is parsed.
+        dedup_id = ops.start_task("dedup", "all", run_date)
+        try:
+            dedup = apply_dedup(silver, run_id=dedup_id)
+        except Exception as exc:
+            ops.finish_task(
+                dedup_id, "failed", rows_in=0, rows_out=0, rows_failed=0, error=repr(exc)
+            )
+            raise
+        ops.finish_task(
+            dedup_id, "success", rows_in=dedup.vacancies, rows_out=dedup.groups, rows_failed=0
+        )
+        logger.info("dedup: {}", dedup)
     finally:
         silver.close()
         ops.close()

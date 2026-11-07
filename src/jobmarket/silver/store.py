@@ -5,6 +5,7 @@ from pathlib import Path
 
 import duckdb
 
+from jobmarket.silver.dedup import DedupInput, VacancyGroup
 from jobmarket.silver.model import ParsedVacancy
 
 # (row_no, position, experience_years, city, english, company_size, company_type, salary_usd,
@@ -70,6 +71,19 @@ CREATE TABLE IF NOT EXISTS silver_dou_salaries (
     _loaded_at TIMESTAMP NOT NULL,
     _source_file VARCHAR NOT NULL,
     PRIMARY KEY (_source_file, row_no)
+)
+"""
+
+_GROUPS_DDL = """
+CREATE TABLE IF NOT EXISTS silver_vacancy_groups (
+    dedup_group_id VARCHAR PRIMARY KEY,  -- id of the oldest member
+    size INTEGER NOT NULL,
+    sources VARCHAR[] NOT NULL,
+    match_kind VARCHAR NOT NULL,  -- single | exact | fuzzy
+    text_id VARCHAR NOT NULL,  -- member whose title and description represent the group
+    salary_id VARCHAR,  -- member whose salary represents the group
+    _run_id VARCHAR NOT NULL,
+    _loaded_at TIMESTAMP NOT NULL
 )
 """
 
@@ -146,6 +160,7 @@ class SilverStore:
         self._con.execute(_SURVEY_DDL)
         for statement in _SKILLS_DDL:
             self._con.execute(statement)
+        self._con.execute(_GROUPS_DDL)
 
     def close(self) -> None:
         self._con.close()
@@ -360,6 +375,51 @@ class SilverStore:
                     "unnest(?::VARCHAR[]) AS skill_id, unnest(?::VARCHAR[]) AS importance, "
                     "unnest(?::DOUBLE[]) AS confidence) r",
                     [method, run_id, loaded_at, *columns],
+                )
+            self._con.execute("COMMIT")
+        except Exception:
+            self._con.execute("ROLLBACK")
+            raise
+
+    def dedup_inputs(self) -> list[DedupInput]:
+        rows = self._con.execute(
+            "SELECT id, source, title, company, description_text, content_hash, published_at, "
+            "_fetched_at, (salary_min IS NOT NULL OR salary_max IS NOT NULL) "
+            "FROM silver_vacancies ORDER BY id"
+        ).fetchall()
+        return [DedupInput(*row) for row in rows]
+
+    def replace_groups(
+        self, groups: list[VacancyGroup], *, run_id: str, loaded_at: datetime
+    ) -> None:
+        """Store the groups and point every vacancy at its group, atomically."""
+        self._con.execute("BEGIN TRANSACTION")
+        try:
+            self._con.execute("DELETE FROM silver_vacancy_groups")
+            if groups:
+                self._con.execute(
+                    "INSERT INTO silver_vacancy_groups SELECT g.id, g.size, g.sources, g.kind, "
+                    "g.text_id, g.salary_id, ?, ? FROM (SELECT unnest(?::VARCHAR[]) AS id, "
+                    "unnest(?::INTEGER[]) AS size, unnest(?::VARCHAR[][]) AS sources, "
+                    "unnest(?::VARCHAR[]) AS kind, unnest(?::VARCHAR[]) AS text_id, "
+                    "unnest(?::VARCHAR[]) AS salary_id) g",
+                    [
+                        run_id,
+                        loaded_at,
+                        [g.group_id for g in groups],
+                        [len(g.members) for g in groups],
+                        [list(g.sources) for g in groups],
+                        [g.match_kind for g in groups],
+                        [g.text_id for g in groups],
+                        [g.salary_id for g in groups],
+                    ],
+                )
+                members = [(m, g.group_id) for g in groups for m in g.members]
+                self._con.execute(
+                    "UPDATE silver_vacancies SET dedup_group_id = m.group_id FROM "
+                    "(SELECT unnest(?::VARCHAR[]) AS id, unnest(?::VARCHAR[]) AS group_id) m "
+                    "WHERE silver_vacancies.id = m.id",
+                    [[m for m, _ in members], [g for _, g in members]],
                 )
             self._con.execute("COMMIT")
         except Exception:
