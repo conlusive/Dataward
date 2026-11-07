@@ -1,0 +1,56 @@
+# Gold cases for the dictionary extractor (method A). `required` / `nice` are the exact sets of
+# skill ids expected; omitted = empty. Most traps below were found in real vacancies.
+cases:
+  # --- plain stacks, longest match, boundaries
+  - {title: Senior Python Developer, text: "We use Django, PostgreSQL and Docker.", required: [django, docker, postgresql, python]}
+  - {text: "Java, JavaScript and Spring Boot.", required: [java, javascript, spring-boot]}
+  - {text: ".NET, C# and ASP.NET Core", required: [asp-net, csharp, dotnet]}
+  - {text: "C++/C#", required: [cpp, csharp]}
+  - {text: "T-SQL and PL/SQL on Oracle Database", required: [oracle-db, pl-sql, t-sql]}
+  - {text: "MySQL, PostgreSQL, but not NoSQL", required: [mysql, nosql, postgresql]}
+  - {text: "GitHub Actions pipelines", required: [github-actions]}
+  - {text: "Version control in GitHub", required: [git]}
+  - {text: "NodeJS and node.js", required: [nodejs]}
+  - {text: "(Python), python3 and Python.", required: [python]}
+  - {text: "Pythonic code and Javascripty hacks", required: []}
+  - {text: "Досвід з Python та Docker", required: [docker, python]}
+  - {text: "1С:Підприємство 8 та 1С:ERP", required: ["1c"]}
+  - {text: "Strong C and C++ for embedded Linux", required: [c, cpp, embedded]}  # "embedded Linux" is one skill alias
+  # --- ambiguous words need the exact case and a context word
+  - {text: "Experience with Go (Golang) and gRPC.", required: [go, grpc]}
+  - {text: "Senior Software Engineer (Go)", required: [go]}
+  - {text: "Let's go to the market. R&D and C-level reports.", required: []}
+  - {text: "We go beyond expectations, go-getters welcome", required: []}
+  - {text: "Python or R for data analysis", required: [data-analysis, python, r]}
+  - {text: "Rust and C++ systems programming", required: [cpp, rust]}
+  - {text: "Rust-coloured walls and rusty tools", required: []}
+  - {text: "We use Swift for iOS apps", required: [ios, swift]}
+  - {text: "Swift delivery of results", required: []}
+  - {text: "Spring Boot microservices on Java", required: [java, microservices, spring-boot]}
+  - {text: "Spring is the best season to join, Java developers welcome", required: [java, spring]}
+  - {text: "Apache Spark with Scala", required: [scala, spark]}
+  - {text: "A spark of joy. Express delivery. Vault of dreams.", required: []}
+  - {text: "Spark jobs on Databricks; Express middleware with Node.js; HashiCorp Vault secrets", required: [databricks, express, nodejs, spark, vault]}
+  - {text: "AWS Lambda functions", required: [lambda]}
+  - {text: "Lambda calculus lectures", required: []}
+  - {text: "We react quickly. Ability to react to change.", required: []}
+  - {text: "Skills: React, TypeScript", required: [react, typescript]}
+  - {text: "We can do the rest of the work. REST API design.", required: [rest]}
+  # --- sections and importance
+  - {text: "Requirements:\n- Python\nNice to have:\n- Kafka\nWe offer:\n- Docker courses", required: [python], nice: [kafka]}
+  - {text: "Requirements\n- Python\nNice to have\n- Kafka\nWhat we offer\n- Docker courses\n- gym", required: [python], nice: [kafka]}
+  - {text: "Benefits: English courses, Docker training\nPython", required: [python]}
+  - {text: "Python skills\nNice to have: Go (Golang)", required: [python], nice: [go]}
+  - {text: "Strong knowledge of Python and SQL skills", required: [python, sql]}
+  - {text: "Tech stack: Python, Django, PostgreSQL", required: [django, postgresql, python]}
+  - {text: "Experience with Kafka is a plus", nice: [kafka]}
+  - {text: "Буде плюсом: досвід з Redis", nice: [redis]}
+  - {text: "Ми пропонуємо:\n- курси Docker\nВимоги:\n- Kubernetes", required: [kubernetes]}
+  - {text: "Nice to have:\nDocker\nRequirements:\nDocker", required: [docker]}  # required beats nice
+  - {title: Kotlin Developer, text: "Nice to have:\nKotlin", required: [kotlin]}  # the title always counts
+  # --- split-out concepts that used to be noise
+  - {text: "Strong debugging and profiling skills", required: []}
+  - {text: "Terraform and Infrastructure as Code", required: [iac, terraform]}
+  - {text: "Using Claude Code, Cursor and GitHub Copilot daily", required: [ai-coding-tools]}
+  - {text: "Building AI agents and agentic workflows", required: [ai-agents]}
+  - {text: "Good code quality and scalability", required: []}
