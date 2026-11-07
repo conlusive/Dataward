@@ -9,6 +9,7 @@ commit marker: a data file without meta is an incomplete write and is treated as
 import hashlib
 import json
 import os
+from collections.abc import Iterator
 from dataclasses import dataclass
 from datetime import date, datetime
 from enum import StrEnum
@@ -70,6 +71,13 @@ class BronzeStore:
                 if meta["status"] == 200:
                     urls.add(meta["url"])
         return urls
+
+    def records(self, source: str, run_date: date) -> Iterator[BronzeRecord]:
+        """Every complete record of one partition, in a stable order."""
+        directory = self.partition_dir(source, run_date)
+        for meta_path in sorted(directory.glob("*.meta.json")):
+            meta: dict[str, Any] = json.loads(meta_path.read_text(encoding="utf-8"))
+            yield BronzeRecord(content=(directory / meta["file"]).read_bytes(), meta=meta)
 
     def read(self, source: str, run_date: date, url: str) -> BronzeRecord | None:
         meta_path = self._meta_path(source, run_date, url)
