@@ -14,6 +14,12 @@ SOURCE = "djinni"
 _EXTERNAL_ID = re.compile(r"/jobs/(\d+)-")
 
 
+def vacancy_id(url: str) -> str | None:
+    """ "djinni:857083" for a vacancy URL, None for any other URL."""
+    match = _EXTERNAL_ID.search(url)
+    return f"{SOURCE}:{match.group(1)}" if match else None
+
+
 def _job_posting(tree: LexborHTMLParser) -> dict[str, Any] | None:
     for node in tree.css('script[type="application/ld+json"]'):
         try:

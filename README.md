@@ -62,6 +62,17 @@ near-identical and the levels do not conflict ("Senior X" and "X" merge, "Middle
 not). Every vacancy gets a `dedup_group_id` (the oldest member's id) and `silver_vacancy_groups` says
 which member supplies the text (DOU first) and which the salary (Djinni first).
 
+`make parse` runs the whole silver step for every stored day that has no finished parse yet (it is
+the catch-up used by the daily workflow), then fetches missing exchange rates and parses again.
+Each day's listing pages are also stored as `silver_vacancy_sightings` (who was listed when). dbt
+(`warehouse/`, DuckDB) turns them into `fct_vacancy_daily` (a vacancy is `new`, then `active`, and
+`closed` after two days off the listing; first-day vacancies are flagged `left_censored`) and keeps an
+SCD2 history of title/salary/description changes:
+
+```bash
+make dbt-build    # dbt snapshot + dbt build (models and tests)
+```
+
 DOU salary surveys (34 waves since 2010) are loaded separately:
 
 ```bash

@@ -1,0 +1,15 @@
+name: jobmarket
+version: "0.1.0"
+config-version: 2
+profile: jobmarket
+
+model-paths: ["models"]
+snapshot-paths: ["snapshots"]
+test-paths: ["tests"]
+target-path: "target"
+clean-targets: ["target", "dbt_packages"]
+
+models:
+  jobmarket:
+    marts:
+      +materialized: table

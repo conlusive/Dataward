@@ -74,6 +74,14 @@ CREATE TABLE IF NOT EXISTS silver_dou_salaries (
 )
 """
 
+_SIGHTINGS_DDL = """
+CREATE TABLE IF NOT EXISTS silver_vacancy_sightings (
+    vacancy_id VARCHAR NOT NULL,
+    seen_date DATE NOT NULL,  -- a day the vacancy was on a listing page
+    PRIMARY KEY (vacancy_id, seen_date)
+)
+"""
+
 _GROUPS_DDL = """
 CREATE TABLE IF NOT EXISTS silver_vacancy_groups (
     dedup_group_id VARCHAR PRIMARY KEY,  -- id of the oldest member
@@ -161,6 +169,7 @@ class SilverStore:
         for statement in _SKILLS_DDL:
             self._con.execute(statement)
         self._con.execute(_GROUPS_DDL)
+        self._con.execute(_SIGHTINGS_DDL)
 
     def close(self) -> None:
         self._con.close()
@@ -425,3 +434,13 @@ class SilverStore:
         except Exception:
             self._con.execute("ROLLBACK")
             raise
+
+    def add_sightings(self, vacancy_ids: list[str], seen_date: date) -> None:
+        """Record that these vacancies were listed on ``seen_date`` (repeating it is harmless)."""
+        if not vacancy_ids:
+            return
+        self._con.execute(
+            "INSERT INTO silver_vacancy_sightings SELECT unnest(?::VARCHAR[]), ? "
+            "ON CONFLICT DO NOTHING",
+            [vacancy_ids, seen_date],
+        )

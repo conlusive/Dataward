@@ -1,0 +1,13 @@
+# Profiles live next to the project so `dbt ... --profiles-dir warehouse` works from the repo root
+# (no ~/.dbt needed, same in CI). The path is relative to the directory dbt is started from.
+# `prod` (Neon Postgres) is added in the deployment phase.
+config:
+  send_anonymous_usage_stats: false
+
+jobmarket:
+  target: dev
+  outputs:
+    dev:
+      type: duckdb
+      path: "{{ env_var('DUCKDB_PATH', 'data/jobmarket.duckdb') }}"
+      threads: 1

@@ -138,3 +138,12 @@ class OpsStore:
             "rows_failed = ?, error = ? WHERE run_id = ?",
             [_utc_now(), status, rows_in, rows_out, rows_failed, error, run_id],
         )
+
+    def parsed_dates(self, source: str) -> set[date]:
+        """Dates of ``source`` that have a finished parse (success or partial)."""
+        rows = self._con.execute(
+            "SELECT DISTINCT run_date FROM ops_task_runs "
+            "WHERE task = 'parse' AND source = ? AND status IN ('success', 'partial')",
+            [source],
+        ).fetchall()
+        return {row[0] for row in rows}
