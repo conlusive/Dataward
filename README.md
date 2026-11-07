@@ -56,6 +56,12 @@ context word nearby; skills under "nice to have" headings are marked `nice`, ben
 ignored. Add a skill by appending a line; `make test` validates the file. Results go to
 `silver_vacancy_skills` (`method = dictionary`).
 
+Duplicates are found across both sites: inside one company, two vacancies are the same posting when
+the titles are almost equal and the text is the same or very similar, or when the text is
+near-identical and the levels do not conflict ("Senior X" and "X" merge, "Middle X" and "Senior X" do
+not). Every vacancy gets a `dedup_group_id` (the oldest member's id) and `silver_vacancy_groups` says
+which member supplies the text (DOU first) and which the salary (Djinni first).
+
 DOU salary surveys (34 waves since 2010) are loaded separately:
 
 ```bash
