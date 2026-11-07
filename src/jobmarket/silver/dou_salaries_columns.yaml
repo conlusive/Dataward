@@ -1,0 +1,171 @@
+# Column mapping for the DOU salary survey waves (github.com/devua/csv, salaries/).
+# Each schema lists the files it covers (without .csv) and which header feeds which field.
+# Headers are matched exactly after stripping spaces and a BOM; the FIRST column with that
+# name is used (some waves repeat a header). A field that is absent in a wave is left out.
+# The wave date is the first day of the month in the file name (october, may, june/jun, dec);
+# per-row timestamps are not used. All salaries are USD per month, net, as asked by the survey.
+# `encoding` defaults to utf-8; `delimiter` defaults to ",".
+# `weight` names a column that says how many respondents a row stands for (2022_june aggregates).
+# `skip_rows` drops rows whose normalised cell equals one of the listed values (subtotals).
+schemas:
+  - files: [2010_october_raw]
+    columns:
+      salary: Зарплата за последний месяц
+      position: Специализация
+      experience: Общий стаж работы по специальности
+      city: Город
+      company_size: Размер компании
+
+  - files: [2011_dec_raw, 2011_may_raw, 2012_may_raw]
+    columns:
+      salary: Средняя зарплата в месяц
+      position: Должность
+      experience: Общий опыт работы
+      city: Город
+      english: Уровень английского
+      company_size: Размер компании
+
+  - files: [2012_dec_raw, 2013_may_raw]
+    columns:
+      salary: Зарплата в месяц
+      position: Должность
+      experience: Общий опыт работы
+      city: Город
+      english: Уровень английского
+      company_size: Размер компании
+
+  - files: [2013_dec_raw, 2014_dec_raw, 2014_may_raw, 2015_may_raw, 2015_dec_raw, 2016_may_raw,
+            2016_dec_raw, 2017_dec_raw, 2017_jun_raw, 2018_dec_raw, 2018_june_raw, 2019_june_raw]
+    columns:
+      salary: Зарплата в месяц
+      position: Должность
+      experience: Общий опыт работы
+      city: Город
+      english: Уровень английского
+      company_size: Размер компании
+      company_type: Тип компании
+
+  - files: [2019_dec_raw]
+    columns:
+      salary: Зарплата за місяць, net, після податків
+      position: Оберіть вашу посаду
+      experience: Загальний стаж роботи за спеціальністю
+      city: Місто
+      english: Знання англійської мови
+      company_type: Тип компанії
+
+  - files: [2020_dec_raw]
+    columns:
+      salary: Зарплата у $$$ за місяць, лише ставка після сплати податків
+      position: Оберіть вашу посаду
+      experience: Загальний стаж роботи за спеціальністю
+      city: Де ви мешкаєте?
+      english: Знання англійської мови
+      company_type: Тип компанії
+
+  - files: [2020_june_mini]
+    columns:
+      salary: Зарплата.в.месяц
+      position: Должность
+      experience: exp
+      city: Город
+      english: Уровень.английского
+
+  - files: [2021_dec_raw]
+    delimiter: ";"
+    columns:
+      salary: Зарплата у $$$ за місяць, лише ставка після сплати податків
+      position: Оберіть вашу посаду
+      experience: Загальний стаж роботи за спеціальністю
+      city: Де ви мешкаєте?
+      english: Знання англійської мови
+      company_type: Тип компанії
+
+  - files: [2021_june_raw]
+    columns:
+      salary: Зарплата у $$$ за місяць, лише ставка після сплати податків
+      position: Оберіть вашу посаду
+      experience: Загальний стаж роботи в ІТ
+      city: Де ви мешкаєте?
+      english: Знання англійської мови
+      company_type: Тип компанії
+
+  - files: [2022_dec_raw]
+    delimiter: ";"
+    columns:
+      salary: Зарплата у $$$ за місяць, лише ставка після сплати податків
+      position: Оберіть вашу посаду
+      experience: Загальний стаж роботи за спеціальністю
+      city: Де ви зараз живете?
+      english: Знання англійської мови
+      company_type: Тип компанії
+
+  - files: [2022_june_dev]
+    weight: freq
+    columns: {salary: salary, position: position, experience: experience, city: city}
+
+  # These two files are cross-tabs: every respondent also appears in subtotal rows ("all cities",
+  # "all positions", "all experience"), so only rows without a subtotal marker are kept.
+  - files: [2022_june_other, 2022_june_qa]
+    weight: freq
+    skip_rows:
+      city: ["Всі міста"]
+      position: ["Всі посади"]
+      experience: ["Весь досвід", "Total"]
+    columns: {salary: salary, position: position, experience: experience, city: city}
+
+  - files: [2023_june_raw]
+    delimiter: ";"
+    columns:
+      salary: Зарплата / дохід у $$$ за місяць, лише ставка після сплати податків
+      position: Ваш тайтл на цій посаді
+      experience: Загальний стаж роботи за нинішньою ІТ-спеціальністю
+      city: Де ви зараз живете?
+      english: Знання англійської мови
+
+  # 2023-12 .. 2025-06: wide forms again. Their header cells span several lines, so columns are
+  # matched by the start of the (whitespace-normalised) header. 2024_june has no city question,
+  # only the region; 2025_dec has neither.
+  - files: [2023_dec_raw]
+    columns:
+      salary: "Зарплата / дохід у $$$ за місяць, лише ставка"
+      position: Оберіть вашу основну посаду
+      experience: Загальний стаж роботи за нинішньою ІТ-спеціальністю
+      city: Де ви зараз живете?
+      english: Знання англійської мови
+  - files: [2024_dec_raw]
+    columns:
+      salary: "Зарплата / дохід в IT у $$$ за місяць, лише ставка"
+      position: Оберіть ваш тайтл або роль у компанії
+      experience: Загальний стаж роботи за нинішньою ІТ-спеціальністю
+      city: Де ви зараз живете?
+      english: Знання англійської мови
+  - files: [2024_june_raw]
+    columns:
+      salary: "Зарплата / дохід в ІТ у $$$ за місяць, лише ставка"
+      position: Оберіть вашу основну посаду
+      experience: Загальний стаж роботи за нинішньою ІТ-спеціальністю
+      city: В якій області ви зараз живете?
+      english: Знання англійської мови
+  - files: [2025_dec_raw]
+    columns:
+      salary: "ЗАРПЛАТА / СУМАРНИЙ ДОХІД в IT у $$$ за місяць, лише ставка"
+      position: Почніть вводити і оберіть вашу ОСНОВНУ посаду
+      experience: Загальний стаж роботи за нинішньою ІТ-спеціальністю
+      english: Знання англійської мови
+  - files: [2025_june_raw]
+    encoding: cp1251
+    columns:
+      salary: "ЗАРПЛАТА / СУМАРНИЙ ДОХІД в IT у $$$ за місяць, лише ставка"
+      position: Почніть вводити і оберіть вашу ОСНОВНУ посаду
+      experience: Загальний стаж роботи за нинішньою ІТ-спеціальністю
+      city: Де ви зараз живете?
+      english: Знання англійської мови
+
+  - files: [2026_june_raw]
+    columns:
+      salary: ЗАРПЛАТА СУМАРНИЙ ДОХІД в ІТ
+      position: Title_clean
+      experience: Загальний стаж роботи за нинішньою ІТ-спеціальністю
+      city: Де ви зараз живете?
+      english: Знання англійської мови

@@ -19,6 +19,7 @@ from jobmarket.silver.build import PARSERS, parse_source
 from jobmarket.silver.rates import load_nbu_rates, missing_rate_dates, needed_rate_dates
 from jobmarket.silver.salary_step import apply_salaries
 from jobmarket.silver.store import SilverStore
+from jobmarket.silver.survey_build import load_surveys
 from jobmarket.silver.usd import apply_usd
 
 
@@ -55,7 +56,37 @@ def _build_parser() -> argparse.ArgumentParser:
     commands.add_parser(
         "fetch-rates", help="download NBU rates for the dates that silver salaries need"
     )
+    commands.add_parser(
+        "parse-surveys", help="load the DOU salary survey waves from bronze into silver"
+    )
     return parser
+
+
+def _parse_surveys() -> int:
+    settings = Settings.from_env()
+    ops = OpsStore(settings.duckdb_path)
+    silver = SilverStore(settings.duckdb_path)
+    today = datetime.now(UTC).date()
+    task_id = ops.start_task("parse", "dou_salaries", today)
+    try:
+        stats = load_surveys(BronzeStore(settings.bronze_dir), silver, run_id=task_id)
+    except Exception as exc:
+        ops.finish_task(task_id, "failed", rows_in=0, rows_out=0, rows_failed=0, error=repr(exc))
+        raise
+    finally:
+        silver.close()
+    problems = stats.failed + stats.unmapped
+    status = "success" if problems == 0 else ("partial" if stats.loaded else "failed")
+    ops.finish_task(
+        task_id,
+        status,
+        rows_in=stats.rows_kept + stats.rows_no_salary + stats.rows_outliers,
+        rows_out=stats.rows_kept,
+        rows_failed=problems,
+    )
+    ops.close()
+    logger.info("{} {}: {}", task_id, status, stats)
+    return 1 if problems else 0
 
 
 async def _fetch_rates() -> int:
@@ -138,6 +169,8 @@ def main(argv: Sequence[str] | None = None) -> int:
     args = _build_parser().parse_args(argv)
     if args.command == "fetch-rates":
         return asyncio.run(_fetch_rates())
+    if args.command == "parse-surveys":
+        return _parse_surveys()
     run_date: date = args.run_date or _default_run_date()
     if args.command == "parse":
         return _parse(tuple(PARSERS) if args.source == "all" else (args.source,), run_date)

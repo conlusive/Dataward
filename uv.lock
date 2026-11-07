@@ -436,6 +436,7 @@ dependencies = [
     { name = "duckdb" },
     { name = "httpx" },
     { name = "loguru" },
+    { name = "pyyaml" },
     { name = "selectolax" },
     { name = "tenacity" },
 ]
@@ -461,6 +462,7 @@ requires-dist = [
     { name = "duckdb", specifier = ">=2.0.0" },
     { name = "httpx", specifier = ">=0.28.1" },
     { name = "loguru", specifier = ">=0.7.3" },
+    { name = "pyyaml", specifier = ">=6.0.3" },
     { name = "selectolax", specifier = ">=1.0.2" },
     { name = "tenacity", specifier = ">=9.2.1" },
 ]

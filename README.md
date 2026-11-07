@@ -45,6 +45,17 @@ uv run jobmarket fetch-rates   # downloads the missing NBU rates into bronze
 
 fetches them (run `parse` again afterwards).
 
+DOU salary surveys (34 waves since 2010) are loaded separately:
+
+```bash
+uv run jobmarket scrape dou_salaries   # CSVs into bronze, a few times a year
+uv run jobmarket parse-surveys         # bronze -> silver_dou_salaries (~300k answers, ~7 s)
+```
+
+`src/jobmarket/silver/dou_salaries_columns.yaml` maps each wave's columns to one schema; a file
+whose columns changed fails alone and is reported, the other waves still load. Reloading replaces a
+file's rows atomically. Cross-tab subtotal rows (2022) are skipped so no respondent is counted twice.
+
 ## Exploring the data
 
 `notebooks/01_eda_bronze.ipynb` summarises what is in `data/bronze`: volumes, statuses, distinct
