@@ -31,7 +31,7 @@ def _days_to_parse(
     """One day, or every stored bronze day that has no finished parse yet (oldest first)."""
     if not missing:
         return [run_date]
-    done = ops.parsed_dates(source)
+    done = ops.parsed_dates(source, today=run_date)
     return [day for day in bronze.partition_dates(source) if day not in done]
 
 

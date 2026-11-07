@@ -1,7 +1,7 @@
 """Operational metrics in DuckDB. A re-run of the same date is a new attempt, not an edit."""
 
 from dataclasses import dataclass
-from datetime import UTC, date, datetime
+from datetime import UTC, date, datetime, timedelta
 from pathlib import Path
 
 import duckdb
@@ -156,12 +156,20 @@ class OpsStore:
             [_utc_now(), status, rows_in, rows_out, rows_failed, error, run_id],
         )
 
-    def parsed_dates(self, source: str) -> set[date]:
-        """Dates of ``source`` that have a finished parse (success or partial)."""
+    def parsed_dates(
+        self, source: str, *, today: date | None = None, retry_partial_days: int = 3
+    ) -> set[date]:
+        """Dates of ``source`` whose parse needs no repeating.
+
+        A successful parse is final. A partial one (some pages did not match the parser) is final
+        only once it is older than ``retry_partial_days``: a recent one is tried again after a
+        parser fix, while pages that stay unreadable do not make every nightly run re-parse the
+        whole history. A crashed or unfinished parse is never final.
+        """
         rows = self._con.execute(
-            "SELECT DISTINCT run_date FROM ops_task_runs "
-            "WHERE task = 'parse' AND source = ? AND status IN ('success', 'partial')",
-            [source],
+            "SELECT DISTINCT run_date FROM ops_task_runs WHERE task = 'parse' AND source = ? AND "
+            "(status = 'success' OR (status = 'partial' AND run_date < ?))",
+            [source, (today or _utc_now().date()) - timedelta(days=retry_partial_days)],
         ).fetchall()
         return {row[0] for row in rows}
 
