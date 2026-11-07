@@ -27,6 +27,24 @@ CREATE TABLE IF NOT EXISTS ops_scrape_runs (
 )
 """
 
+_TASK_DDL = """
+CREATE TABLE IF NOT EXISTS ops_task_runs (
+    run_id VARCHAR PRIMARY KEY,
+    task VARCHAR NOT NULL,
+    source VARCHAR NOT NULL,
+    run_date DATE NOT NULL,
+    attempt INTEGER NOT NULL,
+    started_at TIMESTAMP NOT NULL,
+    finished_at TIMESTAMP,
+    status VARCHAR NOT NULL,
+    rows_in INTEGER,
+    rows_out INTEGER,
+    rows_failed INTEGER,
+    error VARCHAR,
+    UNIQUE (task, source, run_date, attempt)
+)
+"""
+
 
 @dataclass
 class ScrapeStats:
@@ -49,6 +67,7 @@ class OpsStore:
         db_path.parent.mkdir(parents=True, exist_ok=True)
         self._con = duckdb.connect(str(db_path))
         self._con.execute(_DDL)
+        self._con.execute(_TASK_DDL)
 
     def close(self) -> None:
         self._con.close()
@@ -86,4 +105,36 @@ class OpsStore:
                 stats.http_403,
                 run_id,
             ],
+        )
+
+    def start_task(self, task: str, source: str, run_date: date) -> str:
+        row = self._con.execute(
+            "SELECT coalesce(max(attempt), 0) + 1 FROM ops_task_runs "
+            "WHERE task = ? AND source = ? AND run_date = ?",
+            [task, source, run_date],
+        ).fetchone()
+        attempt = int(row[0]) if row else 1
+        run_id = f"{task}-{source}-{run_date.isoformat()}-{attempt}"
+        self._con.execute(
+            "INSERT INTO ops_task_runs "
+            "(run_id, task, source, run_date, attempt, started_at, status) "
+            "VALUES (?, ?, ?, ?, ?, ?, 'running')",
+            [run_id, task, source, run_date, attempt, _utc_now()],
+        )
+        return run_id
+
+    def finish_task(
+        self,
+        run_id: str,
+        status: str,
+        *,
+        rows_in: int,
+        rows_out: int,
+        rows_failed: int,
+        error: str | None = None,
+    ) -> None:
+        self._con.execute(
+            "UPDATE ops_task_runs SET finished_at = ?, status = ?, rows_in = ?, rows_out = ?, "
+            "rows_failed = ?, error = ? WHERE run_id = ?",
+            [_utc_now(), status, rows_in, rows_out, rows_failed, error, run_id],
         )
