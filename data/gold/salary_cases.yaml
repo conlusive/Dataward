@@ -1,0 +1,85 @@
+# Gold cases for the salary parser: text -> expected monthly range.
+# min/max are per MONTH in the stated currency; `period` is the period written in the text;
+# net: true = "на руки"/net, false = gross, null = not stated. `expect: null` = no salary.
+cases:
+  # --- plain amounts and ranges
+  - {text: "$3000", min: 3000, max: 3000, currency: USD}
+  - {text: "$3000-5000", min: 3000, max: 5000, currency: USD}
+  - {text: "3000–5000 USD", min: 3000, max: 5000, currency: USD}
+  - {text: "$3,000 - $5,000", min: 3000, max: 5000, currency: USD}
+  - {text: "3 000 - 5 000 $", min: 3000, max: 5000, currency: USD}
+  - {text: "3 000 – 5 000 $", min: 3000, max: 5000, currency: USD}  # non-breaking spaces
+  - {text: "Salary: 2000-3000$", min: 2000, max: 3000, currency: USD}
+  - {text: "USD 3000-3500", min: 3000, max: 3500, currency: USD}
+  - {text: "US$ 4000", min: 4000, max: 4000, currency: USD}
+  - {text: "$ 3 500", min: 3500, max: 3500, currency: USD}
+  - {text: "4,5k USD", min: 4500, max: 4500, currency: USD}
+  # --- open ranges
+  - {text: "від $2500", min: 2500, max: null, currency: USD}
+  - {text: "до $4000", min: null, max: 4000, currency: USD}
+  - {text: "from 2000 to 3000 USD", min: 2000, max: 3000, currency: USD}
+  - {text: "від $2000 до $3000", min: 2000, max: 3000, currency: USD}
+  - {text: "up to $5k", min: null, max: 5000, currency: USD}
+  - {text: "Зарплатна вилка: від 1500 до 2500 доларів", min: 1500, max: 2500, currency: USD}
+  - {text: "від 3 000 до 4 500 $ на місяць", min: 3000, max: 4500, currency: USD}
+  # --- multipliers
+  - {text: "2.5k$", min: 2500, max: 2500, currency: USD}
+  - {text: "3k-5k USD", min: 3000, max: 5000, currency: USD}
+  - {text: "3-5k USD", min: 3000, max: 5000, currency: USD}
+  - {text: "Compensation $6k–$8k", min: 6000, max: 8000, currency: USD}
+  - {text: "5 тис. грн", min: 5000, max: 5000, currency: UAH}
+  - {text: "від 50 тис. грн", min: 50000, max: null, currency: UAH}
+  # --- other currencies
+  - {text: "50 000 грн", min: 50000, max: 50000, currency: UAH}
+  - {text: "UAH 50000", min: 50000, max: 50000, currency: UAH}
+  - {text: "₴60 000", min: 60000, max: 60000, currency: UAH}
+  - {text: "150000-200000 UAH", min: 150000, max: 200000, currency: UAH}
+  - {text: "2.500 грн", min: 2500, max: 2500, currency: UAH}  # dot as thousands separator
+  - {text: "€3500", min: 3500, max: 3500, currency: EUR}
+  - {text: "3500 EUR", min: 3500, max: 3500, currency: EUR}
+  - {text: "3000-4000 євро", min: 3000, max: 4000, currency: EUR}
+  # --- periods
+  - {text: "550-700 USD/MONTH", min: 550, max: 700, currency: USD, period: month}
+  - {text: "$3000 / month", min: 3000, max: 3000, currency: USD, period: month}
+  - {text: "3000-4000 $/міс", min: 3000, max: 4000, currency: USD, period: month}
+  - {text: "$25/год", min: 4000, max: 4000, currency: USD, period: hour}
+  - {text: "$25 per hour", min: 4000, max: 4000, currency: USD, period: hour}
+  - {text: "$30-40/hr", min: 4800, max: 6400, currency: USD, period: hour}
+  - {text: "100-150 грн/год", min: 16000, max: 24000, currency: UAH, period: hour}
+  - {text: "$60k per year", min: 5000, max: 5000, currency: USD, period: year}
+  - {text: "60 000 USD/рік", min: 5000, max: 5000, currency: USD, period: year}
+  # --- net / gross
+  - {text: "$4000 net", min: 4000, max: 4000, currency: USD, net: true}
+  - {text: "4000$ на руки", min: 4000, max: 4000, currency: USD, net: true}
+  - {text: "до 120 тис. грн на руки", min: null, max: 120000, currency: UAH, net: true}
+  - {text: "$4500 gross", min: 4500, max: 4500, currency: USD, net: false}
+  - {text: "5000 USD до оподаткування", min: 5000, max: 5000, currency: USD, net: false}
+  # --- embedded in running text
+  - {text: "We offer a competitive salary of $4000-5500 depending on experience.", min: 4000, max: 5500, currency: USD}
+  - {text: "Зарплата: 80 000 - 120 000 грн, офіційне працевлаштування", min: 80000, max: 120000, currency: UAH}
+  # --- not a salary
+  - {text: "Raised $100M in Series A", expect: null}
+  - {text: "Revenue of €200 million last year", expect: null}
+  - {text: "We have 3000 employees", expect: null}
+  - {text: "Bonus $50", expect: null}
+  - {text: "5% bonus every quarter", expect: null}
+  - {text: "Experience 3-5 years", expect: null}
+  - {text: "Call +380 44 123 4567", expect: null}
+  - {text: "Долучайтесь до команди!", expect: null}
+  - {text: "", expect: null}
+
+# Real description fragments (anonymised only by trimming). Parsed with require_context=True.
+free_text_cases:
+  - {text: "Salary from $1000 with regular reviews", min: 1000, max: null, currency: USD}
+  - {text: "Компенсація та формат — $2,500—4,000/month · Повністю remote", min: 2500, max: 4000, currency: USD}
+  - {text: "На цій позиції ми пропонуємо заробітну вилку від 55 000 до 150 000 грн.", min: 55000, max: 150000, currency: UAH}
+  - {text: "On-time salary starting from $4,500; 2 weeks paid holiday a year", min: 4500, max: null, currency: USD}
+  - {text: "Rate: Up to $25/hour", min: null, max: 4000, currency: USD, period: hour}
+  - {text: "На цій позиції ми пропонуємо заробітну плату від 125 000 до 260 000 грн.", min: 125000, max: 260000, currency: UAH}
+  - {text: "з таким рівнем компенсації — випробувальний термін 500$ на місяць", min: 500, max: 500, currency: USD}
+  - {text: "Our team also donated over UAH 500 000 prosthetics for three Ukrainian defenders.", expect: null}
+  - {text: "За успішну рекомендацію ми виплачуємо $500.", expect: null}
+  - {text: "Щороку компенсуємо до $2000 на wellness або спорт, щоб залишатися у формі", expect: null}
+  - {text: "Benefits We Offer: $100/month for Health & Wellness expenses", expect: null}
+  - {text: "допомагаємо бізнесам, які працюють із бюджетами від $100K на місяць", expect: null}
+  - {text: "Ми пропонуємо $3000 для нових співробітників", expect: null}  # no pay word: not trusted in running text

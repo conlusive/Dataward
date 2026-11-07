@@ -106,3 +106,21 @@ class SilverStore:
                 fetched_at,
             ],
         )
+
+    def salary_inputs(self, source: str) -> list[tuple[str, str, str, str | None]]:
+        rows = self._con.execute(
+            "SELECT id, title, description_text, salary_raw FROM silver_vacancies "
+            "WHERE source = ? ORDER BY id",
+            [source],
+        ).fetchall()
+        return [(r[0], r[1], r[2], r[3]) for r in rows]
+
+    def set_salaries(
+        self, rows: list[tuple[str, str | None, float | None, float | None, str | None]]
+    ) -> None:
+        """rows: (id, salary_raw, salary_min, salary_max, salary_currency)."""
+        self._con.executemany(
+            "UPDATE silver_vacancies SET salary_raw = ?, salary_min = ?, salary_max = ?, "
+            "salary_currency = ? WHERE id = ?",
+            [(raw, low, high, cur, vid) for vid, raw, low, high, cur in rows],
+        )
