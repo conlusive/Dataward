@@ -35,6 +35,16 @@ Parses vacancy pages of one date into `silver_vacancies` (upsert by id; a backfi
 never overwrites newer data). Pages that no longer match the parser are counted as failed in
 `ops_task_runs` instead of stopping the run.
 
+Salaries are recomputed on every `parse`: `salary_min/max/currency` from the declared range or the
+description, then `salary_usd_min/max` from the NBU rate on the publication date. `parse` reads only
+bronze; if a rate for some date is missing it logs the dates, and
+
+```bash
+uv run jobmarket fetch-rates   # downloads the missing NBU rates into bronze
+```
+
+fetches them (run `parse` again afterwards).
+
 ## Exploring the data
 
 `notebooks/01_eda_bronze.ipynb` summarises what is in `data/bronze`: volumes, statuses, distinct
