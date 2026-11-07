@@ -73,6 +73,31 @@ CREATE TABLE IF NOT EXISTS silver_dou_salaries (
 )
 """
 
+_SKILLS_DDL = (
+    """
+    CREATE TABLE IF NOT EXISTS silver_skills (
+        skill_id VARCHAR PRIMARY KEY,
+        canonical VARCHAR NOT NULL,
+        category VARCHAR NOT NULL,
+        parent_id VARCHAR
+    )
+    """,
+    """
+    CREATE TABLE IF NOT EXISTS silver_vacancy_skills (
+        vacancy_id VARCHAR NOT NULL,
+        skill_id VARCHAR NOT NULL,
+        importance VARCHAR NOT NULL,  -- required | nice
+        method VARCHAR NOT NULL,  -- dictionary | llm
+        confidence DOUBLE NOT NULL,
+        model VARCHAR,
+        prompt_version VARCHAR,
+        _run_id VARCHAR NOT NULL,
+        _loaded_at TIMESTAMP NOT NULL,
+        PRIMARY KEY (vacancy_id, skill_id, method)
+    )
+    """,
+)
+
 # Columns added after the first release; applied to databases created before them.
 _MIGRATIONS = (
     "ALTER TABLE silver_vacancies ADD COLUMN IF NOT EXISTS experience_years_text DOUBLE",
@@ -119,6 +144,8 @@ class SilverStore:
             self._con.execute(migration)
         self._con.execute(_RATES_DDL)
         self._con.execute(_SURVEY_DDL)
+        for statement in _SKILLS_DDL:
+            self._con.execute(statement)
 
     def close(self) -> None:
         self._con.close()
@@ -286,3 +313,55 @@ class SilverStore:
             "english_level = ? WHERE id = ?",
             [(seniority, years, english, vid) for vid, seniority, years, english in rows],
         )
+
+    def replace_skills(self, rows: list[tuple[str, str, str, str | None]]) -> None:
+        """The taxonomy as loaded from YAML: (skill_id, canonical, category, parent_id)."""
+        self._con.execute("BEGIN TRANSACTION")
+        try:
+            self._con.execute("DELETE FROM silver_skills")
+            if rows:
+                columns = [list(c) for c in zip(*rows, strict=True)]
+                self._con.execute(
+                    "INSERT INTO silver_skills SELECT unnest(?::VARCHAR[]), unnest(?::VARCHAR[]), "
+                    "unnest(?::VARCHAR[]), unnest(?::VARCHAR[])",
+                    columns,
+                )
+            self._con.execute("COMMIT")
+        except Exception:
+            self._con.execute("ROLLBACK")
+            raise
+
+    def replace_vacancy_skills(
+        self,
+        source: str,
+        method: str,
+        rows: list[tuple[str, str, str, float]],
+        *,
+        run_id: str,
+        loaded_at: datetime,
+    ) -> None:
+        """Replace one method's skills for every vacancy of ``source`` atomically.
+
+        rows: (vacancy_id, skill_id, importance, confidence).
+        """
+        self._con.execute("BEGIN TRANSACTION")
+        try:
+            self._con.execute(
+                "DELETE FROM silver_vacancy_skills WHERE method = ? AND vacancy_id IN "
+                "(SELECT id FROM silver_vacancies WHERE source = ?)",
+                [method, source],
+            )
+            if rows:
+                columns = [list(c) for c in zip(*rows, strict=True)]
+                self._con.execute(
+                    "INSERT INTO silver_vacancy_skills "
+                    "SELECT r.vacancy_id, r.skill_id, r.importance, ?, r.confidence, NULL, NULL, "
+                    "?, ? FROM (SELECT unnest(?::VARCHAR[]) AS vacancy_id, "
+                    "unnest(?::VARCHAR[]) AS skill_id, unnest(?::VARCHAR[]) AS importance, "
+                    "unnest(?::DOUBLE[]) AS confidence) r",
+                    [method, run_id, loaded_at, *columns],
+                )
+            self._con.execute("COMMIT")
+        except Exception:
+            self._con.execute("ROLLBACK")
+            raise

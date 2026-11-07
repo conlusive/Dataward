@@ -50,6 +50,12 @@ fetches them (run `parse` again afterwards).
 page's own `experience_years` (Djinni JSON-LD) instead of replacing it. Gold cases live in
 `data/gold/vacancy_text_cases.yaml`.
 
+Skills are found by a dictionary over `src/jobmarket/skills/taxonomy.yaml` (~490 skills, ~2000
+spellings). Ambiguous words ("Go", "R", "Spring", "Swift") count only with the exact case and a
+context word nearby; skills under "nice to have" headings are marked `nice`, benefit sections are
+ignored. Add a skill by appending a line; `make test` validates the file. Results go to
+`silver_vacancy_skills` (`method = dictionary`).
+
 DOU salary surveys (34 waves since 2010) are loaded separately:
 
 ```bash

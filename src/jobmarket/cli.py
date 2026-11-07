@@ -22,6 +22,9 @@ from jobmarket.silver.store import SilverStore
 from jobmarket.silver.survey_build import load_surveys
 from jobmarket.silver.text_step import apply_text_signals
 from jobmarket.silver.usd import apply_usd
+from jobmarket.skills.dictionary import DictionaryExtractor
+from jobmarket.skills.dictionary_step import apply_dictionary_skills, load_taxonomy_into_silver
+from jobmarket.skills.taxonomy import load_taxonomy
 
 
 def _default_run_date() -> date:
@@ -116,6 +119,9 @@ def _parse(sources: Sequence[str], run_date: date) -> int:
     exit_code = 0
     try:
         logger.info("NBU rates loaded from bronze: {} rows", load_nbu_rates(bronze, silver))
+        taxonomy = load_taxonomy()
+        load_taxonomy_into_silver(silver, taxonomy)
+        extractor = DictionaryExtractor(taxonomy)
         for source in sources:
             task_id = ops.start_task("parse", source, run_date)
             try:
@@ -136,6 +142,8 @@ def _parse(sources: Sequence[str], run_date: date) -> int:
             logger.info("{} {}: {}", task_id, status, stats)
             logger.info("salaries {}: {}", source, apply_salaries(silver, source))
             logger.info("text signals {}: {}", source, apply_text_signals(silver, source))
+            skills = apply_dictionary_skills(silver, extractor, source, run_id=task_id)
+            logger.info("skills {}: {}", source, skills)
             usd = apply_usd(silver, source)
             logger.info("usd {}: {}", source, usd)
             if usd.missing_dates:
