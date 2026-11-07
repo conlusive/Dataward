@@ -13,6 +13,7 @@ from loguru import logger
 
 from jobmarket.bronze import BronzeStore
 from jobmarket.config import Settings
+from jobmarket.gold_commands import evaluate, import_labels, make_sheet
 from jobmarket.ops import OpsStore
 from jobmarket.registry import DAILY_SOURCES, SOURCES
 from jobmarket.runner import run_source
@@ -86,6 +87,24 @@ def _build_parser() -> argparse.ArgumentParser:
         "--dry-run",
         action="store_true",
         help="count the requests and estimate the cost, call nothing",
+    )
+    sample_cmd = commands.add_parser(
+        "gold-sample", help="write a label sheet with a random sample of vacancies to label by hand"
+    )
+    sample_cmd.add_argument("--n", type=int, default=150)
+    sample_cmd.add_argument("--seed", type=int, default=1)
+    sample_cmd.add_argument(
+        "--prefill",
+        action="store_true",
+        help="suggest method A's skills (faster, biases the metric)",
+    )
+    sample_cmd.add_argument("--force", action="store_true", help="replace an existing sheet")
+    commands.add_parser(
+        "gold-import", help="read the labelled sheet into data/gold/skills_gold.yaml"
+    )
+    commands.add_parser(
+        "gold-eval",
+        help="precision/recall/F1 of every method against the gold set -> docs/metrics.md",
     )
     review_cmd = commands.add_parser(
         "skills-review", help="list the most frequent skills the taxonomy does not know yet"
@@ -167,6 +186,18 @@ def _priced_models() -> set[str]:
     return set(yaml.safe_load(PRICES_FILE.read_text(encoding="utf-8"))["models"])
 
 
+def _gold(args: argparse.Namespace) -> int:
+    silver = SilverStore(Settings.from_env().duckdb_path)
+    try:
+        if args.command == "gold-sample":
+            return make_sheet(silver, args.n, args.seed, prefill=args.prefill, force=args.force)
+        if args.command == "gold-import":
+            return import_labels(silver)
+        return evaluate(silver)
+    finally:
+        silver.close()
+
+
 def _skills_review(top: int) -> int:
     silver = SilverStore(Settings.from_env().duckdb_path)
     try:
@@ -239,6 +270,8 @@ def main(argv: Sequence[str] | None = None) -> int:
         return _parse_surveys()
     if args.command == "extract-skills":
         return _extract_skills(args.source, args.limit, args.max_cost_usd, args.dry_run)
+    if args.command in ("gold-sample", "gold-import", "gold-eval"):
+        return _gold(args)
     if args.command == "skills-review":
         return _skills_review(args.top)
     if args.command == "skills-renormalize":
