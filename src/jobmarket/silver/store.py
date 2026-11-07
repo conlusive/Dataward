@@ -23,7 +23,7 @@ CREATE TABLE IF NOT EXISTS silver_vacancies (
     category VARCHAR,
     locations VARCHAR[] NOT NULL,
     remote BOOLEAN,
-    experience_years DOUBLE,
+    experience_years DOUBLE,  -- declared by the page (Djinni JSON-LD)
     english_level VARCHAR,
     salary_raw VARCHAR,
     salary_min DOUBLE,
@@ -35,6 +35,8 @@ CREATE TABLE IF NOT EXISTS silver_vacancies (
     description_text VARCHAR NOT NULL,
     content_hash VARCHAR NOT NULL,
     dedup_group_id VARCHAR,
+    experience_years_text DOUBLE,  -- required years read from the description
+    seniority VARCHAR,  -- from the title: intern / junior / middle / senior / lead
     _run_id VARCHAR NOT NULL,
     _loaded_at TIMESTAMP NOT NULL,
     _source_file VARCHAR NOT NULL,
@@ -71,8 +73,15 @@ CREATE TABLE IF NOT EXISTS silver_dou_salaries (
 )
 """
 
+# Columns added after the first release; applied to databases created before them.
+_MIGRATIONS = (
+    "ALTER TABLE silver_vacancies ADD COLUMN IF NOT EXISTS experience_years_text DOUBLE",
+    "ALTER TABLE silver_vacancies ADD COLUMN IF NOT EXISTS seniority VARCHAR",
+)
+
 # Columns written by the HTML parsers. english_level, salary_min/max/currency, salary_usd_* and
-# dedup_group_id are filled by later steps and must survive a re-parse.
+# dedup_group_id, experience_years_text and seniority are filled by later steps and must survive a
+# re-parse.
 _PARSER_COLUMNS = (
     "source",
     "url",
@@ -106,6 +115,8 @@ class SilverStore:
         db_path.parent.mkdir(parents=True, exist_ok=True)
         self._con = duckdb.connect(str(db_path))
         self._con.execute(_DDL)
+        for migration in _MIGRATIONS:
+            self._con.execute(migration)
         self._con.execute(_RATES_DDL)
         self._con.execute(_SURVEY_DDL)
 
@@ -256,3 +267,22 @@ class SilverStore:
         except Exception:
             self._con.execute("ROLLBACK")
             raise
+
+    def text_inputs(self, source: str) -> list[tuple[str, str, str]]:
+        rows = self._con.execute(
+            "SELECT id, title, description_text FROM silver_vacancies WHERE source = ? ORDER BY id",
+            [source],
+        ).fetchall()
+        return [(r[0], r[1], r[2]) for r in rows]
+
+    def set_text_signals(
+        self, rows: list[tuple[str, str | None, float | None, str | None]]
+    ) -> None:
+        """rows: (id, seniority, experience_years_text, english_level)."""
+        if not rows:
+            return
+        self._con.executemany(
+            "UPDATE silver_vacancies SET seniority = ?, experience_years_text = ?, "
+            "english_level = ? WHERE id = ?",
+            [(seniority, years, english, vid) for vid, seniority, years, english in rows],
+        )

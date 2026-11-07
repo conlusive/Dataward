@@ -1,0 +1,94 @@
+# Gold cases for the text-signal parsers (silver/text_signals.py). Most lines are real fragments
+# of DOU and Djinni descriptions; `expect: null` means "must not produce a value".
+experience:  # required years of experience, lower bound, per description
+  - {text: "5+ years of experience in backend development.", years: 5}
+  - {text: "2+ years of experience in Software development", years: 2}
+  - {text: "3+ years of commercial backend development with Java (17+)", years: 3}
+  - {text: "5+ years of commercial Android development experience.", years: 5}
+  - {text: "Preferably 3+ years of Ruby on Rails development experience.", years: 3}
+  - {text: "At least 5 years of commercial experience in QA Automation.", years: 5}
+  - {text: "4+ years building decision-making systems for robots", years: 4}
+  - {text: "4–6 years in backend engineering, platform engineering or devops", years: 4}
+  - {text: "1 to 3 years of experience", years: 1}
+  - {text: "Досвід від 3 років у кредитних ризиках або управлінні портфелем", years: 3}
+  - {text: "від 1 року комерційного досвіду з PHP (Laravel) або Python;", years: 1}
+  - {text: "5+ років розробки production-систем end-to-end", years: 5}
+  - {text: "3+ роки в кредитному скорингу (споживче кредитування, МФО)", years: 3}
+  - {text: "2–4 роки в досвіду у Data Science / Machine Learning", years: 2}
+  - {text: "Досвід з PHP від 1 до 4 років: PHP 8.x, Laravel", years: 1}
+  - {text: "3-4+ років продуктового досвіду з PHP, Yii, Symfony", years: 3}
+  - {text: "1.5–3+ роки комерційного досвіду розробки на PHP (версії 7.4+ / 8.x);", years: 1.5}
+  - {text: "Досвід роботи на позиції QA Engineer від 3 років, з яких щонайменше 1 рік — у Embedded", years: 3}
+  - {text: "Experience: 3 years", years: 3}
+  - {text: "6 months of hands-on experience with Docker", years: 0.5}
+  - {text: "Python development experience of 4 years", years: 4}
+  - {text: "5+ years overall.\n2+ years of experience with Kubernetes", years: 5}  # the largest wins
+  # --- not a requirement
+  - {text: "До 2030 року цей ринок перевищить 206 мільярдів доларів", expect: null}
+  - {text: "Один із наших ключових напрямів — VPN-продукт, який уже понад 7 років працює", expect: null}
+  - {text: "Space Profit Team - команда, яка вже 5+ років стабільно працює в ніші Nutra", expect: null}
+  - {text: "траєкторією розвитку на 2-3 роки вперед", expect: null}
+  - {text: "за 2023 рік було сплачено 6,6 млрд гривень", expect: null}
+  - {text: "Volpis is a company of ambitious professionals providing services for more than 10 years", expect: null}
+  - {text: "a team where the minimum development experience is 12 years", expect: null}
+  - {text: "10+ years on the market", expect: null}
+  - {text: "Experience with Python", expect: null}
+  - {text: "", expect: null}
+
+english:  # level on the DOU scale, from the description
+  - {text: "B2+ English.", level: upper-intermediate}
+  - {text: "Знання англійської B1+.", level: intermediate}
+  - {text: "Upper-Intermediate Level of English.", level: upper-intermediate}
+  - {text: "Upper-Intermediate English or higher.", level: upper-intermediate}
+  - {text: "Upper Intermediate English level or higher.", level: upper-intermediate}
+  - {text: "An Upper-intermediate level of English.", level: upper-intermediate}
+  - {text: "English C1", level: advanced}
+  - {text: "English at an intermediate level or higher (to read and understand documentation)", level: intermediate}
+  - {text: "English: Intermediate", level: intermediate}
+  - {text: "English level — at least Intermediate strong;", level: intermediate}
+  - {text: "Fluent in English (written and spoken).", level: advanced}
+  - {text: "Fluent English; availability to overlap with Central Europe", level: advanced}
+  - {text: "Англійська мова рівня В2 (і вище);", level: upper-intermediate}  # Cyrillic В
+  - {text: "Знання письмової та усної англійської мови на рівні Upper-Intermediate і вище (В2+)", level: upper-intermediate}
+  - {text: "English: A2", level: pre-intermediate}
+  - {text: "Pre-Intermediate English", level: pre-intermediate}
+  - {text: "Elementary English", level: elementary}
+  - {text: "Python.\nEnglish level: Upper-Intermediate or higher (crucial for stakeholders)", level: upper-intermediate}
+  # --- no level, or not a requirement
+  - {text: "Good English reading and writing skills.", expect: null}
+  - {text: "Excellent written and verbal English communication skills.", expect: null}
+  - {text: "Free English and business English courses", expect: null}
+  - {text: "корпоративні заняття з англійської мови", expect: null}
+  - {text: "Курси англійської мови", expect: null}
+  - {text: "English, German, and Polish language courses and Speaking Clubs", expect: null}
+  - {text: "безкоштовні курси англійської мови, спортивні активності", expect: null}
+  - {text: "Intermediate SQL knowledge", expect: null}  # a level, but not of English
+  - {text: "Advanced Python skills", expect: null}
+  - {text: "", expect: null}
+
+seniority:  # from the title only
+  - {title: "Senior Python Developer", level: senior}
+  - {title: "Middle Backend Developer (Node.js, TypeScript)", level: middle}
+  - {title: "Junior Software Engineer", level: junior}
+  - {title: "Trainee / Junior PHP Developer", level: intern}  # first level named in the title
+  - {title: "Junior/Middle Data Engineer", level: junior}
+  - {title: "Middle / Senior Java Developer", level: middle}
+  - {title: "Middle+ QA Engineer", level: middle}
+  - {title: "Strong Junior / Middle PHP Developer", level: junior}
+  - {title: "Mid-level Developer", level: middle}
+  - {title: "Sr. Data Scientist", level: senior}
+  - {title: "Jr Frontend Developer", level: junior}
+  - {title: "Team Lead Java", level: lead}
+  - {title: "Tech Lead / Senior Backend", level: lead}
+  - {title: "Principal Engineer", level: lead}
+  - {title: "Staff Software Engineer", level: lead}
+  - {title: "Head of Data", level: lead}
+  - {title: "Data Architect", level: lead}
+  - {title: "Intern Data Analyst", level: intern}
+  - {title: "Старший розробник Python", level: senior}
+  - {title: "Молодший QA інженер", level: junior}
+  - {title: "Python Developer", expect: null}
+  - {title: "Lead Generation Specialist", expect: null}
+  - {title: "Internal Tools Developer", expect: null}  # "intern" inside another word
+  - {title: "Data Engineer (Python/Spark)", expect: null}
+  - {title: "", expect: null}

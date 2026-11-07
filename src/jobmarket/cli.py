@@ -20,6 +20,7 @@ from jobmarket.silver.rates import load_nbu_rates, missing_rate_dates, needed_ra
 from jobmarket.silver.salary_step import apply_salaries
 from jobmarket.silver.store import SilverStore
 from jobmarket.silver.survey_build import load_surveys
+from jobmarket.silver.text_step import apply_text_signals
 from jobmarket.silver.usd import apply_usd
 
 
@@ -134,6 +135,7 @@ def _parse(sources: Sequence[str], run_date: date) -> int:
             )
             logger.info("{} {}: {}", task_id, status, stats)
             logger.info("salaries {}: {}", source, apply_salaries(silver, source))
+            logger.info("text signals {}: {}", source, apply_text_signals(silver, source))
             usd = apply_usd(silver, source)
             logger.info("usd {}: {}", source, usd)
             if usd.missing_dates:

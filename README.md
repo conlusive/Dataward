@@ -45,6 +45,11 @@ uv run jobmarket fetch-rates   # downloads the missing NBU rates into bronze
 
 fetches them (run `parse` again afterwards).
 
+`parse` also reads three signals from the text: `seniority` (from the title only), the required
+`experience_years_text` and the `english_level` (from the description). They are kept next to the
+page's own `experience_years` (Djinni JSON-LD) instead of replacing it. Gold cases live in
+`data/gold/vacancy_text_cases.yaml`.
+
 DOU salary surveys (34 waves since 2010) are loaded separately:
 
 ```bash
