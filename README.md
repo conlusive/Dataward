@@ -73,6 +73,19 @@ SCD2 history of title/salary/description changes:
 make dbt-build    # dbt snapshot + dbt build (models and tests)
 ```
 
+Method B asks an LLM for the skills (needs a key, never part of CI):
+
+```bash
+uv run jobmarket extract-skills all --dry-run          # counts requests and estimates the cost, no key
+OPENAI_API_KEY=... uv run jobmarket extract-skills all --max-cost-usd 2
+uv run jobmarket skills-review                         # most frequent skills the taxonomy lacks
+uv run jobmarket skills-renormalize                    # re-map stored answers after editing the taxonomy
+```
+
+`LLM_MODEL` picks the provider: a plain name is OpenAI, `gemini/...` uses `GEMINI_API_KEY`,
+`ollama/...` uses `OLLAMA_BASE_URL`. Answers are cached by title, text hash, prompt and model, so a
+repeat run costs nothing; prices live in `src/jobmarket/skills/llm_prices.yaml` (edit when they change).
+
 DOU salary surveys (34 waves since 2010) are loaded separately:
 
 ```bash

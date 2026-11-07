@@ -82,6 +82,42 @@ CREATE TABLE IF NOT EXISTS silver_vacancy_sightings (
 )
 """
 
+_LLM_DDL = (
+    """
+    CREATE TABLE IF NOT EXISTS llm_cache (
+        cache_key VARCHAR PRIMARY KEY,  -- title + description hash, prompt version/text, model
+        content_hash VARCHAR NOT NULL,
+        model VARCHAR NOT NULL,
+        prompt_version VARCHAR NOT NULL,
+        raw_json VARCHAR NOT NULL,  -- the model's answer exactly as returned
+        prompt_tokens INTEGER NOT NULL,
+        completion_tokens INTEGER NOT NULL,
+        cost_usd DOUBLE NOT NULL,
+        created_at TIMESTAMP NOT NULL
+    )
+    """,
+    """
+    CREATE TABLE IF NOT EXISTS silver_llm_terms (
+        vacancy_id VARCHAR NOT NULL,
+        term VARCHAR NOT NULL,  -- the model's skill name, cleaned (lower-case)
+        importance VARCHAR NOT NULL,
+        model VARCHAR NOT NULL,
+        prompt_version VARCHAR NOT NULL,
+        PRIMARY KEY (vacancy_id, term)
+    )
+    """,
+    """
+    CREATE TABLE IF NOT EXISTS silver_unknown_skills (
+        term VARCHAR PRIMARY KEY,
+        vacancies INTEGER NOT NULL,
+        first_seen DATE NOT NULL,
+        last_seen DATE NOT NULL,
+        suggested_canonical VARCHAR,
+        status VARCHAR NOT NULL  -- new | accepted | rejected
+    )
+    """,
+)
+
 _GROUPS_DDL = """
 CREATE TABLE IF NOT EXISTS silver_vacancy_groups (
     dedup_group_id VARCHAR PRIMARY KEY,  -- id of the oldest member
@@ -169,6 +205,8 @@ class SilverStore:
         for statement in _SKILLS_DDL:
             self._con.execute(statement)
         self._con.execute(_GROUPS_DDL)
+        for statement in _LLM_DDL:
+            self._con.execute(statement)
         self._con.execute(_SIGHTINGS_DDL)
 
     def close(self) -> None:
@@ -444,3 +482,142 @@ class SilverStore:
             "ON CONFLICT DO NOTHING",
             [vacancy_ids, seen_date],
         )
+
+    # ---- LLM extraction (method B)
+    def llm_inputs(self, source: str | None = None) -> list[tuple[str, str, str, str]]:
+        """(id, title, description, content_hash) of the vacancies to extract skills from."""
+        where, params = ("WHERE source = ?", [source]) if source else ("", [])
+        rows = self._con.execute(
+            "SELECT id, title, description_text, content_hash FROM silver_vacancies "
+            f"{where} ORDER BY id",
+            params,
+        ).fetchall()
+        return [(r[0], r[1], r[2], r[3]) for r in rows]
+
+    def cache_get_many(self, keys: list[str]) -> dict[str, str]:
+        if not keys:
+            return {}
+        rows = self._con.execute(
+            "SELECT cache_key, raw_json FROM llm_cache WHERE cache_key IN "
+            "(SELECT unnest(?::VARCHAR[]))",
+            [keys],
+        ).fetchall()
+        return {r[0]: r[1] for r in rows}
+
+    def cache_put(
+        self,
+        key: str,
+        *,
+        content_hash: str,
+        model: str,
+        prompt_version: str,
+        raw_json: str,
+        prompt_tokens: int,
+        completion_tokens: int,
+        cost_usd: float,
+        created_at: datetime,
+    ) -> None:
+        self._con.execute(
+            "INSERT INTO llm_cache VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT DO NOTHING",
+            [
+                key,
+                content_hash,
+                model,
+                prompt_version,
+                raw_json,
+                prompt_tokens,
+                completion_tokens,
+                cost_usd,
+                created_at,
+            ],
+        )
+
+    def replace_llm_results(
+        self,
+        vacancy_ids: list[str],
+        terms: list[tuple[str, str, str, str, str]],
+        skills: list[tuple[str, str, str, float, str, str]],
+        *,
+        run_id: str,
+        loaded_at: datetime,
+    ) -> None:
+        """Replace the LLM terms and skills of exactly these vacancies, atomically.
+
+        terms: (vacancy_id, term, importance, model, prompt_version)
+        skills: (vacancy_id, skill_id, importance, confidence, model, prompt_version)
+        """
+        if not vacancy_ids:
+            return
+        self._con.execute("BEGIN TRANSACTION")
+        try:
+            self._con.execute(
+                "DELETE FROM silver_llm_terms WHERE vacancy_id IN (SELECT unnest(?::VARCHAR[]))",
+                [vacancy_ids],
+            )
+            self._con.execute(
+                "DELETE FROM silver_vacancy_skills WHERE method = 'llm' AND vacancy_id IN "
+                "(SELECT unnest(?::VARCHAR[]))",
+                [vacancy_ids],
+            )
+            if terms:
+                columns = [list(c) for c in zip(*terms, strict=True)]
+                self._con.execute(
+                    "INSERT INTO silver_llm_terms SELECT unnest(?::VARCHAR[]), "
+                    "unnest(?::VARCHAR[]), unnest(?::VARCHAR[]), unnest(?::VARCHAR[]), "
+                    "unnest(?::VARCHAR[])",
+                    columns,
+                )
+            if skills:
+                columns = [list(c) for c in zip(*skills, strict=True)]
+                self._con.execute(
+                    "INSERT INTO silver_vacancy_skills SELECT r.vacancy_id, r.skill_id, "
+                    "r.importance, 'llm', r.confidence, r.model, r.prompt_version, ?, ? FROM ("
+                    "SELECT unnest(?::VARCHAR[]) AS vacancy_id, unnest(?::VARCHAR[]) AS skill_id, "
+                    "unnest(?::VARCHAR[]) AS importance, unnest(?::DOUBLE[]) AS confidence, "
+                    "unnest(?::VARCHAR[]) AS model, unnest(?::VARCHAR[]) AS prompt_version) r",
+                    [run_id, loaded_at, *columns],
+                )
+            self._con.execute("COMMIT")
+        except Exception:
+            self._con.execute("ROLLBACK")
+            raise
+
+    def llm_terms(self) -> list[tuple[str, str, str, str, str]]:
+        rows = self._con.execute(
+            "SELECT vacancy_id, term, importance, model, prompt_version FROM silver_llm_terms "
+            "ORDER BY vacancy_id, term"
+        ).fetchall()
+        return [(r[0], r[1], r[2], r[3], r[4]) for r in rows]
+
+    def term_dates(self) -> dict[str, tuple[int, date, date]]:
+        """term -> (vacancies, first seen, last seen), from when the vacancies were fetched."""
+        rows = self._con.execute(
+            "SELECT t.term, count(DISTINCT t.vacancy_id), min(CAST(v._fetched_at AS DATE)), "
+            "max(CAST(v._fetched_at AS DATE)) FROM silver_llm_terms t "
+            "JOIN silver_vacancies v ON v.id = t.vacancy_id GROUP BY t.term"
+        ).fetchall()
+        return {r[0]: (r[1], r[2], r[3]) for r in rows}
+
+    def unknown_statuses(self) -> dict[str, str]:
+        rows = self._con.execute("SELECT term, status FROM silver_unknown_skills").fetchall()
+        return {r[0]: r[1] for r in rows}
+
+    def replace_unknown_skills(
+        self, rows: list[tuple[str, int, date, date, str | None, str]]
+    ) -> None:
+        """rows: (term, vacancies, first_seen, last_seen, suggested_canonical, status)."""
+        self._con.execute("BEGIN TRANSACTION")
+        try:
+            self._con.execute("DELETE FROM silver_unknown_skills")
+            if rows:
+                columns = [list(c) for c in zip(*rows, strict=True)]
+                self._con.execute(
+                    "INSERT INTO silver_unknown_skills SELECT unnest(?::VARCHAR[]), "
+                    "unnest(?::INTEGER[]), unnest(?::DATE[]), unnest(?::DATE[]), "
+                    "unnest(?::VARCHAR[]), unnest(?::VARCHAR[])",
+                    columns,
+                )
+            self._con.execute("COMMIT")
+        except Exception:
+            self._con.execute("ROLLBACK")
+            raise

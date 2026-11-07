@@ -1,0 +1,8 @@
+# USD per 1,000,000 tokens, used only to estimate and log the cost of extraction runs.
+# Prices change: check the provider's page and edit this file. A model that is not listed (or a
+# local Ollama model) costs 0 in the logs and the run says so.
+# Last checked: not verified against the provider; the numbers below are the ones I knew for
+# gpt-4o-mini and gemini-2.0-flash and may be out of date.
+models:
+  gpt-4o-mini: {input: 0.15, output: 0.60}
+  gemini-2.0-flash: {input: 0.10, output: 0.40}
