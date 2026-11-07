@@ -86,6 +86,19 @@ uv run jobmarket skills-renormalize                    # re-map stored answers a
 `ollama/...` uses `OLLAMA_BASE_URL`. Answers are cached by title, text hash, prompt and model, so a
 repeat run costs nothing; prices live in `src/jobmarket/skills/llm_prices.yaml` (edit when they change).
 
+The skill gold set (the hand-labelled truth that precision/recall are measured against):
+
+```bash
+uv run jobmarket gold-sample --n 150     # data/gold/_label_sheet.md, blind (no suggestions)
+# open the sheet, list the skill ids each vacancy asks for under "Labels:" (ids: data/gold/_skill_ids.md)
+uv run jobmarket gold-import             # checks the ids, writes data/gold/skills_gold.yaml
+uv run jobmarket gold-eval               # precision / recall / F1 per method -> docs/metrics.md
+```
+
+The sheet and the vacancy texts stay local (gitignored); only the labels are committed. After the
+first `gold-eval`, put `regression_min_f1: <value>` in `skills_gold.yaml` and CI-style regression
+checks of the dictionary method start working (`tests/test_gold_regression.py`).
+
 DOU salary surveys (34 waves since 2010) are loaded separately:
 
 ```bash

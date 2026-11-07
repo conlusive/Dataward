@@ -25,3 +25,7 @@ dist/
 .vscode/
 .DS_Store
 warehouse/.user.yml
+
+# Gold set: the label sheet and the vacancy texts stay local (the labels themselves are committed)
+data/gold/_*
+data/gold/skills_gold_texts.yaml
