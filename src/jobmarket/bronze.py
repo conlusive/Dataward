@@ -72,6 +72,15 @@ class BronzeStore:
                     urls.add(meta["url"])
         return urls
 
+    def partition_dates(self, source: str) -> list[date]:
+        found: list[date] = []
+        for partition in (self._root / source).glob("dt=*"):
+            try:
+                found.append(date.fromisoformat(partition.name.removeprefix("dt=")))
+            except ValueError:
+                continue
+        return sorted(found)
+
     def records(self, source: str, run_date: date) -> Iterator[BronzeRecord]:
         """Every complete record of one partition, in a stable order."""
         directory = self.partition_dir(source, run_date)
