@@ -155,14 +155,81 @@ def test_an_explicit_day_is_parsed_again_as_a_new_attempt(settings: Settings) ->
     assert _scalar(settings, "SELECT count(*) FROM silver_vacancy_sightings") == 60
 
 
-def test_parsed_dates_only_count_finished_runs(tmp_path: Path) -> None:
+def test_parsed_dates_only_count_runs_that_need_no_repeating(tmp_path: Path) -> None:
     ops = OpsStore(tmp_path / "ops.duckdb")
-    done = ops.start_task("parse", "dou", date(2026, 11, 1))
-    ops.finish_task(done, "success", rows_in=1, rows_out=1, rows_failed=0)
-    broken = ops.start_task("parse", "dou", date(2026, 11, 2))
-    ops.finish_task(broken, "failed", rows_in=0, rows_out=0, rows_failed=0, error="boom")
-    ops.start_task("parse", "dou", date(2026, 11, 3))  # still "running": it crashed midway
+    today = date(2026, 11, 10)
 
-    assert ops.parsed_dates("dou") == {date(2026, 11, 1)}
-    assert ops.parsed_dates("djinni") == set()
+    def run(day: date, status: str) -> None:
+        task = ops.start_task("parse", "dou", day)
+        ops.finish_task(task, status, rows_in=1, rows_out=1, rows_failed=0)
+
+    run(date(2026, 11, 1), "success")
+    run(date(2026, 11, 2), "failed")  # a crash is always tried again
+    run(date(2026, 11, 3), "partial")  # old enough: pages that stay unreadable are left alone
+    run(date(2026, 11, 8), "partial")  # recent: a parser fix gets another chance
+    ops.start_task("parse", "dou", date(2026, 11, 4))  # still "running": it crashed midway
+
+    assert ops.parsed_dates("dou", today=today) == {date(2026, 11, 1), date(2026, 11, 3)}
+    assert ops.parsed_dates("djinni", today=today) == set()
     ops.close()
+
+
+def _day_with_pages(tmp_path: Path, good: int, broken: int) -> Settings:
+    store = BronzeStore(tmp_path / "bronze")
+    day = date(2026, 11, 1)
+    for i in range(good):
+        _put(
+            store,
+            "dou",
+            day,
+            f"https://jobs.dou.ua/companies/acme/vacancies/{1000 + i}/",
+            sample("dou/detail.html"),
+        )
+    for i in range(broken):
+        _put(
+            store,
+            "dou",
+            day,
+            f"https://jobs.dou.ua/companies/acme/vacancies/{2000 + i}/",
+            b"<html>new markup</html>",
+        )
+    return Settings(bronze_dir=tmp_path / "bronze", duckdb_path=tmp_path / "test.duckdb")
+
+
+def test_a_few_unreadable_pages_do_not_fail_the_run(tmp_path: Path) -> None:
+    settings = _day_with_pages(tmp_path, good=40, broken=1)  # 2.4% of the pages
+
+    assert run_parse(settings, ["dou"], date(2026, 11, 1)) == 0
+    assert _scalar(settings, "SELECT count(*) FROM silver_vacancies") == 40
+    assert _scalar(settings, "SELECT status FROM ops_task_runs WHERE task = 'parse'") == "partial"
+
+
+def test_many_unreadable_pages_mean_the_markup_changed_and_fail_the_run(tmp_path: Path) -> None:
+    settings = _day_with_pages(tmp_path, good=10, broken=3)  # 23% of the pages
+
+    assert run_parse(settings, ["dou"], date(2026, 11, 1)) == 1
+
+
+def test_a_day_where_nothing_can_be_read_fails_the_run(tmp_path: Path) -> None:
+    settings = _day_with_pages(tmp_path, good=0, broken=5)
+
+    assert run_parse(settings, ["dou"], date(2026, 11, 1)) == 1
+
+
+def test_a_recent_partial_day_is_parsed_again_and_picks_up_what_was_fixed(tmp_path: Path) -> None:
+    settings = _day_with_pages(tmp_path, good=40, broken=1)
+    assert run_parse(settings, ["dou"], date(2026, 11, 1), missing=True) == 0
+    assert _scalar(settings, "SELECT count(*) FROM silver_vacancies") == 40
+
+    # the "parser fix": the page that used to fail now looks like a normal vacancy
+    store = BronzeStore(tmp_path / "bronze")
+    _put(
+        store,
+        "dou",
+        date(2026, 11, 1),
+        "https://jobs.dou.ua/companies/acme/vacancies/2000/",
+        sample("dou/detail.html"),
+    )
+    run_parse(settings, ["dou"], date(2026, 11, 2), missing=True)
+
+    assert _scalar(settings, "SELECT count(*) FROM silver_vacancies") == 41

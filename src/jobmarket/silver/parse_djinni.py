@@ -86,7 +86,10 @@ def parse_djinni_vacancy(html: str, url: str, *, fetched_on: date) -> ParsedVaca
 
     title = str(posting.get("title") or "").strip()
     organization = posting.get("hiringOrganization")
-    company = str(organization.get("name") or "").strip() if isinstance(organization, dict) else ""
+    if isinstance(organization, dict):
+        company = str(organization.get("name") or "").strip()
+    else:  # an employer who hides the name is the bare string "confidential"
+        company = str(organization or "").strip()
     if not title or not company:
         raise ParseError(f"title or company missing: {url}")
 
