@@ -64,11 +64,19 @@ class VacancyGroup:
     salary_id: str | None  # member whose salary represents the group, if any member has one
 
 
+# Employers who hide their name: different companies behind one word, so never one block.
+HIDDEN_EMPLOYERS = frozenset({"confidential", "anonymous", "конфіденційно", "анонімно"})
+
+
 def normalize_company(name: str) -> str:
-    """Company key: no bracketed notes, legal forms or punctuation ("Digis (a Fiverr company)")."""
+    """Company key: no bracketed notes, legal forms or punctuation ("Digis (a Fiverr company)").
+
+    Empty for an employer who hides the name: such vacancies are never grouped with each other.
+    """
     without_notes = re.sub(r"\([^)]*\)", " ", name)
     without_forms = _LEGAL_FORMS.sub(" ", without_notes)
-    return re.sub(r"[^a-z0-9а-яіїєґ]+", "", without_forms.casefold())
+    key = re.sub(r"[^a-z0-9а-яіїєґ]+", "", without_forms.casefold())
+    return "" if key in HIDDEN_EMPLOYERS else key
 
 
 def _seniority_conflict(title_a: str, title_b: str) -> bool:
@@ -128,7 +136,9 @@ def group_vacancies(vacancies: list[DedupInput]) -> list[VacancyGroup]:
     by_id = {v.id: v for v in vacancies}
     blocks: dict[str, list[DedupInput]] = {}
     for vacancy in vacancies:
-        blocks.setdefault(normalize_company(vacancy.company), []).append(vacancy)
+        key = normalize_company(vacancy.company)
+        # An unknown employer gets a block of its own, so it is compared with nobody.
+        blocks.setdefault(key or f"\0{vacancy.id}", []).append(vacancy)
 
     components = _UnionFind(list(by_id))
     edges: dict[frozenset[str], MatchKind] = {}

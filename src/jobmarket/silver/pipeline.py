@@ -20,6 +20,10 @@ from jobmarket.skills.dictionary import DictionaryExtractor
 from jobmarket.skills.dictionary_step import apply_dictionary_skills, load_taxonomy_into_silver
 from jobmarket.skills.taxonomy import load_taxonomy
 
+# A few pages that do not match the parser are normal (odd vacancies); a large share means the
+# site changed its markup, and then the run must fail so that somebody looks.
+MAX_FAILED_SHARE = 0.05
+
 
 def _days_to_parse(
     source: str, bronze: BronzeStore, ops: OpsStore, run_date: date, *, missing: bool
@@ -34,7 +38,7 @@ def _days_to_parse(
 def run_parse(
     settings: Settings, sources: Sequence[str], run_date: date, *, missing: bool = False
 ) -> int:
-    """Parse and enrich ``sources``; returns 1 when some pages no longer match their parser."""
+    """Parse and enrich ``sources``; returns 1 when too many pages no longer match their parser."""
     ops = OpsStore(settings.duckdb_path)
     silver = SilverStore(settings.duckdb_path)
     bronze = BronzeStore(settings.bronze_dir)
@@ -88,7 +92,7 @@ def run_parse(
 def _parse_day(
     source: str, day: date, *, bronze: BronzeStore, silver: SilverStore, ops: OpsStore
 ) -> bool:
-    """Parse one stored day of one source; True when some pages no longer match the parser."""
+    """Parse one stored day of one source; True when too many pages no longer match the parser."""
     task_id = ops.start_task("parse", source, day)
     try:
         stats = parse_source(source, day, bronze=bronze, silver=silver, run_id=task_id)
@@ -103,4 +107,9 @@ def _parse_day(
     listed = listed_vacancy_ids(bronze, source, day)
     silver.add_sightings(listed, day)
     logger.info("sightings {}: {} vacancies listed on {}", source, len(listed), day)
-    return stats.failed > 0
+    too_many = stats.failed > MAX_FAILED_SHARE * stats.pages
+    if stats.failed and not too_many:
+        logger.warning(
+            "{}: {} of {} pages did not match the parser", task_id, stats.failed, stats.pages
+        )
+    return too_many

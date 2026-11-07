@@ -166,3 +166,45 @@ def test_parsed_dates_only_count_finished_runs(tmp_path: Path) -> None:
     assert ops.parsed_dates("dou") == {date(2026, 11, 1)}
     assert ops.parsed_dates("djinni") == set()
     ops.close()
+
+
+def _day_with_pages(tmp_path: Path, good: int, broken: int) -> Settings:
+    store = BronzeStore(tmp_path / "bronze")
+    day = date(2026, 11, 1)
+    for i in range(good):
+        _put(
+            store,
+            "dou",
+            day,
+            f"https://jobs.dou.ua/companies/acme/vacancies/{1000 + i}/",
+            sample("dou/detail.html"),
+        )
+    for i in range(broken):
+        _put(
+            store,
+            "dou",
+            day,
+            f"https://jobs.dou.ua/companies/acme/vacancies/{2000 + i}/",
+            b"<html>new markup</html>",
+        )
+    return Settings(bronze_dir=tmp_path / "bronze", duckdb_path=tmp_path / "test.duckdb")
+
+
+def test_a_few_unreadable_pages_do_not_fail_the_run(tmp_path: Path) -> None:
+    settings = _day_with_pages(tmp_path, good=40, broken=1)  # 2.4% of the pages
+
+    assert run_parse(settings, ["dou"], date(2026, 11, 1)) == 0
+    assert _scalar(settings, "SELECT count(*) FROM silver_vacancies") == 40
+    assert _scalar(settings, "SELECT status FROM ops_task_runs WHERE task = 'parse'") == "partial"
+
+
+def test_many_unreadable_pages_mean_the_markup_changed_and_fail_the_run(tmp_path: Path) -> None:
+    settings = _day_with_pages(tmp_path, good=10, broken=3)  # 23% of the pages
+
+    assert run_parse(settings, ["dou"], date(2026, 11, 1)) == 1
+
+
+def test_a_day_where_nothing_can_be_read_fails_the_run(tmp_path: Path) -> None:
+    settings = _day_with_pages(tmp_path, good=0, broken=5)
+
+    assert run_parse(settings, ["dou"], date(2026, 11, 1)) == 1

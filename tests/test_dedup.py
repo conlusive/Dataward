@@ -154,6 +154,14 @@ def test_an_identical_text_with_a_slightly_different_title_is_one_vacancy() -> N
     assert match_kind(first, second) == "exact"
 
 
+def test_hidden_employers_are_never_compared_with_each_other() -> None:
+    first = _v("djinni:1", company="confidential", source="djinni")
+    second = _v("djinni:2", company="confidential", source="djinni")  # the very same text
+
+    assert normalize_company("confidential") == ""
+    assert len(group_vacancies([first, second])) == 2
+
+
 def test_the_same_text_in_two_companies_is_not_a_duplicate() -> None:
     groups = group_vacancies([_v("dou:1", company="Acme"), _v("dou:2", company="Other")])
 

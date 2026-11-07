@@ -119,3 +119,14 @@ def test_html_to_text_keeps_blocks_and_joins_inline_markup() -> None:
     html = "<p>We&nbsp;need a <b>Senior</b> dev</p><ul><li>one</li><li>two</li></ul>a<br>b"
 
     assert html_to_text(html) == "We need a Senior dev\none\ntwo\na\nb"
+
+
+def test_a_hidden_employer_is_kept_with_the_word_the_site_gives() -> None:
+    html = sample("djinni/detail.html").decode()
+    start = html.index('"hiringOrganization"')
+    end = html.index("}", start) + 1
+    hidden = html[:start] + '"hiringOrganization": "confidential"' + html[end:]
+
+    vacancy = parse_djinni_vacancy(hidden, DJINNI_URL, fetched_on=FETCHED)
+
+    assert vacancy.company == "confidential" and vacancy.title == "Python/Spark/AI Developer_TT"
