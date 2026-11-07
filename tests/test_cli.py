@@ -22,3 +22,7 @@ def test_parse_of_an_empty_bronze_succeeds() -> None:
 def test_unknown_source_is_rejected_by_argparse() -> None:
     with pytest.raises(SystemExit):
         main(["parse", "work_ua", "--run-date", "2026-11-06"])
+
+
+def test_parse_surveys_of_an_empty_bronze_succeeds() -> None:
+    assert main(["parse-surveys"]) == 0

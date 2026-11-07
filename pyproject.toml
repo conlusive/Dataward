@@ -8,6 +8,7 @@ dependencies = [
     "duckdb>=2.0.0",
     "httpx>=0.28.1",
     "loguru>=0.7.3",
+    "pyyaml>=6.0.3",
     "selectolax>=1.0.2",
     "tenacity>=9.2.1",
 ]

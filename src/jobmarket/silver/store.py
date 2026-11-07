@@ -7,6 +7,12 @@ import duckdb
 
 from jobmarket.silver.model import ParsedVacancy
 
+# (row_no, position, experience_years, city, english, company_size, company_type, salary_usd,
+# weight): one answer of a DOU survey as stored in silver_dou_salaries.
+SurveyRecord = tuple[
+    int, str | None, float | None, str | None, str | None, str | None, str | None, float, float
+]
+
 _DDL = """
 CREATE TABLE IF NOT EXISTS silver_vacancies (
     id VARCHAR PRIMARY KEY,
@@ -42,6 +48,26 @@ CREATE TABLE IF NOT EXISTS silver_nbu_rates (
     currency VARCHAR NOT NULL,
     rate DOUBLE NOT NULL,  -- UAH per 1 unit of currency
     PRIMARY KEY (rate_date, currency)
+)
+"""
+
+_SURVEY_DDL = """
+CREATE TABLE IF NOT EXISTS silver_dou_salaries (
+    survey_date DATE NOT NULL,  -- first day of the survey month
+    wave VARCHAR NOT NULL,  -- e.g. 2024_june
+    row_no INTEGER NOT NULL,  -- position of the answer in its file
+    position VARCHAR,
+    experience_years DOUBLE,
+    city VARCHAR,
+    english VARCHAR,
+    company_size VARCHAR,
+    company_type VARCHAR,
+    salary_usd DOUBLE NOT NULL,  -- per month, net
+    weight DOUBLE NOT NULL,  -- respondents this row stands for (aggregated waves)
+    _run_id VARCHAR NOT NULL,
+    _loaded_at TIMESTAMP NOT NULL,
+    _source_file VARCHAR NOT NULL,
+    PRIMARY KEY (_source_file, row_no)
 )
 """
 
@@ -81,6 +107,7 @@ class SilverStore:
         self._con = duckdb.connect(str(db_path))
         self._con.execute(_DDL)
         self._con.execute(_RATES_DDL)
+        self._con.execute(_SURVEY_DDL)
 
     def close(self) -> None:
         self._con.close()
@@ -189,3 +216,43 @@ class SilverStore:
             + (" AND source = ?" if source else ""),
             [source] if source else [],
         )
+
+    def replace_survey_file(
+        self,
+        source_file: str,
+        wave: str,
+        survey_date: date,
+        rows: list[SurveyRecord],
+        *,
+        run_id: str,
+        loaded_at: datetime,
+    ) -> None:
+        """Replace everything loaded from one survey file, atomically.
+
+        rows: (row_no, position, experience_years, city, english, company_size, company_type,
+        salary_usd, weight).
+        """
+        self._con.execute("BEGIN TRANSACTION")
+        try:
+            self._con.execute(
+                "DELETE FROM silver_dou_salaries WHERE _source_file = ?", [source_file]
+            )
+            if rows:
+                # One statement per file: unnest() of equally long list parameters is ~100x
+                # faster in DuckDB than executemany row by row (14k rows: 0.02 s vs 3.6 s).
+                columns = [list(column) for column in zip(*rows, strict=True)]
+                self._con.execute(
+                    "INSERT INTO silver_dou_salaries "
+                    "SELECT ?, ?, r.row_no, r.position, r.experience_years, r.city, r.english, "
+                    "r.company_size, r.company_type, r.salary_usd, r.weight, ?, ?, ? FROM ("
+                    "SELECT unnest(?::INTEGER[]) AS row_no, unnest(?::VARCHAR[]) AS position, "
+                    "unnest(?::DOUBLE[]) AS experience_years, unnest(?::VARCHAR[]) AS city, "
+                    "unnest(?::VARCHAR[]) AS english, unnest(?::VARCHAR[]) AS company_size, "
+                    "unnest(?::VARCHAR[]) AS company_type, unnest(?::DOUBLE[]) AS salary_usd, "
+                    "unnest(?::DOUBLE[]) AS weight) r",
+                    [survey_date, wave, run_id, loaded_at, source_file, *columns],
+                )
+            self._con.execute("COMMIT")
+        except Exception:
+            self._con.execute("ROLLBACK")
+            raise
