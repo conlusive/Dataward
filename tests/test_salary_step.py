@@ -84,3 +84,9 @@ def test_recomputing_gives_the_same_result_and_clears_stale_values(silver: Silve
     apply_salaries(silver, "dou")
 
     assert _salary(silver, "dou:4") == (None, None, None, None)
+
+
+def test_a_source_without_vacancies_is_a_no_op(silver: SilverStore) -> None:
+    stats = apply_salaries(silver, "dou")
+
+    assert stats.vacancies == 0

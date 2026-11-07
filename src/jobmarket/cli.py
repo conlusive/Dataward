@@ -16,8 +16,10 @@ from jobmarket.ops import OpsStore
 from jobmarket.registry import DAILY_SOURCES, SOURCES
 from jobmarket.runner import run_source
 from jobmarket.silver.build import PARSERS, parse_source
+from jobmarket.silver.rates import load_nbu_rates, missing_rate_dates, needed_rate_dates
 from jobmarket.silver.salary_step import apply_salaries
 from jobmarket.silver.store import SilverStore
+from jobmarket.silver.usd import apply_usd
 
 
 def _default_run_date() -> date:
@@ -50,7 +52,28 @@ def _build_parser() -> argparse.ArgumentParser:
         default=None,
         help="YYYY-MM-DD; defaults to $RUN_DATE or today (UTC)",
     )
+    commands.add_parser(
+        "fetch-rates", help="download NBU rates for the dates that silver salaries need"
+    )
     return parser
+
+
+async def _fetch_rates() -> int:
+    settings = Settings.from_env()
+    ops = OpsStore(settings.duckdb_path)
+    silver = SilverStore(settings.duckdb_path)
+    try:
+        bronze = BronzeStore(settings.bronze_dir)
+        missing = missing_rate_dates(bronze, needed_rate_dates(silver))
+        logger.info("NBU rates missing for {} dates", len(missing))
+        exit_code = 0
+        for day in missing:
+            stats = await run_source("nbu_rates", day, settings=settings, ops=ops)
+            exit_code = 1 if stats.errors else exit_code
+        return exit_code
+    finally:
+        silver.close()
+        ops.close()
 
 
 def _parse(sources: Sequence[str], run_date: date) -> int:
@@ -60,6 +83,7 @@ def _parse(sources: Sequence[str], run_date: date) -> int:
     bronze = BronzeStore(settings.bronze_dir)
     exit_code = 0
     try:
+        logger.info("NBU rates loaded from bronze: {} rows", load_nbu_rates(bronze, silver))
         for source in sources:
             task_id = ops.start_task("parse", source, run_date)
             try:
@@ -79,6 +103,11 @@ def _parse(sources: Sequence[str], run_date: date) -> int:
             )
             logger.info("{} {}: {}", task_id, status, stats)
             logger.info("salaries {}: {}", source, apply_salaries(silver, source))
+            usd = apply_usd(silver, source)
+            logger.info("usd {}: {}", source, usd)
+            if usd.missing_dates:
+                days = ", ".join(sorted(d.isoformat() for d in usd.missing_dates))
+                logger.warning("no NBU rate for {}; run `jobmarket fetch-rates`", days)
             if stats.failed:
                 exit_code = 1
     finally:
@@ -107,6 +136,8 @@ async def _scrape(
 
 def main(argv: Sequence[str] | None = None) -> int:
     args = _build_parser().parse_args(argv)
+    if args.command == "fetch-rates":
+        return asyncio.run(_fetch_rates())
     run_date: date = args.run_date or _default_run_date()
     if args.command == "parse":
         return _parse(tuple(PARSERS) if args.source == "all" else (args.source,), run_date)

@@ -1,6 +1,6 @@
 """silver_vacancies in DuckDB. Parser-owned columns are upserted; later steps own the rest."""
 
-from datetime import datetime
+from datetime import date, datetime
 from pathlib import Path
 
 import duckdb
@@ -33,6 +33,15 @@ CREATE TABLE IF NOT EXISTS silver_vacancies (
     _loaded_at TIMESTAMP NOT NULL,
     _source_file VARCHAR NOT NULL,
     _fetched_at TIMESTAMP NOT NULL
+)
+"""
+
+_RATES_DDL = """
+CREATE TABLE IF NOT EXISTS silver_nbu_rates (
+    rate_date DATE NOT NULL,
+    currency VARCHAR NOT NULL,
+    rate DOUBLE NOT NULL,  -- UAH per 1 unit of currency
+    PRIMARY KEY (rate_date, currency)
 )
 """
 
@@ -71,6 +80,7 @@ class SilverStore:
         db_path.parent.mkdir(parents=True, exist_ok=True)
         self._con = duckdb.connect(str(db_path))
         self._con.execute(_DDL)
+        self._con.execute(_RATES_DDL)
 
     def close(self) -> None:
         self._con.close()
@@ -119,8 +129,63 @@ class SilverStore:
         self, rows: list[tuple[str, str | None, float | None, float | None, str | None]]
     ) -> None:
         """rows: (id, salary_raw, salary_min, salary_max, salary_currency)."""
+        if not rows:
+            return
         self._con.executemany(
             "UPDATE silver_vacancies SET salary_raw = ?, salary_min = ?, salary_max = ?, "
             "salary_currency = ? WHERE id = ?",
             [(raw, low, high, cur, vid) for vid, raw, low, high, cur in rows],
+        )
+
+    def upsert_rates(self, rows: list[tuple[date, str, float]]) -> None:
+        if not rows:  # DuckDB rejects executemany with no parameter sets
+            return
+        self._con.executemany(
+            "INSERT INTO silver_nbu_rates (rate_date, currency, rate) VALUES (?, ?, ?) "
+            "ON CONFLICT (rate_date, currency) DO UPDATE SET rate = excluded.rate",
+            rows,
+        )
+
+    def rates(self, currencies: tuple[str, ...]) -> dict[str, dict[date, float]]:
+        found: dict[str, dict[date, float]] = {c: {} for c in currencies}
+        placeholders = ", ".join("?" for _ in currencies)
+        for rate_date, currency, rate in self._con.execute(
+            "SELECT rate_date, currency, rate FROM silver_nbu_rates "
+            f"WHERE currency IN ({placeholders})",
+            list(currencies),
+        ).fetchall():
+            found[currency][rate_date] = rate
+        return found
+
+    def salary_rows(
+        self, source: str | None = None
+    ) -> list[tuple[str, str, float | None, float | None, date]]:
+        """(id, currency, min, max, rate date) of vacancies with a salary; the rate date is the
+        publication date, or the day the page was fetched when the page has none."""
+        where = "salary_currency IS NOT NULL" + (" AND source = ?" if source else "")
+        rows = self._con.execute(
+            "SELECT id, salary_currency, salary_min, salary_max, "
+            "coalesce(published_at, CAST(_fetched_at AS DATE)) "
+            f"FROM silver_vacancies WHERE {where} ORDER BY id",
+            [source] if source else [],
+        ).fetchall()
+        return [(r[0], r[1], r[2], r[3], r[4]) for r in rows]
+
+    def set_usd(self, rows: list[tuple[str, float | None, float | None]]) -> None:
+        """rows: (id, salary_usd_min, salary_usd_max)."""
+        if not rows:
+            return
+        self._con.executemany(
+            "UPDATE silver_vacancies SET salary_usd_min = ?, salary_usd_max = ? WHERE id = ?",
+            [(low, high, vid) for vid, low, high in rows],
+        )
+
+    def clear_usd_without_salary(self, source: str | None = None) -> None:
+        """A vacancy that lost its salary must not keep USD amounts computed from the old one."""
+        self._con.execute(
+            "UPDATE silver_vacancies SET salary_usd_min = NULL, salary_usd_max = NULL "
+            "WHERE salary_currency IS NULL "
+            "AND (salary_usd_min IS NOT NULL OR salary_usd_max IS NOT NULL)"
+            + (" AND source = ?" if source else ""),
+            [source] if source else [],
         )
