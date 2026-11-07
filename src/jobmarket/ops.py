@@ -45,6 +45,22 @@ CREATE TABLE IF NOT EXISTS ops_task_runs (
 )
 """
 
+_LLM_USAGE_DDL = """
+CREATE TABLE IF NOT EXISTS ops_llm_usage (
+    run_id VARCHAR PRIMARY KEY,
+    model VARCHAR NOT NULL,
+    prompt_version VARCHAR NOT NULL,
+    vacancies INTEGER NOT NULL,
+    calls INTEGER NOT NULL,
+    cache_hits INTEGER NOT NULL,
+    failed INTEGER NOT NULL,
+    prompt_tokens INTEGER NOT NULL,
+    completion_tokens INTEGER NOT NULL,
+    cost_usd DOUBLE NOT NULL,
+    created_at TIMESTAMP NOT NULL
+)
+"""
+
 
 @dataclass
 class ScrapeStats:
@@ -68,6 +84,7 @@ class OpsStore:
         self._con = duckdb.connect(str(db_path))
         self._con.execute(_DDL)
         self._con.execute(_TASK_DDL)
+        self._con.execute(_LLM_USAGE_DDL)
 
     def close(self) -> None:
         self._con.close()
@@ -147,3 +164,34 @@ class OpsStore:
             [source],
         ).fetchall()
         return {row[0] for row in rows}
+
+    def add_llm_usage(
+        self,
+        run_id: str,
+        model: str,
+        prompt_version: str,
+        *,
+        vacancies: int,
+        calls: int,
+        cache_hits: int,
+        failed: int,
+        prompt_tokens: int,
+        completion_tokens: int,
+        cost_usd: float,
+    ) -> None:
+        self._con.execute(
+            "INSERT INTO ops_llm_usage VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            [
+                run_id,
+                model,
+                prompt_version,
+                vacancies,
+                calls,
+                cache_hits,
+                failed,
+                prompt_tokens,
+                completion_tokens,
+                cost_usd,
+                _utc_now(),
+            ],
+        )
