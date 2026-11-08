@@ -14,9 +14,12 @@ from pathlib import Path
 import duckdb
 import yaml
 
+from jobmarket.skill_clusters import cluster_skills
+
 SCHEMA_FILE = Path("warehouse/models/marts/schema.yml")
 EXPORT_DIR = Path("data/export")
 SUMMARY_FILE = "last_update.json"
+CLUSTERS_TABLE = "skill_clusters"  # computed here from fct_skill_pairs, not a dbt model
 
 
 class ExportError(Exception):
@@ -47,6 +50,39 @@ def _check(con: duckdb.DuckDBPyConnection, table: str, expected: list[tuple[str,
         raise ExportError(f"{table}: columns {actual} do not match the contract {expected}")
 
 
+def _write_clusters(con: duckdb.DuckDBPyConnection, target: Path) -> int:
+    pairs = [
+        (a, b, float(npmi))
+        for a, b, npmi in con.execute(
+            "SELECT skill_a, skill_b, npmi FROM fct_skill_pairs WHERE npmi IS NOT NULL"
+        ).fetchall()
+    ]
+    members = cluster_skills(pairs)
+    memory = duckdb.connect()
+    try:
+        memory.execute(
+            "CREATE TABLE c (skill_id VARCHAR, cluster_id INTEGER, cluster_size INTEGER, "
+            "cluster_label VARCHAR)"
+        )
+        if members:
+            memory.execute(
+                "INSERT INTO c SELECT unnest(?::VARCHAR[]), unnest(?::INTEGER[]), "
+                "unnest(?::INTEGER[]), unnest(?::VARCHAR[])",
+                [
+                    [m.skill_id for m in members],
+                    [m.cluster_id for m in members],
+                    [m.cluster_size for m in members],
+                    [m.cluster_label for m in members],
+                ],
+            )
+        memory.execute(
+            f"COPY (SELECT * FROM c ORDER BY cluster_id, skill_id) TO '{target}' (FORMAT parquet)"
+        )
+    finally:
+        memory.close()
+    return len(members)
+
+
 def export_gold(
     db_path: Path,
     *,
@@ -68,11 +104,15 @@ def export_gold(
             _check(con, table, columns)
         counts: dict[str, int] = {}
         files: dict[str, dict[str, object]] = {}
-        for table in expected:
+        derived = (CLUSTERS_TABLE,) if "fct_skill_pairs" in expected else ()
+        for table in (*expected, *derived):
             target = staging / f"{table}.parquet"
-            # table names come from our own schema.yml, never from user input
-            con.execute(f"COPY (SELECT * FROM {table}) TO '{target}' (FORMAT parquet)")
-            counts[table] = int(con.execute(f"SELECT count(*) FROM {table}").fetchall()[0][0])
+            if table == CLUSTERS_TABLE:
+                counts[table] = _write_clusters(con, target)
+            else:
+                # table names come from our own schema.yml, never from user input
+                con.execute(f"COPY (SELECT * FROM {table}) TO '{target}' (FORMAT parquet)")
+                counts[table] = int(con.execute(f"SELECT count(*) FROM {table}").fetchall()[0][0])
             files[table] = {
                 "rows": counts[table],
                 "bytes": target.stat().st_size,

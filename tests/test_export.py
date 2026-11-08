@@ -95,3 +95,44 @@ def test_a_missing_table_says_to_build_first(tmp_path: Path, schema: Path) -> No
 
     with pytest.raises(ExportError, match="table not found"):
         export_gold(db, schema_file=schema, out_dir=tmp_path / "export")
+
+
+def test_skill_clusters_are_written_next_to_the_pairs_they_come_from(tmp_path: Path) -> None:
+    schema = tmp_path / "schema.yml"
+    schema.write_text(
+        """
+models:
+  - name: fct_skill_pairs
+    config: {contract: {enforced: true}}
+    columns:
+      - {name: skill_a, data_type: varchar}
+      - {name: skill_b, data_type: varchar}
+      - {name: npmi, data_type: double}
+""",
+        encoding="utf-8",
+    )
+    db = _database(
+        tmp_path,
+        "CREATE TABLE fct_skill_pairs AS "
+        "SELECT skill_a, skill_b, npmi::DOUBLE AS npmi FROM (VALUES "
+        "('python','django',0.8), ('python','flask',0.7), ('django','flask',0.6), "
+        "('go','kafka',0.1)) t(skill_a, skill_b, npmi)",
+    )
+    out = tmp_path / "export"
+
+    counts = export_gold(db, schema_file=schema, out_dir=out)
+
+    assert counts == {"fct_skill_pairs": 4, "skill_clusters": 3}
+    rows = (
+        duckdb.connect()
+        .execute(
+            f"SELECT skill_id, cluster_id, cluster_size, cluster_label "
+            f"FROM '{out / 'skill_clusters.parquet'}' ORDER BY skill_id"
+        )
+        .fetchall()
+    )
+    assert rows == [
+        ("django", 1, 3, "python"),
+        ("flask", 1, 3, "python"),
+        ("python", 1, 3, "python"),
+    ]
