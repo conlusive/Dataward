@@ -39,6 +39,7 @@ with unreadable pages is parsed again after a parser fix.
 - [x] A fixture and a test for a hidden employer (PR #13).
 - [x] A check that separates "a few odd pages" from "the markup changed": `parse_failures` in
       `jobmarket dq` (warn 1%, error 5%), stored in `ops_dq_results`.
-- [x] A failed run is reported without anyone opening Actions: the Telegram message names the failed
-      step and the check that said why (it needs the bot secrets, see docs/observability.md).
+- [ ] A failed run is reported without anyone opening Actions: the Telegram message names the failed
+      step and the check that said why. Implemented; it works once `TELEGRAM_BOT_TOKEN` and
+      `TELEGRAM_CHAT_ID` are set as GitHub secrets (see docs/observability.md).
 - [ ] Keep a real unreadable page when one appears, as a fixture, so each new page type becomes a test.
