@@ -1,5 +1,7 @@
 # Data and secrets
 data/bronze/
+data/export/
+data/export.tmp/
 .env
 *.duckdb
 *.duckdb.wal

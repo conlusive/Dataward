@@ -1,4 +1,4 @@
-.PHONY: install lint test test-all scrape parse dbt-build gold
+.PHONY: install lint test test-all scrape parse dbt-build export gold
 
 install:
 	uv sync
@@ -27,6 +27,10 @@ parse:
 dbt-build:
 	uv run dbt snapshot --project-dir warehouse --profiles-dir warehouse
 	uv run dbt build --project-dir warehouse --profiles-dir warehouse
+
+# Gold marts -> parquet in data/export (needs `make dbt-build` first).
+export:
+	uv run jobmarket export
 
 # Label the gold set: `make gold` writes the sheet, edit it, then `uv run jobmarket gold-import`
 # and `uv run jobmarket gold-eval`. See the README.

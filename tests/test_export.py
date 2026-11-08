@@ -1,0 +1,97 @@
+import json
+from datetime import UTC, datetime
+from pathlib import Path
+
+import duckdb
+import pytest
+
+from jobmarket.export import SCHEMA_FILE, ExportError, contracts, export_gold
+
+SCHEMA = """
+version: 2
+models:
+  - name: dim_thing
+    config: {contract: {enforced: true}}
+    columns:
+      - name: thing_id
+        data_type: varchar
+      - name: size
+        data_type: integer
+  - name: not_published
+    columns:
+      - name: x
+        data_type: integer
+"""
+
+
+@pytest.fixture
+def schema(tmp_path: Path) -> Path:
+    path = tmp_path / "schema.yml"
+    path.write_text(SCHEMA, encoding="utf-8")
+    return path
+
+
+def _database(tmp_path: Path, create: str) -> Path:
+    path = tmp_path / "t.duckdb"
+    con = duckdb.connect(str(path))
+    con.execute(create)
+    con.close()
+    return path
+
+
+GOOD = "CREATE TABLE dim_thing AS SELECT 'a' AS thing_id, 3 AS size UNION ALL SELECT 'b', 4"
+
+
+def test_only_models_with_an_enforced_contract_are_published(schema: Path) -> None:
+    assert contracts(schema) == {"dim_thing": [("thing_id", "VARCHAR"), ("size", "INTEGER")]}
+
+
+def test_the_real_project_publishes_its_marts() -> None:
+    published = set(contracts(SCHEMA_FILE))
+
+    assert {"dim_skill", "fct_skill_pairs", "fct_vacancy_daily"} <= published
+
+
+def test_a_table_is_written_as_parquet_with_a_summary(tmp_path: Path, schema: Path) -> None:
+    db = _database(tmp_path, GOOD)
+    out = tmp_path / "export"
+    now = datetime(2026, 11, 9, 12, 0, tzinfo=UTC)
+
+    counts = export_gold(db, schema_file=schema, out_dir=out, now=now)
+
+    assert counts == {"dim_thing": 2}
+    rows = (
+        duckdb.connect()
+        .execute(f"SELECT thing_id, size FROM '{out / 'dim_thing.parquet'}' ORDER BY 1")
+        .fetchall()
+    )
+    assert rows == [("a", 3), ("b", 4)]
+    summary = json.loads((out / "last_update.json").read_text(encoding="utf-8"))
+    assert summary["exported_at"] == "2026-11-09T12:00:00+00:00"
+    assert summary["tables"]["dim_thing"]["rows"] == 2
+    assert len(summary["tables"]["dim_thing"]["sha256"]) == 64
+
+
+def test_a_column_with_the_wrong_type_stops_the_export_and_keeps_the_previous_files(
+    tmp_path: Path, schema: Path
+) -> None:
+    out = tmp_path / "export"
+    export_gold(_database(tmp_path, GOOD), schema_file=schema, out_dir=out)
+    before = (out / "dim_thing.parquet").read_bytes()
+    bad = tmp_path / "bad.duckdb"
+    con = duckdb.connect(str(bad))
+    con.execute("CREATE TABLE dim_thing AS SELECT 'a' AS thing_id, 'big' AS size")
+    con.close()
+
+    with pytest.raises(ExportError, match="do not match the contract"):
+        export_gold(bad, schema_file=schema, out_dir=out)
+
+    assert (out / "dim_thing.parquet").read_bytes() == before
+    assert not (tmp_path / "export.tmp").exists()
+
+
+def test_a_missing_table_says_to_build_first(tmp_path: Path, schema: Path) -> None:
+    db = _database(tmp_path, "CREATE TABLE other AS SELECT 1 AS x")
+
+    with pytest.raises(ExportError, match="table not found"):
+        export_gold(db, schema_file=schema, out_dir=tmp_path / "export")

@@ -3,20 +3,30 @@ version: 2
 models:
   - name: fct_vacancy_daily
     description: One row per vacancy and day while the vacancy is open (see the model for the rules).
+    config:
+      contract: {enforced: true}
     columns:
       - name: vacancy_day_key
+        data_type: varchar
         data_tests: [unique, not_null]
       - name: date
+        data_type: date
         data_tests: [not_null]
       - name: vacancy_id
+        data_type: varchar
         data_tests: [not_null]
       - name: status
+        data_type: varchar
         data_tests:
           - not_null
           - accepted_values:
               arguments:
                 values: [new, active, closed]
       - name: lifetime_days
+        data_type: integer
+        data_tests: [not_null]
+      - name: left_censored
+        data_type: boolean
         data_tests: [not_null]
 
   - name: dim_skill
