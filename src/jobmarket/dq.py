@@ -28,6 +28,11 @@ SALARY_DROP_WARN, SALARY_DROP_ERROR = 0.10, 0.20
 SALARY_RECENT_DAYS, SALARY_MIN_SAMPLE = 7, 20
 SIGHTING_GAP_WARN, SIGHTING_GAP_ERROR = 0.10, 0.30
 PARSE_FAILED_WARN, PARSE_FAILED_ERROR = 0.01, 0.05
+# Drift of what the parsers produce, newest fetch day vs the earlier days. Only ever a warning: a
+# shifted distribution is a reason to look, not to stop the export.
+DRIFT_MIN_SAMPLE = 20
+SALARY_SHARE_DRIFT_WARN = 0.15  # absolute change in the share of vacancies with a salary string
+DESCRIPTION_DRIFT_WARN = 0.40  # relative change in the mean description length
 
 
 @dataclass(frozen=True)
@@ -50,14 +55,19 @@ def _judge(
     observed: float,
     *,
     warn: float,
-    error: float,
+    error: float | None,
     detail: str,
     higher_is_bad: bool = True,
 ) -> CheckResult:
+    """``error=None`` makes a check that can only warn."""
+
     def tripped(limit: float) -> bool:
         return observed >= limit if higher_is_bad else observed <= limit
 
-    status = "error" if tripped(error) else ("warn" if tripped(warn) else "pass")
+    if error is not None and tripped(error):
+        status = "error"
+    else:
+        status = "warn" if tripped(warn) else "pass"
     return CheckResult(name, layer, observed, warn, error, status, detail)
 
 
@@ -218,6 +228,58 @@ def check_salary_parse_rate(con: Con, now: datetime) -> CheckResult:
     )
 
 
+def _fetch_day_windows(
+    con: Con, expression: str
+) -> tuple[tuple[float, int], tuple[float, int]] | None:
+    """(mean, count) of ``expression`` for the newest fetch day and for the days before; None when
+    either side has fewer than DRIFT_MIN_SAMPLE vacancies."""
+    rows = con.execute(
+        f"SELECT CAST(_fetched_at AS DATE) = (SELECT max(CAST(_fetched_at AS DATE)) "
+        f"FROM silver_vacancies) AS newest, avg({expression}), count(*) "
+        "FROM silver_vacancies GROUP BY 1"
+    ).fetchall()
+    by_side = {bool(newest): (float(mean or 0.0), int(n)) for newest, mean, n in rows}
+    newest_side, earlier = by_side.get(True), by_side.get(False)
+    if not newest_side or not earlier:
+        return None
+    if min(newest_side[1], earlier[1]) < DRIFT_MIN_SAMPLE:
+        return None
+    return newest_side, earlier
+
+
+def check_salary_share_drift(con: Con, now: datetime) -> CheckResult:
+    windows = _fetch_day_windows(
+        con, "CASE WHEN salary_raw IS NOT NULL AND trim(salary_raw) <> '' THEN 1.0 ELSE 0.0 END"
+    )
+    if windows is None:
+        return _skipped("salary_share_drift", "silver", "too few vacancies on one side to compare")
+    (newest, _), (earlier, _) = windows
+    return _judge(
+        "salary_share_drift",
+        "silver",
+        abs(newest - earlier),
+        warn=SALARY_SHARE_DRIFT_WARN,
+        error=None,
+        detail=f"{newest:.0%} of the newest vacancies state a salary, {earlier:.0%} of the earlier",
+    )
+
+
+def check_description_length_drift(con: Con, now: datetime) -> CheckResult:
+    windows = _fetch_day_windows(con, "length(description_text)")
+    if windows is None:
+        return _skipped("description_length_drift", "silver", "too few vacancies to compare")
+    (newest, _), (earlier, _) = windows
+    change = abs(newest - earlier) / earlier if earlier else 0.0
+    return _judge(
+        "description_length_drift",
+        "silver",
+        change,
+        warn=DESCRIPTION_DRIFT_WARN,
+        error=None,
+        detail=f"mean description {newest:.0f} characters (newest) vs {earlier:.0f} (earlier)",
+    )
+
+
 def check_references(con: Con, now: datetime) -> CheckResult:
     orphans = {
         "skill rows with an unknown skill id": "SELECT count(*) FROM silver_vacancy_skills s "
@@ -320,6 +382,8 @@ CHECKS: tuple[tuple[str, Callable[[Con, datetime], CheckResult]], ...] = (
     ("silver", check_vacancies_without_skills),
     ("silver", check_salary_range),
     ("silver", check_salary_parse_rate),
+    ("silver", check_salary_share_drift),
+    ("silver", check_description_length_drift),
     ("silver", check_sightings_have_pages),
     ("silver", check_parse_failures),
     ("gold", check_gold_built),

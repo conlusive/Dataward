@@ -73,6 +73,23 @@ def backfill_steps(start: date, end: date) -> list[Step]:
     ]
 
 
+def trigger_from_env(flow: str) -> str:
+    """cron | manual | backfill, from the environment the run was started in."""
+    if flow == "backfill":
+        return "backfill"
+    return {"schedule": "cron", "workflow_dispatch": "manual"}.get(
+        os.environ.get("GITHUB_EVENT_NAME", ""), "manual"
+    )
+
+
+def run_url_from_env() -> str | None:
+    """The GitHub Actions run, when running there."""
+    server = os.environ.get("GITHUB_SERVER_URL")
+    repo = os.environ.get("GITHUB_REPOSITORY")
+    run_id = os.environ.get("GITHUB_RUN_ID")
+    return f"{server}/{repo}/actions/runs/{run_id}" if server and repo and run_id else None
+
+
 def subprocess_runner(step: Step, env: dict[str, str]) -> int:
     """Run the step's command with its own timeout; a timeout is exit code 124."""
     try:
@@ -90,9 +107,13 @@ def run_flow(
     only: Sequence[str] | None = None,
     runner: Runner = subprocess_runner,
     sleep: Callable[[float], None] = time.sleep,
+    flow: str = "daily",
 ) -> list[StepResult]:
     """Run the steps in order; ``only`` limits the run to some of them (their needs among the
-    selected steps still apply, a need that was not selected counts as met)."""
+    selected steps still apply, a need that was not selected counts as met).
+
+    The whole run is a row in `ops_pipeline_runs` (flow, trigger, link to the Actions run, which
+    steps failed), next to the per-attempt rows in `ops_task_runs`."""
     names = {step.name for step in steps}
     unknown = set(only or ()) - names
     if unknown:
@@ -100,6 +121,7 @@ def run_flow(
     selected = [s for s in steps if only is None or s.name in only]
     env = {**os.environ, "RUN_DATE": run_date.isoformat()}
     results: dict[str, StepResult] = {}
+    pipeline_id = _pipeline_start(db_path, flow, run_date)
 
     for step in selected:
         blocked = [n for n in step.needs if n in results and results[n].status != "success"]
@@ -108,7 +130,28 @@ def run_flow(
             results[step.name] = StepResult(step.name, "skipped", 0, 0.0, f"needs {blocked[0]}")
             continue
         results[step.name] = _run_step(step, run_date, db_path, env, runner, sleep)
-    return [results[s.name] for s in selected]
+    ordered = [results[s.name] for s in selected]
+    _pipeline_finish(db_path, pipeline_id, ordered)
+    return ordered
+
+
+def _pipeline_start(db_path: Path, flow: str, run_date: date) -> str:
+    ops = OpsStore(db_path)
+    try:
+        return ops.start_pipeline(
+            flow, run_date, trigger=trigger_from_env(flow), run_url=run_url_from_env()
+        )
+    finally:
+        ops.close()
+
+
+def _pipeline_finish(db_path: Path, run_id: str, results: Sequence[StepResult]) -> None:
+    failed = [r.name for r in results if r.status == "failed"]
+    ops = OpsStore(db_path)
+    try:
+        ops.finish_pipeline(run_id, "failed" if failed else "success", failed)
+    finally:
+        ops.close()
 
 
 def _run_step(

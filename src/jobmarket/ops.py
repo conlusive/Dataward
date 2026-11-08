@@ -76,6 +76,22 @@ CREATE TABLE IF NOT EXISTS ops_dq_results (
 )
 """
 
+_PIPELINE_DDL = """
+CREATE TABLE IF NOT EXISTS ops_pipeline_runs (
+    run_id VARCHAR PRIMARY KEY,  -- flow-daily-2026-11-09-1
+    flow VARCHAR NOT NULL,  -- daily | backfill
+    run_date DATE NOT NULL,
+    attempt INTEGER NOT NULL,
+    started_at TIMESTAMP NOT NULL,
+    finished_at TIMESTAMP,
+    status VARCHAR NOT NULL,  -- running | success | failed
+    trigger VARCHAR NOT NULL,  -- cron | manual | backfill
+    run_url VARCHAR,  -- the GitHub Actions run, when there is one
+    failed_steps VARCHAR,  -- comma-separated step names, NULL when none
+    UNIQUE (flow, run_date, attempt)
+)
+"""
+
 
 @dataclass
 class ScrapeStats:
@@ -101,6 +117,7 @@ class OpsStore:
         self._con.execute(_TASK_DDL)
         self._con.execute(_LLM_USAGE_DDL)
         self._con.execute(_DQ_DDL)
+        self._con.execute(_PIPELINE_DDL)
 
     def close(self) -> None:
         self._con.close()
@@ -170,6 +187,30 @@ class OpsStore:
             "UPDATE ops_task_runs SET finished_at = ?, status = ?, rows_in = ?, rows_out = ?, "
             "rows_failed = ?, error = ? WHERE run_id = ?",
             [_utc_now(), status, rows_in, rows_out, rows_failed, error, run_id],
+        )
+
+    def start_pipeline(
+        self, flow: str, run_date: date, *, trigger: str, run_url: str | None
+    ) -> str:
+        row = self._con.execute(
+            "SELECT coalesce(max(attempt), 0) + 1 FROM ops_pipeline_runs "
+            "WHERE flow = ? AND run_date = ?",
+            [flow, run_date],
+        ).fetchone()
+        attempt = int(row[0]) if row else 1
+        run_id = f"flow-{flow}-{run_date.isoformat()}-{attempt}"
+        self._con.execute(
+            "INSERT INTO ops_pipeline_runs (run_id, flow, run_date, attempt, started_at, status, "
+            "trigger, run_url) VALUES (?, ?, ?, ?, ?, 'running', ?, ?)",
+            [run_id, flow, run_date, attempt, _utc_now(), trigger, run_url],
+        )
+        return run_id
+
+    def finish_pipeline(self, run_id: str, status: str, failed_steps: list[str]) -> None:
+        self._con.execute(
+            "UPDATE ops_pipeline_runs SET finished_at = ?, status = ?, failed_steps = ? "
+            "WHERE run_id = ?",
+            [_utc_now(), status, ",".join(failed_steps) or None, run_id],
         )
 
     def add_dq_results(

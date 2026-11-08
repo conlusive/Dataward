@@ -155,6 +155,51 @@ def test_a_fall_in_parsed_salaries_is_found_by_comparing_recent_and_earlier_page
     assert result.status == "error" and result.observed == pytest.approx(1 - 12 / 25)
 
 
+# ---- drift -----------------------------------------------------------------------------------
+def _two_windows(db: Path, earlier_salary: bool, newest_salary: bool, n: int = 25) -> None:
+    for i in range(n):
+        _add(db, f"dou:old{i}", fetched=NOW - timedelta(days=30),
+             salary_raw="1000 USD" if earlier_salary else None)  # fmt: skip
+        _add(db, f"dou:new{i}", fetched=NOW - timedelta(hours=2),
+             salary_raw="1000 USD" if newest_salary else None)  # fmt: skip
+
+
+@pytest.mark.parametrize(("newest_salary", "status"), [(True, "pass"), (False, "warn")])
+def test_a_jump_in_the_share_of_vacancies_with_a_salary_warns_but_never_fails(
+    db: Path, newest_salary: bool, status: str
+) -> None:
+    _two_windows(db, earlier_salary=True, newest_salary=newest_salary)
+
+    result = _check(db, "salary_share_drift")
+
+    assert result.status == status and result.error is None
+
+
+@pytest.mark.parametrize(("newest_length", "status"), [(105, "pass"), (400, "warn"), (20, "warn")])
+def test_a_change_in_the_mean_description_length_warns(
+    db: Path, newest_length: int, status: str
+) -> None:
+    _two_windows(db, earlier_salary=False, newest_salary=False)
+    _sql(
+        db,
+        "UPDATE silver_vacancies SET description_text = repeat('x', 100) WHERE id LIKE 'dou:old%'",
+    )
+    _sql(
+        db,
+        "UPDATE silver_vacancies SET description_text = repeat('x', ?) WHERE id LIKE 'dou:new%'",
+        [newest_length],
+    )
+
+    assert _check(db, "description_length_drift").status == status
+
+
+def test_drift_is_not_judged_on_a_handful_of_vacancies(db: Path) -> None:
+    _two_windows(db, earlier_salary=True, newest_salary=False, n=5)
+
+    assert _check(db, "salary_share_drift").status == "skipped"
+    assert _check(db, "description_length_drift").status == "skipped"
+
+
 # ---- references ------------------------------------------------------------------------------
 def test_rows_pointing_at_missing_parents_are_an_error(db: Path) -> None:
     _add(db, "dou:1")
@@ -240,7 +285,7 @@ def test_the_command_stores_every_result_and_exits_1_only_for_an_error(
 
     stored = _results(db)
     assert stored["fresh_data"] == "error" and stored["schema_contract"] == "pass"
-    assert len(stored) == 11
+    assert len(stored) == 13
 
 
 def test_warnings_alone_do_not_stop_the_run(db: Path, monkeypatch: pytest.MonkeyPatch) -> None:
