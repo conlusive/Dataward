@@ -1,0 +1,559 @@
+position_raw,role,seniority
+2D Artist,designer,
+3D Artist,designer,
+AI Director,data,lead
+AI Engineer,data,
+AI ML Consultant,data,
+ASO Specialist / ASO Manager,management,
+Account Executive (Sales),sales,
+Account Manager,sales,
+Account Manager / Account Executive,sales,
+Account Manager Account Executive,sales,
+Account Payable IT Bill Auditor,other,
+Accountant,other,
+Administrative Assistant,other,
+Administrative Manager,management,
+Affiliate Manager,management,
+Agile Coach,other,
+Analog engineer (IC design),designer,
+"Analyst (Business, Data, System etc)",analyst,
+"Analyst (Business, Data, System)",analyst,
+Analytics Engineer,software_engineer,
+Analytics Team Lead,software_engineer,lead
+Animator,designer,
+Animator (Animator 2D / Animator 3D / Technical Animator),designer,
+Animator 2D,designer,
+Animator 3D,designer,
+Anti-Fraud Analyst,analyst,
+Application Architect,software_engineer,lead
+Application Manager,management,
+Application security engineer,security,
+Architect,software_engineer,lead
+Art Director,management,lead
+Art manager,management,
+Artist / Animator,designer,
+Automation QA / AQA,qa,
+Automation QA AQA,qa,
+BI Analyst,analyst,
+BI Engineer,software_engineer,
+Billing Operations Specialist / Payment Operations / P2P Specialist (Procurement),other,
+Billing Operations Specialist Payment Operations,other,
+Brand Designer / Marketing Designer,marketing,
+Brand Designer Marketing Designer,marketing,
+Brand Manager,management,
+Brand manager,management,
+Business Analyst,analyst,
+Business Analyst (BA),analyst,
+Business Architect,software_engineer,lead
+Business Consultant,other,
+Business Development Manager,sales,
+Business analyst,analyst,
+C#/.NET,software_engineer,
+C++,software_engineer,
+CAO (Chief Administrative Officer),other,
+CAO (Chief Analytics Officer),other,
+CBDO (Chief Business Development Officer),sales,
+CCO (Chief Commercial Officer),other,
+CEO,management,
+CEO / C-level (Chief) / Director / VP,management,lead
+CEO / founder / cofounder,management,
+CEO Founder Cofounder,management,
+"CEO, (co-) founder",management,
+CFO (Chief Financial Officer),other,
+CHRO (Chief Human Resources Officer),management,
+CIO (Chief Information Officer),other,
+CLO (Chief Legal Officer),other,
+CMO (Chief Marketing Officer),marketing,
+COO (Chief Operating Officer),management,
+CPO (Chief Product Officer),project_manager,
+CRM Manager,management,
+CSO (Chief Security Officer),security,
+CSR Lead,software_engineer,lead
+CTO,management,lead
+CTO (Chief Technology Officer) / Technical Director,management,lead
+CTO (Chief Technology Officer) Technical Director,management,lead
+Career development manager,management,
+Character Artist,designer,
+Chief Growth Officer,other,
+Chief Marketing Officer (CMO),marketing,
+Client Partner / Engagement manager,management,
+Client Partner Engagement Manager,management,
+Cloud Architect,software_engineer,lead
+Cloud Engineer,software_engineer,
+Communications Specialist,other,
+Community Manager,management,
+Compensation and Benefit Specialist,other,
+Compliance Manager,management,
+Computer Vision Engineer,software_engineer,
+Computer Vision Engineer (CV),software_engineer,
+Concept Artist,designer,
+Concept artist,designer,
+Config Analyst (+java codescripts),analyst,
+Configuration Engineer,software_engineer,
+Content Manager / Content Marketing Manager,marketing,
+Content Manager Content Marketing Manager,marketing,
+Content Producer,project_manager,
+Content Writer,other,
+Control Engineer,software_engineer,
+Copywriter,marketing,
+Country Manager,management,
+Creative Director,management,lead
+Creative Marketing Specialist,marketing,
+Cryptography engineer,software_engineer,
+Customer Success,support,
+Customer Success Manager,support,
+Customer Support,support,
+Cybersecurity Engineer,security,
+DBA,database,
+DBA (Database Administrator),database,
+DBA (Database administrator),database,
+DBA / Администратор баз данных,database,
+DBRE (Database Reliability Engineer),database,
+Data Analyst,analyst,
+Data Architect,software_engineer,lead
+Data Engineer,data,
+Data Engineer / Big Data Engineer,data,
+Data Engineer Big Data Engineer,data,
+Data Engineering Lead Data Lead,data,lead
+Data Labeling Specialist,other,
+Data QA,qa,
+Data Science,data,
+"Data Science, Machine Learning, AI, Big Data, Data Engineer",data,
+"Data Science, Machine Learning, Big Data",data,
+"Data Science, Machine Learning, Big Data, Data Engineer",data,
+Data Scientist,data,
+Data Scientist / Data Analyst,data,
+Data administrator,other,
+Database Developer,database,
+Deep Learning Engineer,software_engineer,
+Delivery Director,management,lead
+Delivery Manager,project_manager,
+Deputy IT Manager,management,
+"Design and UI/UX (Graphic, Video, UX/UI)",designer,
+Design team lead,designer,lead
+Designer,designer,
+"Designer / Artist (Graphic, UX/UI, Game, Artist, Sound etc.)",designer,
+"Designer / Artist (Graphic, Video, UX/UI)",designer,
+Designer Generalist,designer,
+DevOps,devops,
+DevOps Architect,devops,lead
+DevOps Engineer,devops,
+DevOps Tech Lead,devops,lead
+"DevOps, SRE",devops,
+"DevOps, SRE, Operations",devops,
+"DevOps, SysAdmin",devops,
+Digital Adoption Engineer,software_engineer,
+Digital Marketing Manager,marketing,
+Director of Engineering,management,lead
+Director of Engineering / Program Director,management,lead
+Dispatcher USA,other,
+E-learning Specialist,other,
+ERP / CRM,software_engineer,
+ERP/CRM,software_engineer,
+ERP/CRM/SAP Consultant,software_engineer,
+ERPCRMSAP Consultant,other,
+Education Manager,management,
+Electronics Engineer,software_engineer,
+Email Marketing Specialist,marketing,
+Email Marketing Specialist / E-mail Marketing specialist,marketing,
+Email Marketing Specialist E-mail Marketing Specialist,marketing,
+Embedded,software_engineer,
+Embedded QA,qa,
+Employee Engagement Manager /Employee experience Manager,management,
+Employer Brand Manager,management,
+Employer Brand Manager Brand Manager,management,
+Engagement lead,software_engineer,lead
+Engineering Lead,software_engineer,lead
+Engineering Manager,management,
+Environment Artist,designer,
+Event Manager,management,
+Executive Assistant,other,
+Finance /Accounting /Internal Audit,other,
+Finance Manager / Financial Manager / Financial controller,management,
+Finance Manager Financial Manager Financial Controller,management,
+Financial Analyst,analyst,
+Flex/Flash/AIR,other,
+Game Analyst,analyst,
+"Game Design (Game, Level, Narrative)",designer,
+Game Designer,designer,
+Game Developer,software_engineer,
+Game Developer / Programmer,project_manager,
+Game Economy Designer,designer,
+Game Mathematician,other,
+Game Producer,project_manager,
+Game designer,designer,
+Gamedev,other,
+General QA,qa,
+Generalist Artist,designer,
+Graphic Designer,designer,
+Graphic/Web designer,designer,
+Growth Marketing Manager / Growth Manager,marketing,
+Growth Marketing Manager Growth Manager,marketing,
+HR,hr,
+HR Administrator,hr,
+HR Analyst / People Analyst,hr,
+HR Business Partner,hr,
+HR Coordinator,hr,
+HR Director,hr,lead
+HR Director (HRD),hr,lead
+HR Generalist,hr,
+HR Lead,hr,lead
+HR Manager,hr,
+HR Manager / HR specialist,hr,
+HR Manager HR Specialist,hr,
+HR Marketing Specialist,hr,
+HR Operations Specialist / People Operations Specialist,hr,
+HR Operations Specialist People Operations Specialist,hr,
+HR People Partner,hr,
+HR/Recruiter,hr,
+HR/Recruiter/Learning and Development,hr,
+HTML Coder,frontend_coder,
+HTML coder,frontend_coder,
+HTML/CSS/JavaScript,software_engineer,
+Hardware Engineer,software_engineer,
+Head,management,lead
+Head Of Content,management,lead
+Head of AI,data,lead
+Head of Academy,management,lead
+Head of Affiliates,management,lead
+Head of Analytics,management,lead
+Head of Architecture,management,lead
+Head of BA Office,management,lead
+Head of Business Development,sales,lead
+Head of CRM,management,lead
+Head of CX (customer experience),management,lead
+Head of Client Relations,management,lead
+Head of Client Service,management,lead
+Head of Cloud,management,lead
+Head of Communications,management,lead
+Head of Content,management,lead
+Head of Corporate Strategy,management,lead
+Head of Customer Success,support,lead
+Head of Customer Support,support,lead
+Head of Data Science,data,lead
+Head of Delivery,project_manager,lead
+Head of Design,designer,lead
+Head of DevOps,devops,lead
+Head of DevOps & IT,devops,lead
+Head of Development,management,lead
+Head of Digital Marketing,marketing,lead
+Head of Engineering,management,lead
+Head of Engineering / Head of Development,management,lead
+Head of Finance,management,lead
+Head of Frontend,frontend_coder,lead
+Head of HR,hr,lead
+Head of IT Sector,management,lead
+Head of Information Security,security,lead
+Head of Learning and Development Department,hr,lead
+Head of Legal,management,lead
+Head of Maintenance,management,lead
+Head of Marketing,marketing,lead
+Head of Mobile,management,lead
+Head of Operations,management,lead
+Head of PMO,management,lead
+Head of PPC,marketing,lead
+Head of PR,marketing,lead
+Head of Partnerships,management,lead
+Head of Product,project_manager,lead
+Head of Product Design,designer,lead
+Head of QA,qa,lead
+Head of Recruitment,hr,lead
+Head of Retention,management,lead
+Head of SEO,marketing,lead
+Head of SMM,marketing,lead
+Head of SRE,devops,lead
+Head of Sales,sales,lead
+Head of Support,support,lead
+Head of Talent Acquisition,hr,lead
+Head of UX/UI,management,lead
+Head of UXUI,management,lead
+Head of User Acquisition,management,lead
+Head of division (banking sphere),management,lead
+Head of information infrastructure,management,lead
+Helpdesk Engineer,support,
+IT Auditor,other,
+IT Business Partner,other,
+IT Consultant,other,
+IT Director,management,lead
+Illustrator,other,
+Incident Manager,management,
+Influencer marketing manager,marketing,
+Information Security Specialist,security,
+Information security specialist,security,
+Infrastructure Engineer,software_engineer,
+Infrastructure Engineer IT Engineer,software_engineer,
+Instructional Designer,designer,
+Integration Architect,software_engineer,lead
+Integrations Engineer / Integration Manager,management,
+Integrations Engineer Integration Manager,management,
+Intern manual QA Engineer,qa,intern
+Intern/Trainee,other,intern
+Internal Auditor,other,
+Java,software_engineer,
+Junior,software_engineer,junior
+Junior QA,qa,junior
+Junior QA engineer,qa,junior
+Junior Software Engineer,software_engineer,junior
+KYC specialist,other,
+L&D Lead / Learning & Development Lead,software_engineer,lead
+LMS Administrator,other,
+Lawyer,other,
+Lead,software_engineer,lead
+Lead Generation Specialist,software_engineer,lead
+Lead Product Designer,designer,lead
+Lead/Team Lead,software_engineer,lead
+Learning and Development / Training and Development,hr,
+Learning and Development Training and Development,hr,
+Legal,other,
+Legal Counsel,other,
+Level Artist,designer,
+Level Designer,designer,
+Level artist,designer,
+Lightibg Artist,designer,
+Link Builder,other,
+Linkbuilder,other,
+LiveOps Specialist,other,
+Localization Manager,management,
+Localization specialist / Translator,other,
+Logistics,other,
+ML Engineer (Machine Learning),data,
+MLOps Engineer,software_engineer,
+Machine Learning Engineer,data,
+Manager,management,
+Manual QA,qa,
+Market Research Specialist,other,
+Marketing,marketing,
+Marketing Assistant,marketing,
+Marketing Data Analyst / Marketing Analyst,marketing,
+Marketing Data Analyst Marketing Analyst,marketing,
+Marketing Director,marketing,lead
+Marketing Manager,marketing,
+Marketing Project Manager / Marketing Operations Manager,marketing,
+"Marketing, PR, SEO, Copywriter",marketing,
+"Marketing, SEO, Copywriter",marketing,
+Mechanical Design Engineer,designer,
+Media Buyer,other,
+Middle,software_engineer,middle
+Mobile,software_engineer,
+Motion Designer,designer,
+NLP Engineer,software_engineer,
+NOC Engineer,software_engineer,
+Narrative Designer,designer,
+Network Engineer,software_engineer,
+Network Security Engineer,security,
+Objective-C,other,
+Office Manager / Office Administrator / Office Coordinator,management,
+Office manager,management,
+Onboarding manager,management,
+Operations Analyst,analyst,
+Operations Director,management,lead
+Operations Manager,management,
+Oracle,software_engineer,
+Other,other,
+Other (впишіть свій варіант),other,
+Outreach Specialist,other,
+P2P Specialist (Procurement),other,
+PHP,software_engineer,
+PIVOT Product Manager,project_manager,
+PPC Specialist,marketing,
+PR Manager,marketing,
+Partner Enablement Specialist,other,
+Partnership Manager,management,
+Partnership manager,management,
+Payments Manager,management,
+Penetration Tester,qa,
+Penetration Tester / Pentester,security,
+Penetration Tester Pentester,security,
+People partner / Happiness manager,management,
+Performance Analyst,analyst,
+Performance QA,qa,
+Presales Manager,management,
+Principal,software_engineer,lead
+Process manager,management,
+Producer / Creative Producer,project_manager,
+Producer Creative Producer,project_manager,
+Product Analyst,analyst,
+Product Designer,designer,
+Product Manager,project_manager,
+Product Marketing Manager,marketing,
+Product Owner,project_manager,
+Product Owner (роль в скрамі),project_manager,
+Product Owner (у продакт менеджменті),project_manager,
+Program Director,management,lead
+Program Manager,project_manager,
+"Project / Product / Program Manager, Product Owner, Scrum Master, Delivery Manager",project_manager,
+Project Coordinator,project_manager,
+Project Manager,project_manager,
+Project Manager (PM),project_manager,
+Project manager,project_manager,
+"Project/Product/Program Manager, Product Owner, Scrum Master, Delivery Manager",project_manager,
+"Project/Product/Program/Delivery/Engineering Manager, Product Owner, Producer, Scrum Master",project_manager,
+Python,software_engineer,
+QA,qa,
+"QA / AQA / QC Engineer (Junior, Middle, Senior, Team/Tech Lead, Manager)",qa,
+"QA / AQA Engineer (Junior, Middle, Senior, Team/Tech Lead, Manager)",qa,
+QA Engineer,qa,
+"QA Engineer (Junior, Middle, Senior, Team / Tech Lead, Manager)",qa,
+"QA Engineer (Junior, Middle, Senior, Team/Tech Lead, Manager)",qa,
+QA Lead,qa,lead
+QA Manager,qa,
+QA Manager / QC Manager,qa,
+QA Manager QC Manager,qa,
+QA TeamLead,qa,
+QA Tech Lead,qa,lead
+QA engineer,qa,
+QA/Testing,qa,
+Qality Control of Content Moderation,other,
+Quality Architect / Test Architect,qa,lead
+R&D Manager / RnD Manager,management,
+R&D Manager RnD Manager,management,
+Recruiter,hr,
+Recruiter / Recruitment Specialist / Technical Recruiter,hr,
+Recruiter Recruitment Specialist Technical Recruiter,hr,
+Recruitment Assistant,hr,
+Release Manager,management,
+Rendering engineer,software_engineer,
+Research Analyst,analyst,
+Research Engineer,software_engineer,
+Research Scientist,other,
+Researcher,other,
+Resource Manager,management,
+Retention Manager,management,
+Reverse Engineer,software_engineer,
+Risk Manager,management,
+Risk manager,management,
+Ruby/Rails,software_engineer,
+SDET (Software Development Engineer in Test),software_engineer,
+SEO Specialist,marketing,
+SERM спеціаліст,other,
+SMM (Social Media Manager),marketing,
+SMM Manager,marketing,
+SOC Automation Engineer,software_engineer,
+SOC Engineer / SecOps Engineer,software_engineer,
+SRE (Site Reliability Engineer),devops,
+Sales / Business Development,sales,
+Sales / Business Development / Lead Generation,sales,lead
+Sales Development Representative,sales,
+Sales Director,sales,lead
+Sales Manager,sales,
+Sales Manager Sales Executive Sales Operations,sales,
+Sales enablement manager,sales,
+Sales manager,sales,
+Sales manager / Sales Executive / Sales Operations,sales,
+Salesforce Consultant,other,
+Scraping specialist,other,
+Scriptwriter,other,
+Scrum Master,project_manager,
+Security Analyst / SOC Analyst,security,
+Security Analyst SOC Analyst,security,
+Security Architect,security,lead
+Security Engineer,security,
+Security Specialist,security,
+Senior,software_engineer,senior
+Senior Learning Experience Designer,designer,senior
+Senior Project Manager / Program Manager,project_manager,senior
+Senior Project manager / Program Manager,project_manager,senior
+Senior QA Engineer,qa,senior
+Senior QA engineer,qa,senior
+Senior Software Engineer,software_engineer,senior
+Service Designer,designer,
+Service Desk Specialist,other,
+Site Reliability Engineer,software_engineer,
+Software Architect,software_engineer,lead
+Software Engineer,software_engineer,
+"Software Engineer (Junior, Middle, Senior, Team / Tech Lead, Architect)",software_engineer,
+"Software Engineer (Junior, Middle, Senior, Team/Tech Lead, Architect)",software_engineer,
+"Software Engineer / Developer (frontend, backend, mobile, gamedev, embedded etc )",frontend_coder,
+Software Engineer / Programmer,project_manager,
+Software Engineer Developer (frontend backend mobile gamedev embedded etc),frontend_coder,
+Software Quality Assurance Analyst,qa,
+Solution Architect,software_engineer,lead
+Sound Designer,designer,
+Sound Specialist / Designer,designer,
+Staff,software_engineer,lead
+Statistical Programmer Analyst,analyst,
+Strategy Analyst,analyst,
+Strategy Consultant,other,
+Support,support,
+"Support (Customer, Technical, Community)",support,
+Support QA,support,
+SysAdmin,devops,
+Sysadmin,devops,
+System Analyst,analyst,
+System Architect,software_engineer,lead
+System Architect / Системный архитектор,software_engineer,lead
+System Engineer,software_engineer,
+System engineer,software_engineer,
+Talent Acquisition Manager,hr,
+Talent Advisor,hr,
+Talent Manager Talent Partner,hr,
+Talent Researcher,hr,
+Talent Researcher / Sourcer,hr,
+Talent Sourcer / Talent Researcher / Recruitment Researcher,hr,
+Talent Sourcer Talent Researcher Recruitment Researcher,hr,
+Teacher / Lecturer,other,
+Teacher Lecturer,other,
+Team Lead,software_engineer,lead
+Team Lead (for SE & QA: Lead + Team Lead),qa,lead
+Team lead,software_engineer,lead
+Team/Technical Lead,software_engineer,lead
+Tech Lead,software_engineer,lead
+Tech Lead / Engineering Lead,software_engineer,lead
+Tech Lead Engineering Lead,software_engineer,lead
+TechOps Engineer,software_engineer,
+Technical Animator,designer,
+Technical Artist,designer,
+Technical Game Designer,designer,
+Technical Lead,software_engineer,lead
+Technical Product Manager,project_manager,
+Technical Project Manager,project_manager,
+Technical Support,support,
+Technical Writer Techwriter,technical_writer,
+Technical writer,technical_writer,
+Technical writer / Techwriter,technical_writer,
+Treasury Manager,management,
+UI / UX Designer,designer,
+UI/UX Artist,designer,
+UI/UX Designer,designer,
+UI/UX Game Designer,designer,
+UI/UX Researcher,other,
+UI/UX Writer,other,
+UIUX Artist,designer,
+UIUX Designer,designer,
+UIUX Researcher,other,
+UIUX Writer,other,
+UX web analyst,analyst,
+Ui/Ux and graphic designer,designer,
+User Acquisition Manager,management,
+VFX Artist,designer,
+VP of Engineering,management,
+VP of Product,management,
+Video Editor Video Maker,other,
+Web / UX analyst,analyst,
+Web Analyst,analyst,
+Web Designer,designer,
+brand management,other,
+customer support general manager,support,
+freelance,other,
+monitoring engineer,software_engineer,
+support,support,
+Інженер БпЛА Drone Engineer UAV Engineer,software_engineer,
+Інженер-конструктор,other,
+Бизнес-аналитик,analyst,
+Верстальщик,frontend_coder,
+Всі,other,
+Гейм-дизайнер,designer,
+Головний спеціаліст держоргану відділу цифровізації,other,
+Дизайнер,designer,
+Заступник директора департаменту маркетингу,marketing,
+Керівник підрозділу ІТ(представництва в кожному регіоні),management,
+Менеджер з аудіоконтролю,other,
+Немає тайтлу,other,
+Радіоінженер,other,
+СIO (Chief information Officer),other,
+"СTO, Director of Engineering, Program Director",management,lead
+"СTO, Director of Engineering, Program Director, CEO, (co-)founder",management,lead
+"СTO, Director of Engineering, Program Director, COO, CEO, (co-)founder",management,lead
+"СTO, Director of Engineering, Program Director, COO, CEO, (co-)founder, Head of R&D",management,lead
+Системный администратор,devops,
+Технический писатель,technical_writer,
