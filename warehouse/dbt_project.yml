@@ -9,7 +9,18 @@ test-paths: ["tests"]
 target-path: "target"
 clean-targets: ["target", "dbt_packages"]
 
+vars:
+  # Below these sizes a percentile or a ratio is noise, so the mart does not publish the row.
+  min_pair_support: 5
+  min_salary_n: 10
+  min_survey_respondents: 30
+  min_lifetime_n: 10
+
 models:
   jobmarket:
+    staging:
+      +materialized: view
+    intermediate:
+      +materialized: view
     marts:
       +materialized: table

@@ -28,3 +28,53 @@ sources:
             data_tests: [not_null]
           - name: seen_date
             data_tests: [not_null]
+
+      - name: silver_skills
+        columns:
+          - name: skill_id
+            data_tests: [unique, not_null]
+          - name: parent_id
+            data_tests:
+              - relationships:
+                  arguments:
+                    to: source('silver', 'silver_skills')
+                    field: skill_id
+
+      - name: silver_vacancy_skills
+        columns:
+          - name: vacancy_id
+            data_tests: [not_null]
+          - name: skill_id
+            data_tests:
+              - not_null
+              - relationships:
+                  arguments:
+                    to: source('silver', 'silver_skills')
+                    field: skill_id
+
+      - name: silver_vacancy_groups
+        columns:
+          - name: dedup_group_id
+            data_tests: [unique, not_null]
+
+      - name: silver_dou_salaries
+        description: >
+          DOU survey answers. A position or city missing from the seeds (position_map, city_map) is only
+          a warning: regenerate the seeds with `jobmarket make-seeds` after loading new waves.
+        columns:
+          - name: position
+            data_tests:
+              - relationships:
+                  arguments:
+                    to: ref('position_map')
+                    field: position_raw
+                  config:
+                    severity: warn
+          - name: city
+            data_tests:
+              - relationships:
+                  arguments:
+                    to: ref('city_map')
+                    field: city_raw
+                  config:
+                    severity: warn
