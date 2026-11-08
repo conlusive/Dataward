@@ -1,4 +1,4 @@
-.PHONY: install lint test test-all scrape scrape-surveys parse backfill dbt-build dq export gold
+.PHONY: install lint test test-all scrape scrape-surveys parse backfill dbt-build dq dq-silver dq-gold pipeline export docker-build docker-pipeline gold
 
 install:
 	uv sync
@@ -43,6 +43,25 @@ dbt-build:
 # Data-quality checks on silver and gold; exit 1 when a check is at error level.
 dq:
 	uv run jobmarket dq
+
+# The same checks by layer: silver before dbt (bad silver data must not reach gold), gold after.
+dq-silver:
+	uv run jobmarket dq --layer silver
+
+dq-gold:
+	uv run jobmarket dq --layer gold
+
+# The whole daily flow with retries, timeouts, step dependencies and ops rows.
+# Usage: make pipeline [RUN_DATE=YYYY-MM-DD]
+pipeline:
+	uv run jobmarket flow daily $(if $(RUN_DATE),--run-date $(RUN_DATE),)
+
+# The pipeline in a container (see docker-compose.yml); data stays in ./data.
+docker-build:
+	docker compose build pipeline
+
+docker-pipeline:
+	docker compose run --rm pipeline
 
 # Gold marts -> parquet in data/export (needs `make dbt-build` first).
 export:

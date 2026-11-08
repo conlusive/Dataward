@@ -49,48 +49,18 @@ jobs:
           restore-keys: bronze-
 
       - run: uv sync --frozen
-      - name: Scrape
-        run: make scrape
 
-      # The survey is published twice a year, so this normally downloads nothing new.
-      - name: Scrape survey waves
-        run: make scrape-surveys
+      # One command runs the whole flow: scrape, survey, parse, silver checks, dbt, gold checks,
+      # export. Each step has its own timeout and retries, a failed step skips the steps that need
+      # it (bad silver data never reaches gold), and every attempt is a row in `ops_task_runs`.
+      # The Telegram secrets are optional: without them no message is sent.
+      - name: Run the pipeline
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: make pipeline
 
-      # Save even when the scrape failed part-way: what was downloaded is still valid bronze.
-      - name: Save bronze
-        if: always()
-        uses: actions/cache/save@v4
-        with:
-          path: |
-            data/bronze
-            data/jobmarket.duckdb
-          key: bronze-${{ github.run_id }}-${{ github.run_attempt }}
-
-      # Silver and the dbt layer. The bronze above is already saved, so a failure here is red in
-      # the run but loses no scraped data; the state is saved again afterwards either way.
-      - name: Parse into silver
-        run: make parse
-
-      - name: dbt snapshot and build
-        run: make dbt-build
-
-      # An `error` here stops the run before the export, so consumers keep the last good files; a
-      # `warn` is shown as an annotation on the run and the pipeline goes on.
-      - name: Data-quality checks
-        run: make dq
-
-      # Parquet for the dashboards, checked against the dbt contracts; kept as a run artifact until
-      # the publishing target (phase 5/6) exists.
-      - name: Export gold
-        run: make export
-
-      - name: Upload gold export
-        uses: actions/upload-artifact@v4
-        with:
-          name: gold-export
-          path: data/export
-          retention-days: 14
-
+      # Save even when a step failed: what was scraped and parsed is still valid.
       - name: Save bronze and silver
         if: always()
         uses: actions/cache/save@v4
@@ -113,3 +83,13 @@ jobs:
           for row in rows:
               print(row)
           EOF
+
+      # Parquet for the dashboards, kept as a run artifact until the publishing target exists.
+      - name: Upload gold export
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: gold-export
+          path: data/export
+          retention-days: 14
+          if-no-files-found: ignore

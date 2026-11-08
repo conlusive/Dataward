@@ -13,10 +13,12 @@ from loguru import logger
 
 from jobmarket.bronze import BronzeStore
 from jobmarket.config import Settings
-from jobmarket.dq import run_checks
+from jobmarket.dq import LAYERS, run_checks
 from jobmarket.export import EXPORT_DIR, ExportError, export_gold
+from jobmarket.flow import backfill_steps, daily_steps, run_flow, summarize
 from jobmarket.gold_commands import evaluate, import_labels, make_sheet
 from jobmarket.gold_seeds import write_seeds
+from jobmarket.notify import send_telegram
 from jobmarket.ops import OpsStore
 from jobmarket.registry import DAILY_SOURCES, SOURCES
 from jobmarket.runner import run_source
@@ -59,6 +61,14 @@ def _build_parser() -> argparse.ArgumentParser:
     scrape.add_argument(
         "--max-pages", type=int, default=None, help="cap listing pages per category (for testing)"
     )
+    flow_cmd = commands.add_parser(
+        "flow", help="run a whole flow (steps, retries, timeouts, ops rows): daily or backfill"
+    )
+    flow_cmd.add_argument("name", choices=["daily", "backfill"])
+    flow_cmd.add_argument("--run-date", type=date.fromisoformat, default=None)
+    flow_cmd.add_argument("--from", dest="start", type=date.fromisoformat, default=None)
+    flow_cmd.add_argument("--to", dest="end", type=date.fromisoformat, default=None)
+    flow_cmd.add_argument("--only", default=None, help="comma-separated steps to run")
     backfill = commands.add_parser(
         "backfill",
         help="re-parse the stored bronze days of a date range into silver (no network)",
@@ -123,9 +133,10 @@ def _build_parser() -> argparse.ArgumentParser:
         "export",
         help="write the gold marts to data/export as parquet, checked against the contracts",
     )
-    commands.add_parser(
+    dq_cmd = commands.add_parser(
         "dq", help="data-quality checks; exit 1 on an error (a warning only reports)"
     )
+    dq_cmd.add_argument("--layer", choices=LAYERS, default=None, help="only this layer's checks")
     review_cmd = commands.add_parser(
         "skills-review", help="list the most frequent skills the taxonomy does not know yet"
     )
@@ -218,12 +229,33 @@ def _gold(args: argparse.Namespace) -> int:
         silver.close()
 
 
-def _dq() -> int:
+def _flow(args: argparse.Namespace) -> int:
+    run_date: date = args.run_date or _default_run_date()
+    if args.name == "backfill":
+        if args.start is None or args.end is None or args.start > args.end:
+            logger.error("flow backfill needs --from and --to, with --from not after --to")
+            return 2
+        steps = backfill_steps(args.start, args.end)
+    else:
+        steps = daily_steps()
+    only = args.only.split(",") if args.only else None
+    try:
+        results = run_flow(steps, run_date, Settings.from_env().duckdb_path, only=only)
+    except ValueError as error:
+        logger.error("{}", error)
+        return 2
+    summary = summarize(args.name, run_date, results)
+    logger.info("flow summary\n{}", summary)
+    send_telegram(summary)
+    return 0 if all(r.status == "success" for r in results) else 1
+
+
+def _dq(layer: str | None) -> int:
     settings = Settings.from_env()
-    results = run_checks(settings.duckdb_path)
+    results = run_checks(settings.duckdb_path, layer=layer)
     today = datetime.now(UTC).date()
     ops = OpsStore(settings.duckdb_path)
-    task_id = ops.start_task("dq", "all", today)
+    task_id = ops.start_task("dq", layer or "all", today)
     ops.add_dq_results(
         task_id,
         [(r.name, r.layer, r.observed, r.warn, r.error, r.status, r.detail) for r in results],
@@ -356,7 +388,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     if args.command in ("gold-sample", "gold-import", "gold-eval"):
         return _gold(args)
     if args.command == "dq":
-        return _dq()
+        return _dq(args.layer)
     if args.command == "export":
         return _export()
     if args.command == "make-seeds":
@@ -365,6 +397,8 @@ def main(argv: Sequence[str] | None = None) -> int:
         return _skills_review(args.top)
     if args.command == "skills-renormalize":
         return _skills_renormalize()
+    if args.command == "flow":
+        return _flow(args)
     if args.command == "backfill":
         if args.start > args.end:
             logger.error("--from {} is after --to {}", args.start, args.end)

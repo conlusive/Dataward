@@ -24,3 +24,22 @@ jobs:
       - run: uv sync --frozen
       - run: make lint
       - run: make test
+
+  # The image must build and be able to start the CLI and dbt; nothing is pushed anywhere.
+  docker:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - run: docker build -f Dockerfile.pipeline -t jobmarket-pipeline .
+      - name: The CLI starts
+        run: docker run --rm jobmarket-pipeline jobmarket --help
+      - name: dbt reads the project
+        run: >
+          docker run --rm -e DUCKDB_PATH=/tmp/check.duckdb jobmarket-pipeline
+          dbt parse --project-dir warehouse --profiles-dir warehouse
+      - name: The flow refuses an unknown step
+        run: |
+          set +e
+          docker run --rm jobmarket-pipeline jobmarket flow daily --only nope
+          test $? -eq 2

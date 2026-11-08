@@ -73,6 +73,16 @@ SCD2 history of title/salary/description changes:
 make dbt-build    # dbt snapshot + dbt build (models and tests)
 ```
 
+## Running it
+
+```bash
+make pipeline          # the whole daily flow: scrape, parse, checks, dbt, checks, export
+make docker-pipeline   # the same in a container, data in ./data
+```
+
+Each step has a timeout, the scrape steps retry, a failed step skips the steps that depend on it, and
+every attempt is recorded in `ops_task_runs`. See [docs/orchestration.md](docs/orchestration.md).
+
 ## Reliability
 
 A run for a date can be repeated and gives the same data (`tests/test_idempotency.py` compares hashes

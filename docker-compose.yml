@@ -1,0 +1,19 @@
+# Run the pipeline locally with nothing but Docker installed:
+#   make docker-pipeline                      # the daily flow
+#   docker compose run --rm pipeline jobmarket flow backfill --from 2026-11-01 --to 2026-11-30
+# Settings come from a local env file (copy .env.example); nothing secret is baked into the image.
+services:
+  pipeline:
+    build:
+      context: .
+      dockerfile: Dockerfile.pipeline
+    image: jobmarket-pipeline
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      # paths inside the container; the data directory is the only thing kept between runs
+      DUCKDB_PATH: /app/data/jobmarket.duckdb
+      BRONZE_DIR: /app/data/bronze
+    volumes:
+      - ./data:/app/data
