@@ -13,6 +13,8 @@ from typing import Any
 import duckdb
 
 from jobmarket.flow import StepResult
+from jobmarket.ops import OpsStore
+from jobmarket.silver.store import SilverStore
 
 Con = duckdb.DuckDBPyConnection
 
@@ -230,6 +232,10 @@ def status_document(
     db_path: Path, now: datetime | None = None, *, days: int = 14
 ) -> dict[str, Any]:
     moment = _utc_naive(now)
+    # a database from before a table existed has no such table, and a read-only connection cannot
+    # create it: opening the stores once adds whatever is missing (nothing is overwritten)
+    OpsStore(db_path).close()
+    SilverStore(db_path).close()
     con = duckdb.connect(str(db_path), read_only=True)
     try:
         runs = [

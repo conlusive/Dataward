@@ -65,6 +65,8 @@ Every result, also a pass, is stored in `ops_dq_results`.
 | `salary_in_range` | share of USD salaries outside 100-30,000 | 2% | 10% |
 | `salary_parse_rate` | fall of the parsed share of salary strings, last 7 days vs earlier | 10 pp | 20 pp |
 | `sightings_have_pages` | share of the latest day's listed vacancies without a parsed page | 10% | 30% |
+| `salary_share_drift` | change in the share of vacancies with a salary string, newest fetch day vs earlier | 15 pp | - (warns only) |
+| `description_length_drift` | relative change in the mean description length, same windows | 40% | - (warns only) |
 | `parse_failures` | share of unparsed pages in the last parse runs | 1% | 5% |
 | `gold_built` | rows in `fct_skill_demand_monthly` | - | none |
 

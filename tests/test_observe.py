@@ -355,3 +355,12 @@ def test_the_status_command_prints_and_can_write_json(
     assert cli.main(["status", "--json", str(out)]) == 0
 
     assert "Pipeline status" in capsys.readouterr().out and json.loads(out.read_text())["slo"]
+
+
+def test_status_works_on_a_database_that_never_saw_the_ops_tables(tmp_path: Path) -> None:
+    bare = tmp_path / "bare.duckdb"
+    duckdb.connect(str(bare)).close()  # a file with no tables at all, like one from before phase 6
+
+    text = render_status(status_document(bare, NOW))
+
+    assert "no pipeline runs recorded yet" in text
