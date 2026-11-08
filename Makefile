@@ -1,4 +1,4 @@
-.PHONY: install lint test test-all scrape scrape-surveys parse dbt-build export gold
+.PHONY: install lint test test-all scrape scrape-surveys parse backfill dbt-build dq export gold
 
 install:
 	uv sync
@@ -29,9 +29,20 @@ parse:
 	uv run jobmarket parse all --missing
 	uv run jobmarket parse-surveys
 
+# Re-parse stored days after a parser or taxonomy change, then rebuild gold. No network, no LLM calls
+# (answers come from the cache). Usage: make backfill FROM=2026-11-01 TO=2026-11-30
+backfill:
+	@test -n "$(FROM)" -a -n "$(TO)" || { echo "usage: make backfill FROM=YYYY-MM-DD TO=YYYY-MM-DD"; exit 2; }
+	uv run jobmarket backfill all --from $(FROM) --to $(TO)
+	$(MAKE) dbt-build
+
 dbt-build:
 	uv run dbt snapshot --project-dir warehouse --profiles-dir warehouse
 	uv run dbt build --project-dir warehouse --profiles-dir warehouse
+
+# Data-quality checks on silver and gold; exit 1 when a check is at error level.
+dq:
+	uv run jobmarket dq
 
 # Gold marts -> parquet in data/export (needs `make dbt-build` first).
 export:

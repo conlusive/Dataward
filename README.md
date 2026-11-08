@@ -73,6 +73,20 @@ SCD2 history of title/salary/description changes:
 make dbt-build    # dbt snapshot + dbt build (models and tests)
 ```
 
+## Reliability
+
+A run for a date can be repeated and gives the same data (`tests/test_idempotency.py` compares hashes
+of every silver table and mart after two runs). Backfill and the data-quality checks:
+
+```bash
+make backfill FROM=2026-11-01 TO=2026-11-30   # re-parse stored days (no network), rebuild gold
+make dq                                       # 11 checks; exit 1 on an error, a warning only reports
+```
+
+`dq` runs in the daily workflow before the export, so bad data stops there and the consumers keep the
+last good files. Results go to `ops_dq_results`. Silver tables have contracts in `contracts/silver.yml`
+that a test keeps in step with the code. Details: [docs/idempotency_and_backfill.md](docs/idempotency_and_backfill.md).
+
 ## Gold
 
 dbt also builds the marts: skill demand per month, which skills appear together (lift, PMI, NPMI),

@@ -13,6 +13,7 @@ from loguru import logger
 
 from jobmarket.bronze import BronzeStore
 from jobmarket.config import Settings
+from jobmarket.dq import run_checks
 from jobmarket.export import EXPORT_DIR, ExportError, export_gold
 from jobmarket.gold_commands import evaluate, import_labels, make_sheet
 from jobmarket.gold_seeds import write_seeds
@@ -58,6 +59,13 @@ def _build_parser() -> argparse.ArgumentParser:
     scrape.add_argument(
         "--max-pages", type=int, default=None, help="cap listing pages per category (for testing)"
     )
+    backfill = commands.add_parser(
+        "backfill",
+        help="re-parse the stored bronze days of a date range into silver (no network)",
+    )
+    backfill.add_argument("source", choices=[*PARSERS, "all"])
+    backfill.add_argument("--from", dest="start", type=date.fromisoformat, required=True)
+    backfill.add_argument("--to", dest="end", type=date.fromisoformat, required=True)
     parse = commands.add_parser("parse", help="parse bronze pages into silver_vacancies")
     parse.add_argument("source", choices=[*PARSERS, "all"])
     parse.add_argument(
@@ -114,6 +122,9 @@ def _build_parser() -> argparse.ArgumentParser:
     commands.add_parser(
         "export",
         help="write the gold marts to data/export as parquet, checked against the contracts",
+    )
+    commands.add_parser(
+        "dq", help="data-quality checks; exit 1 on an error (a warning only reports)"
     )
     review_cmd = commands.add_parser(
         "skills-review", help="list the most frequent skills the taxonomy does not know yet"
@@ -205,6 +216,45 @@ def _gold(args: argparse.Namespace) -> int:
         return evaluate(silver)
     finally:
         silver.close()
+
+
+def _dq() -> int:
+    settings = Settings.from_env()
+    results = run_checks(settings.duckdb_path)
+    today = datetime.now(UTC).date()
+    ops = OpsStore(settings.duckdb_path)
+    task_id = ops.start_task("dq", "all", today)
+    ops.add_dq_results(
+        task_id,
+        [(r.name, r.layer, r.observed, r.warn, r.error, r.status, r.detail) for r in results],
+    )
+    errors = [r for r in results if r.status == "error"]
+    warnings = [r for r in results if r.status == "warn"]
+    status = "failed" if errors else ("partial" if warnings else "success")
+    ops.finish_task(
+        task_id,
+        status,
+        rows_in=len(results),
+        rows_out=sum(r.status == "pass" for r in results),
+        rows_failed=len(errors),
+    )
+    ops.close()
+    for r in results:
+        logger.log(
+            {"error": "ERROR", "warn": "WARNING"}.get(r.status, "INFO"),
+            "dq {} [{}] {}: {}",
+            r.status.upper(),
+            r.layer,
+            r.name,
+            r.detail,
+        )
+        if os.environ.get("GITHUB_ACTIONS") and r.status in ("error", "warn"):
+            level = "error" if r.status == "error" else "warning"
+            print(f"::{level} title=dq {r.name}::{r.detail}")
+    logger.info(
+        "{}: {} checks, {} warnings, {} errors", task_id, len(results), len(warnings), len(errors)
+    )
+    return 1 if errors else 0
 
 
 def _export() -> int:
@@ -305,6 +355,8 @@ def main(argv: Sequence[str] | None = None) -> int:
         return _extract_skills(args.source, args.limit, args.max_cost_usd, args.dry_run)
     if args.command in ("gold-sample", "gold-import", "gold-eval"):
         return _gold(args)
+    if args.command == "dq":
+        return _dq()
     if args.command == "export":
         return _export()
     if args.command == "make-seeds":
@@ -313,6 +365,16 @@ def main(argv: Sequence[str] | None = None) -> int:
         return _skills_review(args.top)
     if args.command == "skills-renormalize":
         return _skills_renormalize()
+    if args.command == "backfill":
+        if args.start > args.end:
+            logger.error("--from {} is after --to {}", args.start, args.end)
+            return 2
+        return run_parse(
+            Settings.from_env(),
+            tuple(PARSERS) if args.source == "all" else (args.source,),
+            args.end,
+            date_range=(args.start, args.end),
+        )
     run_date: date = args.run_date or _default_run_date()
     if args.command == "parse":
         return run_parse(
