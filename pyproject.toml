@@ -8,6 +8,7 @@ dependencies = [
     "duckdb>=2.0.0",
     "httpx>=0.28.1",
     "loguru>=0.7.3",
+    "networkx>=3.6.1",
     "pydantic>=2.14.3",
     "pyyaml>=6.0.3",
     "rapidfuzz>=3.14.6",
@@ -67,3 +68,7 @@ asyncio_default_fixture_loop_scope = "function"
 markers = [
     "llm: tests that call a real LLM; run locally only, skipped in CI",
 ]
+
+[[tool.mypy.overrides]]
+module = "networkx.*"
+ignore_missing_imports = true  # networkx ships no type information

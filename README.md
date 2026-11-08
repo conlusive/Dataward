@@ -73,6 +73,23 @@ SCD2 history of title/salary/description changes:
 make dbt-build    # dbt snapshot + dbt build (models and tests)
 ```
 
+## Gold
+
+dbt also builds the marts: skill demand per month, which skills appear together (lift, PMI, NPMI),
+salary percentiles per skill and from the DOU survey, and how long vacancies stay open. A real
+vacancy listed on both DOU and Djinni counts once, and a skill counts for its parents (Django for
+Python). Marts do not publish samples that are too small (`warehouse/dbt_project.yml`, `vars`), and
+their column types are enforced contracts.
+
+```bash
+uv run jobmarket make-seeds   # position/city vocabularies for the survey -> warehouse/seeds
+make export                   # marts -> data/export/*.parquet + last_update.json (checked against the contracts)
+```
+
+`export` also writes `skill_clusters.parquet` (Louvain communities of the pair graph). The daily
+workflow keeps the export as the `gold-export` artifact. The manual `dbt-docs` workflow publishes the
+model documentation once GitHub Pages is switched on (Settings -> Pages -> Source: GitHub Actions).
+
 Method B asks an LLM for the skills (needs a key, never part of CI):
 
 ```bash
@@ -118,6 +135,7 @@ vacancies and salary coverage. Re-run it after more days accumulate.
 ## Automation
 
 - `ci.yml`: ruff, mypy, pytest on every PR and push to `main`.
+- `docs.yml`: manual; builds the dbt docs site for GitHub Pages.
 - `pipeline-daily.yml`: scrape at 04:00 UTC (also manually, with `run_date` and `max_pages`).
   Bronze is kept in a rolling GitHub Actions cache for now; this is interim storage and not
   durable. Object storage (R2/S3) replaces it later.

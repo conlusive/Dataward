@@ -13,7 +13,9 @@ from loguru import logger
 
 from jobmarket.bronze import BronzeStore
 from jobmarket.config import Settings
+from jobmarket.export import EXPORT_DIR, ExportError, export_gold
 from jobmarket.gold_commands import evaluate, import_labels, make_sheet
+from jobmarket.gold_seeds import write_seeds
 from jobmarket.ops import OpsStore
 from jobmarket.registry import DAILY_SOURCES, SOURCES
 from jobmarket.runner import run_source
@@ -105,6 +107,13 @@ def _build_parser() -> argparse.ArgumentParser:
     commands.add_parser(
         "gold-eval",
         help="precision/recall/F1 of every method against the gold set -> docs/metrics.md",
+    )
+    commands.add_parser(
+        "make-seeds", help="write the dbt seeds (survey positions and cities) from silver"
+    )
+    commands.add_parser(
+        "export",
+        help="write the gold marts to data/export as parquet, checked against the contracts",
     )
     review_cmd = commands.add_parser(
         "skills-review", help="list the most frequent skills the taxonomy does not know yet"
@@ -198,6 +207,30 @@ def _gold(args: argparse.Namespace) -> int:
         silver.close()
 
 
+def _export() -> int:
+    try:
+        counts = export_gold(Settings.from_env().duckdb_path)
+    except ExportError as error:
+        logger.error("export failed: {}", error)
+        return 1
+    logger.info("exported {} tables to {}: {}", len(counts), EXPORT_DIR, counts)
+    return 0
+
+
+def _make_seeds() -> int:
+    silver = SilverStore(Settings.from_env().duckdb_path)
+    try:
+        shares = write_seeds(silver)
+    finally:
+        silver.close()
+    logger.info(
+        "seeds written to warehouse/seeds: positions in 'other' {:.1%}, cities unspecified {:.1%}",
+        shares["positions_other"],
+        shares["cities_unspecified"],
+    )
+    return 0
+
+
 def _skills_review(top: int) -> int:
     silver = SilverStore(Settings.from_env().duckdb_path)
     try:
@@ -272,6 +305,10 @@ def main(argv: Sequence[str] | None = None) -> int:
         return _extract_skills(args.source, args.limit, args.max_cost_usd, args.dry_run)
     if args.command in ("gold-sample", "gold-import", "gold-eval"):
         return _gold(args)
+    if args.command == "export":
+        return _export()
+    if args.command == "make-seeds":
+        return _make_seeds()
     if args.command == "skills-review":
         return _skills_review(args.top)
     if args.command == "skills-renormalize":

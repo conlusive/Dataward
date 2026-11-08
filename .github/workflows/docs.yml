@@ -1,0 +1,44 @@
+name: dbt-docs
+
+# Manual until GitHub Pages is switched on for the repository (Settings -> Pages -> Source:
+# GitHub Actions). The docs describe models, tests and lineage only, so no data is needed.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: dbt-docs
+  cancel-in-progress: false
+
+jobs:
+  docs:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+      - run: uv sync --frozen
+
+      - name: Generate the docs site
+        env:
+          DUCKDB_PATH: ${{ runner.temp }}/docs.duckdb
+        run: |
+          uv run dbt docs generate --empty-catalog --static \
+            --project-dir warehouse --profiles-dir warehouse
+          mkdir _site
+          cp warehouse/target/static_index.html _site/index.html
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+      - id: deploy
+        uses: actions/deploy-pages@v4

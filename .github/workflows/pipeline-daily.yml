@@ -52,6 +52,10 @@ jobs:
       - name: Scrape
         run: make scrape
 
+      # The survey is published twice a year, so this normally downloads nothing new.
+      - name: Scrape survey waves
+        run: make scrape-surveys
+
       # Save even when the scrape failed part-way: what was downloaded is still valid bronze.
       - name: Save bronze
         if: always()
@@ -69,6 +73,18 @@ jobs:
 
       - name: dbt snapshot and build
         run: make dbt-build
+
+      # Parquet for the dashboards, checked against the dbt contracts; kept as a run artifact until
+      # the publishing target (phase 5/6) exists.
+      - name: Export gold
+        run: make export
+
+      - name: Upload gold export
+        uses: actions/upload-artifact@v4
+        with:
+          name: gold-export
+          path: data/export
+          retention-days: 14
 
       - name: Save bronze and silver
         if: always()

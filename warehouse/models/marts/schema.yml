@@ -3,18 +3,199 @@ version: 2
 models:
   - name: fct_vacancy_daily
     description: One row per vacancy and day while the vacancy is open (see the model for the rules).
+    config:
+      contract: {enforced: true}
     columns:
       - name: vacancy_day_key
+        data_type: varchar
         data_tests: [unique, not_null]
       - name: date
+        data_type: date
         data_tests: [not_null]
       - name: vacancy_id
+        data_type: varchar
         data_tests: [not_null]
       - name: status
+        data_type: varchar
         data_tests:
           - not_null
           - accepted_values:
               arguments:
                 values: [new, active, closed]
       - name: lifetime_days
+        data_type: integer
         data_tests: [not_null]
+      - name: left_censored
+        data_type: boolean
+        data_tests: [not_null]
+
+  - name: dim_skill
+    description: The skill taxonomy, with the parent's name.
+    config:
+      contract: {enforced: true}
+    columns:
+      - name: skill_id
+        data_type: varchar
+        data_tests: [unique, not_null]
+      - name: canonical
+        data_type: varchar
+        data_tests: [not_null]
+      - name: category
+        data_type: varchar
+        data_tests: [not_null]
+      - name: parent_id
+        data_type: varchar
+        data_tests:
+          - relationships:
+              arguments: {to: ref('dim_skill'), field: skill_id}
+      - name: parent_canonical
+        data_type: varchar
+
+  - name: fct_skill_demand_monthly
+    description: >
+      Share of a month's new real (deduplicated) vacancies that ask for a skill, parents included.
+    config:
+      contract: {enforced: true}
+    data_tests:
+      - unique_combination:
+          arguments:
+            column_names: [month, skill_id]
+    columns:
+      - name: month
+        data_type: date
+        data_tests: [not_null]
+      - name: skill_id
+        data_type: varchar
+        data_tests:
+          - not_null
+          - relationships:
+              arguments: {to: ref('dim_skill'), field: skill_id}
+      - name: vacancies
+        data_type: integer
+        data_tests: [not_null]
+      - name: vacancies_direct
+        data_type: integer
+        data_tests: [not_null]
+      - name: vacancies_required
+        data_type: integer
+        data_tests: [not_null]
+      - name: month_vacancies
+        data_type: integer
+        data_tests: [not_null]
+      - name: share
+        data_type: double
+        data_tests:
+          - not_null
+          - share_between_zero_and_one
+
+  - name: fct_skill_pairs
+    description: >
+      Skill pairs that appear together in at least `min_pair_support` vacancies, with lift, PMI and
+      normalised PMI.
+    config:
+      contract: {enforced: true}
+    data_tests:
+      - unique_combination:
+          arguments:
+            column_names: [skill_a, skill_b]
+    columns:
+      - name: skill_a
+        data_type: varchar
+        data_tests:
+          - not_null
+          - relationships:
+              arguments: {to: ref('dim_skill'), field: skill_id}
+      - name: skill_b
+        data_type: varchar
+        data_tests:
+          - not_null
+          - relationships:
+              arguments: {to: ref('dim_skill'), field: skill_id}
+      - name: vacancies_together
+        data_type: integer
+        data_tests: [not_null]
+      - name: vacancies_a
+        data_type: integer
+        data_tests: [not_null]
+      - name: vacancies_b
+        data_type: integer
+        data_tests: [not_null]
+      - name: vacancies_total
+        data_type: integer
+        data_tests: [not_null]
+      - name: lift
+        data_type: double
+        data_tests: [not_null]
+      - name: pmi
+        data_type: double
+        data_tests: [not_null]
+      - name: npmi
+        data_type: double
+
+  - name: fct_salary_by_skill
+    description: Declared salary percentiles (USD per month) of vacancies asking for a skill; small groups are left out.
+    config:
+      contract: {enforced: true}
+    columns:
+      - name: skill_id
+        data_type: varchar
+        data_tests:
+          - unique
+          - not_null
+          - relationships:
+              arguments: {to: ref('dim_skill'), field: skill_id}
+      - name: vacancies_with_salary
+        data_type: integer
+        data_tests: [not_null]
+      - name: salary_p25
+        data_type: double
+      - name: salary_median
+        data_type: double
+      - name: salary_p75
+        data_type: double
+
+  - name: fct_salary_survey
+    description: Weighted DOU survey salary percentiles (USD per month, net) by year, role and level.
+    config:
+      contract: {enforced: true}
+    data_tests:
+      - unique_combination:
+          arguments:
+            column_names: [survey_year, role, seniority]
+    columns:
+      - name: survey_year
+        data_type: integer
+        data_tests: [not_null]
+      - name: role
+        data_type: varchar
+        data_tests: [not_null]
+      - name: seniority
+        data_type: varchar
+        data_tests: [not_null]
+      - name: respondents
+        data_type: double
+        data_tests: [not_null]
+      - name: salary_p25
+        data_type: double
+      - name: salary_median
+        data_type: double
+      - name: salary_p75
+        data_type: double
+
+  - name: fct_vacancy_lifetime
+    description: Days closed vacancies stayed open, by level; small groups are left out.
+    config:
+      contract: {enforced: true}
+    columns:
+      - name: seniority
+        data_type: varchar
+        data_tests: [unique, not_null]
+      - name: closed_vacancies
+        data_type: integer
+        data_tests: [not_null]
+      - name: lifetime_p25
+        data_type: double
+      - name: lifetime_median
+        data_type: double
+      - name: lifetime_p75
+        data_type: double
