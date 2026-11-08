@@ -58,6 +58,13 @@ def _build_parser() -> argparse.ArgumentParser:
     scrape.add_argument(
         "--max-pages", type=int, default=None, help="cap listing pages per category (for testing)"
     )
+    backfill = commands.add_parser(
+        "backfill",
+        help="re-parse the stored bronze days of a date range into silver (no network)",
+    )
+    backfill.add_argument("source", choices=[*PARSERS, "all"])
+    backfill.add_argument("--from", dest="start", type=date.fromisoformat, required=True)
+    backfill.add_argument("--to", dest="end", type=date.fromisoformat, required=True)
     parse = commands.add_parser("parse", help="parse bronze pages into silver_vacancies")
     parse.add_argument("source", choices=[*PARSERS, "all"])
     parse.add_argument(
@@ -313,6 +320,16 @@ def main(argv: Sequence[str] | None = None) -> int:
         return _skills_review(args.top)
     if args.command == "skills-renormalize":
         return _skills_renormalize()
+    if args.command == "backfill":
+        if args.start > args.end:
+            logger.error("--from {} is after --to {}", args.start, args.end)
+            return 2
+        return run_parse(
+            Settings.from_env(),
+            tuple(PARSERS) if args.source == "all" else (args.source,),
+            args.end,
+            date_range=(args.start, args.end),
+        )
     run_date: date = args.run_date or _default_run_date()
     if args.command == "parse":
         return run_parse(

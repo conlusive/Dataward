@@ -26,9 +26,21 @@ MAX_FAILED_SHARE = 0.05
 
 
 def _days_to_parse(
-    source: str, bronze: BronzeStore, ops: OpsStore, run_date: date, *, missing: bool
+    source: str,
+    bronze: BronzeStore,
+    ops: OpsStore,
+    run_date: date,
+    *,
+    missing: bool,
+    date_range: tuple[date, date] | None,
 ) -> list[date]:
-    """One day, or every stored bronze day that has no finished parse yet (oldest first)."""
+    """One day, every stored day in a range, or every stored day without a finished parse.
+
+    Stored days only: a range never invents days, so a backfill touches exactly what bronze has.
+    """
+    if date_range is not None:
+        start, end = date_range
+        return [day for day in bronze.partition_dates(source) if start <= day <= end]
     if not missing:
         return [run_date]
     done = ops.parsed_dates(source, today=run_date)
@@ -36,9 +48,18 @@ def _days_to_parse(
 
 
 def run_parse(
-    settings: Settings, sources: Sequence[str], run_date: date, *, missing: bool = False
+    settings: Settings,
+    sources: Sequence[str],
+    run_date: date,
+    *,
+    missing: bool = False,
+    date_range: tuple[date, date] | None = None,
 ) -> int:
-    """Parse and enrich ``sources``; returns 1 when too many pages no longer match their parser."""
+    """Parse and enrich ``sources``; returns 1 when too many pages no longer match their parser.
+
+    ``date_range`` (inclusive) re-parses every stored day in it, finished or not: the backfill
+    after a parser or taxonomy change. It reads bronze only and never touches the network.
+    """
     ops = OpsStore(settings.duckdb_path)
     silver = SilverStore(settings.duckdb_path)
     bronze = BronzeStore(settings.bronze_dir)
@@ -51,7 +72,9 @@ def run_parse(
         today = datetime.now(UTC).date().isoformat()
 
         for source in sources:
-            for day in _days_to_parse(source, bronze, ops, run_date, missing=missing):
+            for day in _days_to_parse(
+                source, bronze, ops, run_date, missing=missing, date_range=date_range
+            ):
                 if _parse_day(source, day, bronze=bronze, silver=silver, ops=ops):
                     exit_code = 1
             # The enrichment is recomputed from silver every time: a changed taxonomy or rule

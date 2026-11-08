@@ -233,3 +233,24 @@ def test_a_recent_partial_day_is_parsed_again_and_picks_up_what_was_fixed(tmp_pa
     run_parse(settings, ["dou"], date(2026, 11, 2), missing=True)
 
     assert _scalar(settings, "SELECT count(*) FROM silver_vacancies") == 41
+
+
+def test_a_backfill_reparses_exactly_the_stored_days_in_its_range(tmp_path: Path) -> None:
+    store = BronzeStore(tmp_path / "bronze")
+    for day in (date(2026, 11, 1), date(2026, 11, 2), date(2026, 11, 3)):
+        _dou_day(store, day)
+    settings = Settings(bronze_dir=tmp_path / "bronze", duckdb_path=tmp_path / "test.duckdb")
+    run_parse(settings, ["dou"], date(2026, 11, 3), missing=True)  # all three days are parsed
+
+    # the range covers two stored days and one day that was never stored (Nov 10)
+    code = run_parse(
+        settings, ["dou"], date(2026, 11, 10), date_range=(date(2026, 11, 2), date(2026, 11, 10))
+    )
+
+    assert code == 0
+    days = _scalar(
+        settings,
+        "SELECT list(run_date ORDER BY run_date) FROM ops_task_runs "
+        "WHERE task = 'parse' AND attempt = 2",
+    )
+    assert [d.isoformat() for d in days] == ["2026-11-02", "2026-11-03"]  # type: ignore[attr-defined]
