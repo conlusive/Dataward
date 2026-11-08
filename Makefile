@@ -1,4 +1,4 @@
-.PHONY: install lint test test-all scrape parse dbt-build export gold
+.PHONY: install lint test test-all scrape scrape-surveys parse dbt-build export gold
 
 install:
 	uv sync
@@ -18,11 +18,16 @@ test-all:
 scrape:
 	uv run jobmarket scrape all $(if $(RUN_DATE),--run-date $(RUN_DATE),)
 
+# Survey waves: files already in bronze are skipped, so this is cheap on repeat runs.
+scrape-surveys:
+	uv run jobmarket scrape dou_salaries
+
 # Bronze -> silver for every stored day without a finished parse, then rates and the dbt layer.
 parse:
 	uv run jobmarket parse all --missing
 	uv run jobmarket fetch-rates
 	uv run jobmarket parse all --missing
+	uv run jobmarket parse-surveys
 
 dbt-build:
 	uv run dbt snapshot --project-dir warehouse --profiles-dir warehouse

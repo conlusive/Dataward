@@ -3,6 +3,9 @@ version: "0.1.0"
 config-version: 2
 profile: jobmarket
 
+flags:
+  send_anonymous_usage_stats: false
+
 model-paths: ["models"]
 snapshot-paths: ["snapshots"]
 test-paths: ["tests"]
