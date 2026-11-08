@@ -310,33 +310,42 @@ def check_gold_built(con: Con, now: datetime) -> CheckResult:
     )
 
 
-CHECKS: tuple[Callable[[Con, datetime], CheckResult], ...] = (
-    check_schema_contract,
-    check_freshness,
-    check_listing_volume,
-    check_empty_key_fields,
-    check_references,
-    check_vacancies_without_skills,
-    check_salary_range,
-    check_salary_parse_rate,
-    check_sightings_have_pages,
-    check_parse_failures,
-    check_gold_built,
+LAYERS = ("silver", "gold")
+CHECKS: tuple[tuple[str, Callable[[Con, datetime], CheckResult]], ...] = (
+    ("silver", check_schema_contract),
+    ("silver", check_freshness),
+    ("silver", check_listing_volume),
+    ("silver", check_empty_key_fields),
+    ("silver", check_references),
+    ("silver", check_vacancies_without_skills),
+    ("silver", check_salary_range),
+    ("silver", check_salary_parse_rate),
+    ("silver", check_sightings_have_pages),
+    ("silver", check_parse_failures),
+    ("gold", check_gold_built),
 )
 
 
-def run_checks(db_path: Path, *, now: datetime | None = None) -> list[CheckResult]:
-    """Run every check on a read-only connection; a check that crashes is an `error`, not a skip."""
+def run_checks(
+    db_path: Path, *, now: datetime | None = None, layer: str | None = None
+) -> list[CheckResult]:
+    """Run the checks of one layer (all by default) on a read-only connection.
+
+    A check that crashes is an `error`, not a skip. The silver checks run before dbt, so bad
+    silver data stops the gold build; the gold checks run after it.
+    """
     moment = (now or datetime.now(UTC)).replace(tzinfo=None)
     con = duckdb.connect(str(db_path), read_only=True)
     try:
         results: list[CheckResult] = []
-        for check in CHECKS:
+        for check_layer, check in CHECKS:
+            if layer is not None and check_layer != layer:
+                continue
             try:
                 results.append(check(con, moment))
             except duckdb.Error as exc:
                 name = check.__name__.removeprefix("check_")
-                results.append(CheckResult(name, "unknown", None, None, None, "error", repr(exc)))
+                results.append(CheckResult(name, check_layer, None, None, None, "error", repr(exc)))
         return results
     finally:
         con.close()
