@@ -74,6 +74,11 @@ jobs:
       - name: dbt snapshot and build
         run: make dbt-build
 
+      # An `error` here stops the run before the export, so consumers keep the last good files; a
+      # `warn` is shown as an annotation on the run and the pipeline goes on.
+      - name: Data-quality checks
+        run: make dq
+
       # Parquet for the dashboards, checked against the dbt contracts; kept as a run artifact until
       # the publishing target (phase 5/6) exists.
       - name: Export gold

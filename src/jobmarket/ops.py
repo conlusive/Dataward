@@ -61,6 +61,21 @@ CREATE TABLE IF NOT EXISTS ops_llm_usage (
 )
 """
 
+_DQ_DDL = """
+CREATE TABLE IF NOT EXISTS ops_dq_results (
+    run_id VARCHAR NOT NULL,
+    check_name VARCHAR NOT NULL,
+    layer VARCHAR NOT NULL,
+    observed DOUBLE,
+    warn_threshold DOUBLE,
+    error_threshold DOUBLE,
+    status VARCHAR NOT NULL,  -- pass | warn | error | skipped
+    detail VARCHAR NOT NULL,
+    created_at TIMESTAMP NOT NULL,
+    PRIMARY KEY (run_id, check_name)
+)
+"""
+
 
 @dataclass
 class ScrapeStats:
@@ -85,6 +100,7 @@ class OpsStore:
         self._con.execute(_DDL)
         self._con.execute(_TASK_DDL)
         self._con.execute(_LLM_USAGE_DDL)
+        self._con.execute(_DQ_DDL)
 
     def close(self) -> None:
         self._con.close()
@@ -155,6 +171,19 @@ class OpsStore:
             "rows_failed = ?, error = ? WHERE run_id = ?",
             [_utc_now(), status, rows_in, rows_out, rows_failed, error, run_id],
         )
+
+    def add_dq_results(
+        self,
+        run_id: str,
+        results: list[tuple[str, str, float | None, float | None, float | None, str, str]],
+    ) -> None:
+        """results: (check, layer, observed, warn_threshold, error_threshold, status, detail)."""
+        now = _utc_now()
+        for check, layer, observed, warn, error, status, detail in results:
+            self._con.execute(
+                "INSERT INTO ops_dq_results VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                [run_id, check, layer, observed, warn, error, status, detail, now],
+            )
 
     def parsed_dates(
         self, source: str, *, today: date | None = None, retry_partial_days: int = 3

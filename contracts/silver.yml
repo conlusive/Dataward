@@ -1,0 +1,309 @@
+# Silver table contracts: the columns, types, nullability and primary keys that the gold layer and
+# the exports rely on. `tests/test_contracts.py` fails when SilverStore's DDL drifts from this file,
+# so a schema change has to be made here too, in the same PR, where a reviewer sees it.
+version: 1
+tables:
+  llm_cache:
+    columns:
+    - name: cache_key
+      type: VARCHAR
+      nullable: false
+    - name: content_hash
+      type: VARCHAR
+      nullable: false
+    - name: model
+      type: VARCHAR
+      nullable: false
+    - name: prompt_version
+      type: VARCHAR
+      nullable: false
+    - name: raw_json
+      type: VARCHAR
+      nullable: false
+    - name: prompt_tokens
+      type: INTEGER
+      nullable: false
+    - name: completion_tokens
+      type: INTEGER
+      nullable: false
+    - name: cost_usd
+      type: DOUBLE
+      nullable: false
+    - name: created_at
+      type: TIMESTAMP
+      nullable: false
+    primary_key:
+    - cache_key
+  silver_dou_salaries:
+    columns:
+    - name: survey_date
+      type: DATE
+      nullable: false
+    - name: wave
+      type: VARCHAR
+      nullable: false
+    - name: row_no
+      type: INTEGER
+      nullable: false
+    - name: position
+      type: VARCHAR
+      nullable: true
+    - name: experience_years
+      type: DOUBLE
+      nullable: true
+    - name: city
+      type: VARCHAR
+      nullable: true
+    - name: english
+      type: VARCHAR
+      nullable: true
+    - name: company_size
+      type: VARCHAR
+      nullable: true
+    - name: company_type
+      type: VARCHAR
+      nullable: true
+    - name: salary_usd
+      type: DOUBLE
+      nullable: false
+    - name: weight
+      type: DOUBLE
+      nullable: false
+    - name: _run_id
+      type: VARCHAR
+      nullable: false
+    - name: _loaded_at
+      type: TIMESTAMP
+      nullable: false
+    - name: _source_file
+      type: VARCHAR
+      nullable: false
+    primary_key:
+    - _source_file
+    - row_no
+  silver_llm_terms:
+    columns:
+    - name: vacancy_id
+      type: VARCHAR
+      nullable: false
+    - name: term
+      type: VARCHAR
+      nullable: false
+    - name: importance
+      type: VARCHAR
+      nullable: false
+    - name: model
+      type: VARCHAR
+      nullable: false
+    - name: prompt_version
+      type: VARCHAR
+      nullable: false
+    primary_key:
+    - vacancy_id
+    - term
+  silver_nbu_rates:
+    columns:
+    - name: rate_date
+      type: DATE
+      nullable: false
+    - name: currency
+      type: VARCHAR
+      nullable: false
+    - name: rate
+      type: DOUBLE
+      nullable: false
+    primary_key:
+    - rate_date
+    - currency
+  silver_skills:
+    columns:
+    - name: skill_id
+      type: VARCHAR
+      nullable: false
+    - name: canonical
+      type: VARCHAR
+      nullable: false
+    - name: category
+      type: VARCHAR
+      nullable: false
+    - name: parent_id
+      type: VARCHAR
+      nullable: true
+    primary_key:
+    - skill_id
+  silver_unknown_skills:
+    columns:
+    - name: term
+      type: VARCHAR
+      nullable: false
+    - name: vacancies
+      type: INTEGER
+      nullable: false
+    - name: first_seen
+      type: DATE
+      nullable: false
+    - name: last_seen
+      type: DATE
+      nullable: false
+    - name: suggested_canonical
+      type: VARCHAR
+      nullable: true
+    - name: status
+      type: VARCHAR
+      nullable: false
+    primary_key:
+    - term
+  silver_vacancies:
+    columns:
+    - name: id
+      type: VARCHAR
+      nullable: false
+    - name: source
+      type: VARCHAR
+      nullable: false
+    - name: url
+      type: VARCHAR
+      nullable: false
+    - name: title
+      type: VARCHAR
+      nullable: false
+    - name: company
+      type: VARCHAR
+      nullable: false
+    - name: category
+      type: VARCHAR
+      nullable: true
+    - name: locations
+      type: VARCHAR[]
+      nullable: false
+    - name: remote
+      type: BOOLEAN
+      nullable: true
+    - name: experience_years
+      type: DOUBLE
+      nullable: true
+    - name: english_level
+      type: VARCHAR
+      nullable: true
+    - name: salary_raw
+      type: VARCHAR
+      nullable: true
+    - name: salary_min
+      type: DOUBLE
+      nullable: true
+    - name: salary_max
+      type: DOUBLE
+      nullable: true
+    - name: salary_currency
+      type: VARCHAR
+      nullable: true
+    - name: salary_usd_min
+      type: DOUBLE
+      nullable: true
+    - name: salary_usd_max
+      type: DOUBLE
+      nullable: true
+    - name: published_at
+      type: DATE
+      nullable: true
+    - name: description_text
+      type: VARCHAR
+      nullable: false
+    - name: content_hash
+      type: VARCHAR
+      nullable: false
+    - name: dedup_group_id
+      type: VARCHAR
+      nullable: true
+    - name: experience_years_text
+      type: DOUBLE
+      nullable: true
+    - name: seniority
+      type: VARCHAR
+      nullable: true
+    - name: _run_id
+      type: VARCHAR
+      nullable: false
+    - name: _loaded_at
+      type: TIMESTAMP
+      nullable: false
+    - name: _source_file
+      type: VARCHAR
+      nullable: false
+    - name: _fetched_at
+      type: TIMESTAMP
+      nullable: false
+    primary_key:
+    - id
+  silver_vacancy_groups:
+    columns:
+    - name: dedup_group_id
+      type: VARCHAR
+      nullable: false
+    - name: size
+      type: INTEGER
+      nullable: false
+    - name: sources
+      type: VARCHAR[]
+      nullable: false
+    - name: match_kind
+      type: VARCHAR
+      nullable: false
+    - name: text_id
+      type: VARCHAR
+      nullable: false
+    - name: salary_id
+      type: VARCHAR
+      nullable: true
+    - name: _run_id
+      type: VARCHAR
+      nullable: false
+    - name: _loaded_at
+      type: TIMESTAMP
+      nullable: false
+    primary_key:
+    - dedup_group_id
+  silver_vacancy_sightings:
+    columns:
+    - name: vacancy_id
+      type: VARCHAR
+      nullable: false
+    - name: seen_date
+      type: DATE
+      nullable: false
+    primary_key:
+    - vacancy_id
+    - seen_date
+  silver_vacancy_skills:
+    columns:
+    - name: vacancy_id
+      type: VARCHAR
+      nullable: false
+    - name: skill_id
+      type: VARCHAR
+      nullable: false
+    - name: importance
+      type: VARCHAR
+      nullable: false
+    - name: method
+      type: VARCHAR
+      nullable: false
+    - name: confidence
+      type: DOUBLE
+      nullable: false
+    - name: model
+      type: VARCHAR
+      nullable: true
+    - name: prompt_version
+      type: VARCHAR
+      nullable: true
+    - name: _run_id
+      type: VARCHAR
+      nullable: false
+    - name: _loaded_at
+      type: TIMESTAMP
+      nullable: false
+    primary_key:
+    - vacancy_id
+    - skill_id
+    - method

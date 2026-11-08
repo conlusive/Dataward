@@ -1,4 +1,4 @@
-.PHONY: install lint test test-all scrape scrape-surveys parse backfill dbt-build export gold
+.PHONY: install lint test test-all scrape scrape-surveys parse backfill dbt-build dq export gold
 
 install:
 	uv sync
@@ -39,6 +39,10 @@ backfill:
 dbt-build:
 	uv run dbt snapshot --project-dir warehouse --profiles-dir warehouse
 	uv run dbt build --project-dir warehouse --profiles-dir warehouse
+
+# Data-quality checks on silver and gold; exit 1 when a check is at error level.
+dq:
+	uv run jobmarket dq
 
 # Gold marts -> parquet in data/export (needs `make dbt-build` first).
 export:
