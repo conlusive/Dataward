@@ -100,10 +100,16 @@ a student one) does not add API quota. To stay inside the limits, ask only about
 vacancies and slowly:
 
 ```bash
-export GEMINI_API_KEY=...                       # in your own terminal; never paste it anywhere
-export LLM_MODEL=gemini/gemini-2.5-flash-lite
-DUCKDB_PATH=data/jobmarket_test.duckdb uv run jobmarket extract-skills all --sheet --rpm 8
+# a file named .env in the project root (it is gitignored) holds the two settings, one per line:
+#   GEMINI_API_KEY=<the key>
+#   LLM_MODEL=gemini/gemini-3.5-flash-lite
+DUCKDB_PATH=data/jobmarket_test.duckdb uv run --env-file .env jobmarket extract-skills all --sheet --rpm 8
 ```
+
+Use a model that a *new* key can call: the pricing page still lists `gemini-2.5-flash-lite`, but the
+API answers 404 ("no longer available to new users") and recommends `gemini-3.5-flash-lite`, the
+model the run was verified with on 2026-11-09. Never paste the key into a chat, a screenshot or the
+code; if it leaks, delete it in AI Studio and create a new one.
 
 `--rpm N` spaces the requests, a `429` waits for the server's `Retry-After` (else 15, 30, 45 seconds),
 and a request that still fails is not cached, so running the same command again (after a minute, or

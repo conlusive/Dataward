@@ -5,7 +5,9 @@
 # Gemini: checked on 2026-11-09 against Google's pricing page (Standard tier, text input; the output
 # price includes the model's thinking tokens). gemini-3.6-flash and gemini-3.8-flash cost twice as
 # much from 2027-01-01 and are left out; gemini-2.5-flash is deprecated and left out; gemini-2.0-flash
-# is no longer listed.
+# is no longer listed. Availability is not the same as being listed: on 2026-11-09 a new key got
+# HTTP 404 for gemini-2.5-flash-lite ("no longer available to new users") and worked with
+# gemini-3.5-flash-lite, so prefer that one.
 # OpenAI: gpt-4o-mini is NOT verified; the numbers are the ones I knew and may be out of date.
 models:
   gpt-4o-mini: {input: 0.15, output: 0.60}
