@@ -21,7 +21,7 @@ jobs:
       - uses: astral-sh/setup-uv@v5
         with:
           enable-cache: true
-      - run: uv sync --frozen --group dashboard
+      - run: uv sync --frozen --group dashboard --group ml
       - run: make lint
       - run: make test
 

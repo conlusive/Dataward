@@ -6,7 +6,7 @@ import pytest
 
 from jobmarket import dashboard_data as dd
 from jobmarket.export import SCHEMA_FILE, contracts
-from tests.dashboard_fixtures import NOV, tables, write_export
+from tests.dashboard_fixtures import GRID, NOV, tables, write_export, write_grid
 
 
 @pytest.fixture(scope="module")
@@ -212,3 +212,64 @@ def test_slo_and_run_tables_use_plain_words() -> None:
 
     assert slo["стан"].tolist() == ["виконано", "замало даних"]
     assert runs["впали кроки"].tolist() == ["", "parse"]
+
+
+# ---- the salary calculator -----------------------------------------------------------------------
+def test_without_a_trained_model_there_is_no_grid(tmp_path: Path) -> None:
+    write_export(tmp_path)
+
+    assert dd.read_grid(tmp_path) is None
+
+
+def test_the_grid_is_read_with_its_description(tmp_path: Path) -> None:
+    write_export(tmp_path)
+    write_grid(tmp_path)
+
+    loaded = dd.read_grid(tmp_path)
+
+    assert loaded is not None
+    grid, info = loaded
+    assert len(grid) == 6 and info["version"] == 3
+
+
+def test_a_grid_with_a_missing_column_is_reported(tmp_path: Path) -> None:
+    import duckdb
+
+    write_export(tmp_path)
+    write_grid(tmp_path)
+    path = tmp_path / "salary_model_grid.parquet"
+    duckdb.connect().execute(
+        f"COPY (SELECT role, seniority FROM '{path}') TO '{path}.new' (FORMAT parquet)"
+    )
+    (tmp_path / "salary_model_grid.parquet.new").replace(path)
+
+    with pytest.raises(dd.DataError, match="make train"):
+        dd.read_grid(tmp_path)
+
+
+def test_the_lookup_takes_the_closest_experience_on_the_grid() -> None:
+    profile = {
+        "role": "qa",
+        "seniority": "senior",
+        "english": "upper-intermediate",
+        "city_group": "ukraine",
+    }
+
+    found = dd.grid_lookup(GRID, experience=4.4, **profile)  # 5 is closer than 3
+
+    assert found == {"p10": 2000.0, "p50": 3300.0, "p90": 4800.0, "experience_used": 5.0}
+    assert dd.grid_lookup(GRID, experience=40.0, **profile)["experience_used"] == 10.0  # type: ignore[index]
+
+
+def test_a_profile_that_is_not_in_the_grid_gets_none() -> None:
+    assert (
+        dd.grid_lookup(
+            GRID,
+            role="dev",
+            seniority="senior",
+            experience=3.0,
+            english="intermediate",
+            city_group="ukraine",
+        )
+        is None
+    )

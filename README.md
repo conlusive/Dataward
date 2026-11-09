@@ -92,6 +92,16 @@ make dashboard    # Streamlit on the last export: http://localhost:8501 (Ukraini
 Six pages: market overview, skills, stacks, salaries, pipeline status, about the data. It reads only
 the exported parquet files. See [docs/dashboard.md](docs/dashboard.md).
 
+## Salary model
+
+```bash
+make train   # needs `uv sync --group ml` and `make export`: trains, compares, maybe promotes, writes the dashboard grid
+```
+
+CatBoost with p10/p50/p90 on the DOU survey rows, judged on the last survey year, with a baseline and
+MLflow tracking; the dashboard shows the range for a profile. Details and limits:
+[docs/ml.md](docs/ml.md), latest run: [docs/ml_report.md](docs/ml_report.md).
+
 ## Observability
 
 ```bash

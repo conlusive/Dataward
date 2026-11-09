@@ -234,3 +234,40 @@ models:
       - name: closed_vacancies
         data_type: integer
         data_tests: [not_null]
+
+  - name: ml_features_salary
+    description: >
+      Survey answers with a salary and the features of the salary model (role, level, experience,
+      English, company, city group). Training and prediction read this table.
+    config:
+      contract: {enforced: true}
+    columns:
+      - name: survey_year
+        data_type: integer
+        data_tests: [not_null]
+      - name: role
+        data_type: varchar
+        data_tests: [not_null]
+      - name: seniority
+        data_type: varchar
+        data_tests: [not_null]
+      - name: experience_years
+        data_type: double
+      - name: english
+        data_type: varchar
+        data_tests: [not_null]
+      - name: company_size
+        data_type: varchar
+        data_tests: [not_null]
+      - name: company_type
+        data_type: varchar
+        data_tests: [not_null]
+      - name: city_group
+        data_type: varchar
+        data_tests: [not_null]
+      - name: salary_usd
+        data_type: double
+        data_tests: [not_null]
+      - name: weight
+        data_type: double
+        data_tests: [not_null]

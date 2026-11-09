@@ -39,6 +39,12 @@ dev = [
     "ruff>=0.5",
     "types-pyyaml>=6.0.12.20261103",
 ]
+ml = [
+    "alembic>=1.20.1",
+    "catboost>=1.2.10",
+    "mlflow-skinny>=3.18.0",
+    "sqlalchemy>=2.1.8",
+]
 
 [build-system]
 requires = ["hatchling"]
@@ -79,3 +85,7 @@ ignore_missing_imports = true  # networkx ships no type information
 [[tool.mypy.overrides]]
 module = ["pandas.*", "streamlit.*", "altair.*"]
 ignore_missing_imports = true  # optional dashboard group; pandas is typed loosely on purpose
+
+[[tool.mypy.overrides]]
+module = ["catboost.*", "mlflow.*"]
+ignore_missing_imports = true  # optional ml group; neither ships complete type information

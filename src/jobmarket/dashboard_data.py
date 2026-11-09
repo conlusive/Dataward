@@ -70,6 +70,15 @@ REQUIRED: dict[str, set[str]] = {
 }
 
 
+# The salary model's grid is optional: it exists only after `make train`.
+GRID_FILE = "salary_model_grid.parquet"
+GRID_INFO_FILE = "salary_model.json"
+GRID_COLUMNS = {
+    "role", "seniority", "experience_years", "english", "city_group", "survey_year",
+    "salary_p10", "salary_p50", "salary_p90",
+}  # fmt: skip
+
+
 class DataError(Exception):
     """A file is missing or lacks a column the dashboard needs."""
 
@@ -95,6 +104,47 @@ def read_json(directory: Path, name: str) -> dict[str, Any]:
         raise DataError(f"{path} not found: run the pipeline (`make pipeline`) to create it")
     loaded: dict[str, Any] = json.loads(path.read_text(encoding="utf-8"))
     return loaded
+
+
+# ---- salary calculator ---------------------------------------------------------------------------
+def read_grid(directory: Path) -> tuple[pd.DataFrame, dict[str, Any]] | None:
+    """The model's grid and its description, or None when no model has been trained yet."""
+    path = directory / GRID_FILE
+    if not path.exists():
+        return None
+    grid = duckdb.connect().execute("SELECT * FROM read_parquet(?)", [str(path)]).df()
+    missing = GRID_COLUMNS - set(grid.columns)
+    if missing:
+        raise DataError(f"{GRID_FILE} lacks the columns {sorted(missing)}: run `make train` again")
+    return grid, read_json(directory, GRID_INFO_FILE)
+
+
+def grid_lookup(
+    grid: pd.DataFrame,
+    *,
+    role: str,
+    seniority: str,
+    experience: float,
+    english: str,
+    city_group: str,
+) -> dict[str, float] | None:
+    """The range for a profile, at the grid's experience closest to ``experience``; None if the
+    profile is not in the grid."""
+    rows = grid[
+        (grid["role"] == role)
+        & (grid["seniority"] == seniority)
+        & (grid["english"] == english)
+        & (grid["city_group"] == city_group)
+    ]
+    if rows.empty:
+        return None
+    nearest = rows.iloc[(rows["experience_years"] - experience).abs().argsort().iloc[0]]
+    return {
+        "p10": float(nearest["salary_p10"]),
+        "p50": float(nearest["salary_p50"]),
+        "p90": float(nearest["salary_p90"]),
+        "experience_used": float(nearest["experience_years"]),
+    }
 
 
 # ---- market overview -------------------------------------------------------------------------

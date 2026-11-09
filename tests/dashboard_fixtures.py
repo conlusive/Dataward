@@ -193,6 +193,36 @@ LAST_UPDATE = {
 }
 
 
+GRID = pd.DataFrame(
+    {
+        "role": ["qa"] * 6,
+        "seniority": ["senior"] * 6,
+        "experience_years": [3.0, 5.0, 10.0, 3.0, 5.0, 10.0],
+        "english": ["intermediate"] * 3 + ["upper-intermediate"] * 3,
+        "city_group": ["ukraine"] * 6,
+        "survey_year": [2026] * 6,
+        "salary_p10": [1500.0, 1800.0, 2400.0, 1700.0, 2000.0, 2600.0],
+        "salary_p50": [2500.0, 3000.0, 4000.0, 2800.0, 3300.0, 4300.0],
+        "salary_p90": [3800.0, 4400.0, 6000.0, 4100.0, 4800.0, 6500.0],
+    }
+)
+GRID_INFO = {
+    "version": 3,
+    "tested_on_year": 2026,
+    "model": {"mae": 1245.0, "coverage_10_90": 0.795, "interval_width": 3900.0},
+    "baseline": {"mae": 1405.0, "coverage_10_90": 0.752, "interval_width": 3600.0},
+}
+
+
+def write_grid(directory: Path) -> None:
+    """The salary model's grid and description, which only exist after `make train`."""
+    con = duckdb.connect()
+    con.register("frame", GRID)
+    target = directory / "salary_model_grid.parquet"
+    con.execute(f"COPY (SELECT * FROM frame) TO '{target}' (FORMAT parquet)")
+    (directory / "salary_model.json").write_text(json.dumps(GRID_INFO), encoding="utf-8")
+
+
 def write_export(directory: Path) -> Path:
     directory.mkdir(parents=True, exist_ok=True)
     con = duckdb.connect()

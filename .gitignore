@@ -2,10 +2,12 @@
 data/bronze/
 data/export/
 data/export.tmp/
+data/mlflow/
 .env
 *.duckdb
 *.duckdb.wal
 mlruns/
+catboost_info/
 warehouse/target/
 warehouse/dbt_packages/
 warehouse/logs/

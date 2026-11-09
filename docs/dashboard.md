@@ -19,7 +19,7 @@ on the "about the data" page.
 | Огляд ринку | open, new and closed vacancies, trend by source, categories, filters, top skills | `fct_market_daily`, `fct_skill_demand_monthly`, `dim_skill` |
 | Навички | one skill: share of vacancies over time, declared salary, what it appears with, its stack | demand, `fct_skill_pairs`, `fct_salary_by_skill`, `skill_clusters` |
 | Стеки | the clusters and the pair graph of one cluster (threshold slider) | pairs, `skill_clusters` |
-| Зарплати | DOU survey benchmarks by role, level and year; how long vacancies stay open | `fct_salary_survey`, `fct_vacancy_lifetime` |
+| Зарплати | the salary calculator (the model's p10-p50-p90 for a profile), DOU survey benchmarks by role, level and year, how long vacancies stay open | `salary_model_grid` (optional, after `make train`), `fct_salary_survey`, `fct_vacancy_lifetime` |
 | Стан пайплайну | SLOs, recent runs, checks, scraping errors, volumes | `status.json` |
 | Про дані | export time, rows per table, sources, limitations | `last_update.json` |
 
@@ -48,5 +48,5 @@ a real export: each rendered in about a second or less.
 
 - **Hosting.** Streamlit Community Cloud and the Hugging Face mirror need accounts. The data must reach
   the app (the `data` branch or object storage); until then it runs locally or in the container.
-- **Salary calculator model** and **typical vacancies per skill**: see ADR 0033.
+- **Typical vacancies per skill**: it needs vacancy-level rows in the export, which means publishing third-party listings; left out until that is decided.
 - **English UI**: only Ukrainian for now.
