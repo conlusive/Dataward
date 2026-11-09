@@ -9,6 +9,7 @@ that does not is asked for again with the error attached, then reported as a fai
 import asyncio
 import json
 import os
+import time
 from collections.abc import Awaitable, Callable, Mapping
 from dataclasses import dataclass
 from pathlib import Path
@@ -26,6 +27,48 @@ MAX_DESCRIPTION_CHARS = 6000  # about 1500 tokens: enough for any real requireme
 MAX_SKILLS = 60
 
 Sleep = Callable[[float], Awaitable[None]]
+
+RATE_LIMIT_WAIT_S = 15.0  # per attempt, when a 429 does not say how long to wait
+MAX_RETRY_AFTER_S = 120.0
+
+
+class RateLimiter:
+    """Spaces request starts at least ``60 / rpm`` seconds apart, whatever the concurrency.
+
+    A free tier allows a few requests a minute; asking politely is cheaper than being refused and
+    waiting. Each caller reserves the next free slot and sleeps until it.
+    """
+
+    def __init__(
+        self,
+        rpm: float,
+        *,
+        clock: Callable[[], float] = time.monotonic,
+        sleep: Sleep = asyncio.sleep,
+    ) -> None:
+        if rpm <= 0:
+            raise ValueError("rpm must be positive")
+        self._interval = 60.0 / rpm
+        self._clock, self._sleep = clock, sleep
+        self._next = 0.0
+        self._lock = asyncio.Lock()
+
+    async def wait(self) -> None:
+        async with self._lock:
+            now = self._clock()
+            start = max(now, self._next)
+            self._next = start + self._interval
+        if start > now:
+            await self._sleep(start - now)
+
+
+def _retry_after(response: httpx.Response, attempt: int) -> float:
+    """How long to wait after a 429: what the server asks for, else a patient wait that grows."""
+    asked = response.headers.get("retry-after", "")
+    try:
+        return min(max(float(asked), 1.0), MAX_RETRY_AFTER_S)
+    except ValueError:
+        return RATE_LIMIT_WAIT_S * attempt
 
 
 class ExtractedSkill(BaseModel):
@@ -99,7 +142,9 @@ class OpenAICompatibleClient:
         client: httpx.AsyncClient | None = None,
         max_attempts: int = 4,
         sleep: Sleep = asyncio.sleep,
+        limiter: RateLimiter | None = None,
     ) -> None:
+        self._limiter = limiter
         self.model = model
         self._url = base_url.rstrip("/") + "/chat/completions"
         self._headers = {"Authorization": f"Bearer {api_key}"} if api_key else {}
@@ -120,20 +165,27 @@ class OpenAICompatibleClient:
             ],
         }
         last_problem = "no attempt made"
+        pause = 0.0
         for attempt in range(1, self._max_attempts + 1):
+            pause = 2.0**attempt
+            if self._limiter is not None:
+                await self._limiter.wait()
             try:
                 response = await self._client.post(self._url, json=body, headers=self._headers)
             except httpx.TransportError as exc:
                 last_problem = repr(exc)
             else:
-                if response.status_code == 429 or response.status_code >= 500:
+                if response.status_code == 429:
+                    last_problem = "HTTP 429 (rate limit or daily quota)"
+                    pause = _retry_after(response, attempt)
+                elif response.status_code >= 500:
                     last_problem = f"HTTP {response.status_code}"
                 elif response.status_code >= 400:
                     raise LlmError(f"HTTP {response.status_code}: {response.text[:300]}")
                 else:
                     return _reply(response.json())
             if attempt < self._max_attempts:
-                await self._sleep(2.0**attempt)
+                await self._sleep(pause)
         raise LlmError(f"giving up after {self._max_attempts} attempts: {last_problem}")
 
 
@@ -150,9 +202,15 @@ def _reply(payload: Any) -> Reply:
         raise LlmError(f"unexpected response shape: {exc!r}") from exc
 
 
-def client_from_env(env: Mapping[str, str] | None = None) -> OpenAICompatibleClient:
-    """Pick the provider from LLM_MODEL: ``gemini/...``, ``ollama/...`` or an OpenAI model name."""
+def client_from_env(
+    env: Mapping[str, str] | None = None, *, rpm: float | None = None
+) -> OpenAICompatibleClient:
+    """Pick the provider from LLM_MODEL: ``gemini/...``, ``ollama/...`` or an OpenAI model name.
+
+    ``rpm`` caps the requests per minute (for a free tier); None means no cap.
+    """
     env = os.environ if env is None else env
+    limiter = RateLimiter(rpm) if rpm else None
     model = env.get("LLM_MODEL") or DEFAULT_MODEL
     if model.startswith("gemini/"):
         key = env.get("GEMINI_API_KEY")
@@ -162,14 +220,19 @@ def client_from_env(env: Mapping[str, str] | None = None) -> OpenAICompatibleCli
             base_url="https://generativelanguage.googleapis.com/v1beta/openai",
             model=model,
             api_key=key,
+            limiter=limiter,
         )
     if model.startswith("ollama/"):
         base = env.get("OLLAMA_BASE_URL") or "http://localhost:11434"
-        return OpenAICompatibleClient(base_url=base.rstrip("/") + "/v1", model=model)
+        return OpenAICompatibleClient(
+            base_url=base.rstrip("/") + "/v1", model=model, limiter=limiter
+        )
     key = env.get("OPENAI_API_KEY")
     if not key:
         raise LlmError("OPENAI_API_KEY is not set (needed for an OpenAI model)")
-    return OpenAICompatibleClient(base_url="https://api.openai.com/v1", model=model, api_key=key)
+    return OpenAICompatibleClient(
+        base_url="https://api.openai.com/v1", model=model, api_key=key, limiter=limiter
+    )
 
 
 async def extract(

@@ -9,6 +9,7 @@ from jobmarket.skills.llm import (
     ExtractionResult,
     LlmError,
     OpenAICompatibleClient,
+    RateLimiter,
     Reply,
     Usage,
     client_from_env,
@@ -66,7 +67,7 @@ async def test_request_shape_and_reply_parsing() -> None:
     assert reply == Reply('{"skills": []}', Usage(321, 45))
 
 
-async def test_rate_limits_and_server_errors_are_retried_with_a_growing_pause() -> None:
+async def test_server_errors_back_off_briefly_and_rate_limits_patiently() -> None:
     statuses = iter([429, 503, 200])
     sleeps = Sleeps()
 
@@ -77,7 +78,7 @@ async def test_rate_limits_and_server_errors_are_retried_with_a_growing_pause() 
     reply = await _client(handler, sleeps=sleeps).complete("s", "u")
 
     assert reply.content == "{}"
-    assert sleeps.calls == [2.0, 4.0]
+    assert sleeps.calls == [15.0, 4.0]  # 429 waits 15 s (not 2); the 503 on attempt 2 waits 2**2
 
 
 async def test_it_gives_up_after_the_last_attempt() -> None:
@@ -207,3 +208,120 @@ def test_cost_comes_from_the_price_file_and_is_zero_for_unknown_models(tmp_path:
     assert estimate_cost("m", usage, prices) == 2.0
     assert estimate_cost("gemini/m", usage, prices) == 2.0  # the provider prefix is ignored
     assert estimate_cost("local-model", usage, prices) == 0.0
+
+
+async def test_a_rate_limit_waits_as_long_as_the_server_asks() -> None:
+    answers = iter([httpx.Response(429, headers={"retry-after": "42"}), None])
+    sleeps = Sleeps()
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        return next(answers) or httpx.Response(200, json=_answer("{}"))
+
+    await _client(handler, sleeps=sleeps).complete("s", "u")
+
+    assert sleeps.calls == [42.0]
+
+
+async def test_an_absurd_retry_after_is_capped() -> None:
+    answers = iter([httpx.Response(429, headers={"retry-after": "86400"}), None])
+    sleeps = Sleeps()
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        return next(answers) or httpx.Response(200, json=_answer("{}"))
+
+    await _client(handler, sleeps=sleeps).complete("s", "u")
+
+    assert sleeps.calls == [120.0]
+
+
+async def test_without_retry_after_the_rate_limit_wait_grows_with_the_attempt() -> None:
+    statuses = iter([429, 429, 200])
+    sleeps = Sleeps()
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        status = next(statuses)
+        return httpx.Response(status, json=_answer("{}") if status == 200 else {})
+
+    await _client(handler, sleeps=sleeps).complete("s", "u")
+
+    assert sleeps.calls == [15.0, 30.0]
+
+
+async def test_a_daily_quota_ends_in_a_clear_error_after_the_last_attempt() -> None:
+    def handler(request: httpx.Request) -> httpx.Response:
+        return httpx.Response(429, json={})
+
+    with pytest.raises(LlmError, match="429.*quota"):
+        await _client(handler, attempts=2).complete("s", "u")
+
+
+async def test_the_limiter_spaces_request_starts_even_when_they_arrive_together() -> None:
+    clock_now = [100.0]
+    waits: list[float] = []
+
+    async def sleep(seconds: float) -> None:
+        waits.append(seconds)
+
+    limiter = RateLimiter(30, clock=lambda: clock_now[0], sleep=sleep)  # one every 2 seconds
+
+    for _ in range(3):
+        await limiter.wait()
+
+    assert waits == [2.0, 4.0]  # the first goes at once; the others take the next free slots
+
+
+async def test_the_limiter_does_not_delay_a_request_that_comes_after_the_gap() -> None:
+    clock_now = [0.0]
+    waits: list[float] = []
+
+    async def sleep(seconds: float) -> None:
+        waits.append(seconds)
+
+    limiter = RateLimiter(60, clock=lambda: clock_now[0], sleep=sleep)
+    await limiter.wait()
+    clock_now[0] = 10.0  # long after the next slot
+
+    await limiter.wait()
+
+    assert waits == []
+
+
+def test_a_non_positive_rate_is_refused() -> None:
+    with pytest.raises(ValueError, match="positive"):
+        RateLimiter(0)
+
+
+async def test_the_limiter_is_asked_before_every_attempt_including_retries() -> None:
+    asked = 0
+
+    class Counting(RateLimiter):
+        async def wait(self) -> None:
+            nonlocal asked
+            asked += 1
+
+    statuses = iter([503, 200])
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        status = next(statuses)
+        return httpx.Response(status, json=_answer("{}") if status == 200 else {})
+
+    client = OpenAICompatibleClient(
+        base_url="https://api.example.com/v1",
+        model="gpt-4o-mini",
+        client=httpx.AsyncClient(transport=httpx.MockTransport(handler)),
+        sleep=Sleeps(),
+        limiter=Counting(60),
+    )
+
+    await client.complete("s", "u")
+
+    assert asked == 2
+
+
+def test_an_rpm_given_to_the_factory_reaches_the_client() -> None:
+    capped = client_from_env(
+        {"LLM_MODEL": "gemini/gemini-2.5-flash-lite", "GEMINI_API_KEY": "g"}, rpm=8
+    )
+    free = client_from_env({"LLM_MODEL": "gemini/gemini-2.5-flash-lite", "GEMINI_API_KEY": "g"})
+
+    assert capped._limiter is not None and free._limiter is None

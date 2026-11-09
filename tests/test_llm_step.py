@@ -202,6 +202,25 @@ async def test_limit_stops_early_and_leaves_the_rest_untouched(
     assert _rows(silver, "SELECT DISTINCT vacancy_id FROM silver_llm_terms") == [("dou:1",)]
 
 
+async def test_only_the_listed_vacancies_are_asked_and_the_others_are_left_alone(
+    stores: tuple[SilverStore, OpsStore],
+) -> None:
+    silver, ops = stores
+    _add(silver, "dou:1", "Dev", "ALPHA needs things")
+    _add(silver, "dou:2", "Dev", "BETA needs things")
+    _add(silver, "dou:3", "Dev", "ALPHA needs other things")
+    client = FakeClient(ANSWERS)
+
+    stats = await _run(silver, ops, client, only_ids={"dou:1", "dou:3"})
+
+    assert (stats.vacancies, stats.calls) == (2, 2) and len(client.requests) == 2
+    assert not any("BETA" in request for request in client.requests)
+    assert _rows(silver, "SELECT DISTINCT vacancy_id FROM silver_llm_terms ORDER BY 1") == [
+        ("dou:1",),
+        ("dou:3",),
+    ]
+
+
 async def test_the_cost_cap_stops_new_batches(
     stores: tuple[SilverStore, OpsStore], monkeypatch: pytest.MonkeyPatch
 ) -> None:

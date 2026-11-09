@@ -124,6 +124,12 @@ def render_sheet(candidates: list[Candidate], prefill: dict[str, list[str]] | No
     return "\n".join(lines)
 
 
+def sheet_ids(sheet: Path = SHEET_FILE) -> set[str]:
+    """The vacancy ids listed in a label sheet."""
+    return {m.group(1) for line in sheet.read_text(encoding="utf-8").splitlines()
+            if (m := _HEADING.match(line))}  # fmt: skip
+
+
 def parse_sheet(text: str, known_ids: set[str]) -> SheetLabels:
     parsed = SheetLabels()
     current: str | None = None
