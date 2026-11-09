@@ -199,3 +199,38 @@ models:
         data_type: double
       - name: lifetime_p75
         data_type: double
+
+  - name: fct_market_daily
+    description: Vacancies per day, source, category and level (open, new, closed), for the market overview.
+    config:
+      contract: {enforced: true}
+    data_tests:
+      - unique_combination:
+          arguments:
+            column_names: [date, source, category, seniority]
+    columns:
+      - name: date
+        data_type: date
+        data_tests: [not_null]
+      - name: source
+        data_type: varchar
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: [dou, djinni]
+      - name: category
+        data_type: varchar
+        data_tests: [not_null]
+      - name: seniority
+        data_type: varchar
+        data_tests: [not_null]
+      - name: open_vacancies
+        data_type: integer
+        data_tests: [not_null]
+      - name: new_vacancies
+        data_type: integer
+        data_tests: [not_null]
+      - name: closed_vacancies
+        data_type: integer
+        data_tests: [not_null]

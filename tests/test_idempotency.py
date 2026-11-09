@@ -28,6 +28,7 @@ MARTS = (
     "fct_salary_by_skill",
     "fct_salary_survey",
     "fct_vacancy_lifetime",
+    "fct_market_daily",
 )
 
 

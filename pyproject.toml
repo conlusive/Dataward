@@ -20,6 +20,9 @@ dependencies = [
 jobmarket = "jobmarket.cli:main"
 
 [dependency-groups]
+dashboard = [
+    "streamlit>=1.67.0",
+]
 dev = [
     "dbt-core>=1.12.6",
     "dbt-duckdb>=1.11.1",

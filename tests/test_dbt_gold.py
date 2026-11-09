@@ -242,6 +242,30 @@ def test_lifetime_counts_only_closed_vacancies_that_were_not_open_before_the_dat
     assert rows == [("middle", 2, 2.25, 2.5, 2.75)]
 
 
+def test_the_market_overview_counts_open_new_and_closed_vacancies_per_day_and_level(
+    db: Path,
+) -> None:
+    _dbt(db, "build", "--vars", SMALL)
+
+    def day(d: int) -> list[tuple]:  # type: ignore[type-arg]
+        return _rows(
+            db,
+            "SELECT source, category, seniority, open_vacancies, new_vacancies, closed_vacancies "
+            f"FROM fct_market_daily WHERE date = DATE '2026-11-0{d}' ORDER BY seniority",
+        )
+
+    # day 3: dou:1 (senior) and dou:2 (middle) are active, dou:3 (middle) is new
+    assert day(3) == [
+        ("dou", "unknown", "middle", 2, 1, 0),
+        ("dou", "unknown", "senior", 1, 0, 0),
+    ]
+    # day 5: dou:2 is found closed (missing two days), dou:3 is still listed
+    assert day(5) == [
+        ("dou", "unknown", "middle", 1, 0, 1),
+        ("dou", "unknown", "senior", 1, 0, 0),
+    ]
+
+
 def test_with_the_default_thresholds_these_few_rows_publish_nothing(db: Path) -> None:
     _dbt(db, "build")
 
