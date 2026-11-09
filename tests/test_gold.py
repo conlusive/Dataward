@@ -9,6 +9,7 @@ from jobmarket.gold import (
     Metrics,
     load_gold,
     load_labelled_by,
+    load_wanted,
     parse_sheet,
     render_metrics,
     render_sheet,
@@ -18,6 +19,7 @@ from jobmarket.gold import (
     write_gold,
 )
 from jobmarket.gold_commands import evaluate, import_labels, make_sheet
+from jobmarket.ops import _LLM_USAGE_DDL
 from jobmarket.silver.dedup_step import apply_dedup
 from jobmarket.silver.model import ParsedVacancy
 from jobmarket.silver.store import SilverStore
@@ -276,3 +278,74 @@ def test_a_gold_file_from_before_the_provenance_was_recorded_still_loads(tmp_pat
 def test_importing_without_saying_who_labelled_is_refused() -> None:
     with pytest.raises(SystemExit):
         main(["gold-import"])
+
+
+def _fill(silver: SilverStore, method: str, skip: set[str] | None = None) -> None:
+    insert = (
+        "INSERT INTO silver_vacancy_skills VALUES "
+        f"(?, ?, 'required', '{method}', 1.0, NULL, NULL, 'r', now())"
+    )
+    for (vid,) in silver._con.execute("SELECT id FROM silver_vacancies").fetchall():
+        if vid not in (skip or set()):
+            for skill in ("python", "django"):
+                silver._con.execute(insert, [vid, skill])
+
+
+def _labelled(silver: SilverStore, tmp_path: Path) -> tuple[Path, Path]:
+    sheet, gold_file = tmp_path / "s.md", tmp_path / "g.yaml"
+    make_sheet(silver, 4, 1, prefill=True, force=True, sheet=sheet)  # python, django each
+    import_labels(
+        silver, labelled_by="test", sheet=sheet, gold_file=gold_file, texts_file=tmp_path / "t.yaml"
+    )
+    return sheet, gold_file
+
+
+def test_an_llm_miss_on_a_vacancy_it_answered_with_nothing_still_counts(
+    silver: SilverStore, tmp_path: Path
+) -> None:
+    _, gold_file = _labelled(silver, tmp_path)
+    silent = sorted(load_gold(gold_file))[0]
+    silver._con.execute(_LLM_USAGE_DDL)  # the cost line reads it
+    _fill(silver, "llm", skip={silent})  # no skill rows for `silent`: it found nothing
+    metrics = tmp_path / "m.md"
+
+    evaluate(silver, gold_file=gold_file, out=metrics)
+    assert "| llm | 3 | 1.00 | 1.00 | 1.00 |" in metrics.read_text(
+        encoding="utf-8"
+    )  # not asked: left out
+
+    silver._con.execute(  # the cache says the LLM was asked about it and had nothing to say
+        "INSERT INTO llm_cache SELECT 'k', content_hash, 'm', 'v', '{}', 1, 1, 0.0, now() "
+        "FROM silver_vacancies WHERE id = ?",
+        [silent],
+    )
+    evaluate(silver, gold_file=gold_file, out=metrics)
+
+    assert "| llm | 4 | 1.00 | 0.75 | 0.86 |" in metrics.read_text(
+        encoding="utf-8"
+    )  # 2 of 8 missed
+
+
+def test_skills_the_taxonomy_lacks_are_kept_and_counted_on_the_metrics_page(
+    silver: SilverStore, tmp_path: Path
+) -> None:
+    sheet = tmp_path / "s.md"
+    make_sheet(silver, 4, 1, prefill=True, force=True, sheet=sheet)
+    text = sheet.read_text(encoding="utf-8")
+    for extra in (
+        "+ Quantum basketry\n+ Origami",
+        "+ quantum BASKETRY",
+    ):  # two spellings, 2 vacancies
+        text = text.replace("- python\n\n---", f"- python\n{extra}\n\n---", 1)
+    sheet.write_text(text, encoding="utf-8")
+    gold_file, metrics = tmp_path / "g.yaml", tmp_path / "m.md"
+    import_labels(
+        silver, labelled_by="test", sheet=sheet, gold_file=gold_file, texts_file=tmp_path / "t.yaml"
+    )
+    _fill(silver, "dictionary")
+
+    evaluate(silver, gold_file=gold_file, out=metrics)
+
+    page = metrics.read_text(encoding="utf-8")
+    assert sum(len(v) for v in load_wanted(gold_file).values()) == 3
+    assert "Quantum basketry (2)" in page and "Origami (1)" in page  # the spellings are merged

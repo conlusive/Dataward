@@ -1,5 +1,6 @@
 """The gold-set commands: sample a label sheet, import the labels, evaluate the methods."""
 
+from collections import Counter
 from pathlib import Path
 
 from loguru import logger
@@ -12,6 +13,7 @@ from jobmarket.gold import (
     Candidate,
     load_gold,
     load_labelled_by,
+    load_wanted,
     parse_sheet,
     render_metrics,
     render_sheet,
@@ -26,6 +28,7 @@ from jobmarket.skills.dictionary import DictionaryExtractor
 from jobmarket.skills.taxonomy import load_taxonomy
 
 METRICS_FILE = Path("docs/metrics.md")
+WANTED_SHOWN = 40  # the most frequent missing skills shown on the metrics page
 METHODS = ("dictionary", "llm")
 
 
@@ -82,7 +85,14 @@ def import_labels(
             "{} vacancies are not labelled yet and are left out (label them with `gold-label`)",
             len(parsed.unlabelled),
         )
-    write_gold(parsed.labels, candidates, gold_file, texts_file, labelled_by=labelled_by)
+    write_gold(
+        parsed.labels,
+        candidates,
+        gold_file,
+        texts_file,
+        labelled_by=labelled_by,
+        wanted=parsed.wanted,
+    )
     wanted = sum(len(v) for v in parsed.wanted.values())
     logger.info(
         "imported {} vacancies; {} skills the taxonomy lacks were requested",
@@ -116,6 +126,16 @@ def evaluate(silver: SilverStore, *, gold_file: Path = GOLD_FILE, out: Path = ME
         logger.error("no gold vacancy is usable")
         return 2
 
+    # A method that ran on a vacancy and found nothing has no rows, yet it was asked: for the LLM
+    # the cache says so, and a miss on such a vacancy must count (else it would leave the score).
+    asked_llm = {
+        row[0]
+        for row in silver._con.execute(
+            "SELECT id FROM silver_vacancies WHERE id IN (SELECT unnest(?::VARCHAR[])) "
+            "AND content_hash IN (SELECT content_hash FROM llm_cache)",
+            [sorted(gold)],
+        ).fetchall()
+    }
     rows, errors = [], {}
     for method in METHODS:
         predicted: dict[str, set[str]] = {}
@@ -131,13 +151,22 @@ def evaluate(silver: SilverStore, *, gold_file: Path = GOLD_FILE, out: Path = ME
         evaluated = {
             vid: skills
             for vid, skills in gold.items()
-            if vid in predicted or method == "dictionary"
+            if vid in predicted or method == "dictionary" or (method == "llm" and vid in asked_llm)
         }
         rows.append((method, score(evaluated, predicted), _cost_per_10k(silver, method)))
         errors[method] = top_errors(evaluated, predicted)
     out.parent.mkdir(parents=True, exist_ok=True)
+    wanted: Counter[str] = Counter()
+    names: dict[str, str] = {}
+    for vid, skills_wanted in load_wanted(gold_file).items():
+        if vid in gold:
+            for name in skills_wanted:
+                wanted[name.casefold()] += 1
+                names.setdefault(name.casefold(), name)
+    gaps = [(names[key], count) for key, count in wanted.most_common(WANTED_SHOWN)]
     out.write_text(
-        render_metrics(rows, [], errors, labelled_by=load_labelled_by(gold_file)), encoding="utf-8"
+        render_metrics(rows, gaps, errors, labelled_by=load_labelled_by(gold_file)),
+        encoding="utf-8",
     )
     for name, metrics, _ in rows:
         logger.info(

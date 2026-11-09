@@ -179,6 +179,7 @@ def write_gold(
     texts_file: Path,
     *,
     labelled_by: str,
+    wanted: dict[str, list[str]] | None = None,
 ) -> None:
     gold = [
         {
@@ -193,7 +194,16 @@ def write_gold(
     gold_file.write_text(
         "# Labelled skills per vacancy (ids from the taxonomy). Texts are kept separately.\n"
         + yaml.safe_dump(
-            {"labelled_by": labelled_by, "vacancies": gold}, allow_unicode=True, sort_keys=False
+            {
+                "labelled_by": labelled_by,
+                # skills a vacancy asks for that the taxonomy lacks: the list of what to add next
+                "wanted": {
+                    v: sorted(w) for v, w in (wanted or {}).items() if v in candidates and w
+                },
+                "vacancies": gold,
+            },
+            allow_unicode=True,
+            sort_keys=False,
         ),
         encoding="utf-8",
     )
@@ -221,6 +231,12 @@ def load_labelled_by(gold_file: Path = GOLD_FILE) -> str | None:
     """Who made the labels (None for a file written before this was recorded)."""
     value = yaml.safe_load(gold_file.read_text(encoding="utf-8")).get("labelled_by")
     return str(value) if value else None
+
+
+def load_wanted(gold_file: Path = GOLD_FILE) -> dict[str, list[str]]:
+    """Skills named in the sheet's `+ Name` lines that the taxonomy lacks, per vacancy."""
+    data = yaml.safe_load(gold_file.read_text(encoding="utf-8"))
+    return {str(v): [str(n) for n in names] for v, names in (data.get("wanted") or {}).items()}
 
 
 def load_gold(gold_file: Path = GOLD_FILE) -> dict[str, dict[str, Any]]:
