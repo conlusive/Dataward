@@ -39,6 +39,12 @@ dev = [
     "ruff>=0.5",
     "types-pyyaml>=6.0.12.20261103",
 ]
+ml = [
+    "alembic>=1.20.1",
+    "catboost>=1.2.10",
+    "mlflow-skinny>=3.18.0",
+    "sqlalchemy>=2.1.8",
+]
 
 [build-system]
 requires = ["hatchling"]

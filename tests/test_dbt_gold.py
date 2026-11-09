@@ -106,13 +106,25 @@ def db(tmp_path: Path) -> Path:
     survey: list[
         SurveyRecord
     ] = [  # (row_no, position, experience, city, english, size, type, salary_usd, weight)
-        (1, "Senior QA engineer", None, "Киев", None, None, None, 1000.0, 1.0),
+        (
+            1,
+            "Senior QA engineer",
+            5.0,
+            "Киев",
+            " Upper-Intermediate ",
+            "<=50",
+            "Product",
+            1000.0,
+            1.0,
+        ),
         (2, "Senior QA engineer", None, "Киев", None, None, None, 2000.0, 1.0),
         (3, "Senior QA engineer", None, "Київ", None, None, None, 3000.0, 1.0),
         (4, "Senior QA engineer", None, "Київ", None, None, None, 4000.0, 1.0),
         (5, "Middle", None, "Київ", None, None, None, 1000.0, 9.0),
         (6, "Middle", None, "Київ", None, None, None, 5000.0, 1.0),
         (7, "Всі", None, "Київ", None, None, None, 9000.0, 1.0),  # one respondent: too few
+        (8, "Всі", 55.0, "Київ", None, None, None, 9100.0, 1.0),  # implausible experience
+        (9, "Всі", -1.0, "Київ", None, None, None, 9200.0, 1.0),  # still below the minimum of 4
     ]
     store.replace_survey_file(
         "s.csv", "2024_june", date(2024, 6, 1), survey, run_id="r1", loaded_at=NOW
@@ -225,6 +237,34 @@ def test_survey_percentiles_are_weighted_and_small_groups_are_not_published(db: 
         # 9 of 10 respondents earn 1000, so every percentile is 1000
         (2024, "software_engineer", "middle", 10.0, 1000.0, 1000.0, 1000.0),
     ]  # the lone "Всі" answer (role other) is below the minimum of 4
+
+
+def test_the_salary_model_features_are_normalised_and_keep_every_answer(db: Path) -> None:
+    _dbt(db, "build", "--vars", SMALL)
+
+    rows = _rows(
+        db,
+        "SELECT role, seniority, experience_years, english, company_size, company_type, "
+        "city_group, salary_usd FROM ml_features_salary ORDER BY salary_usd, role",
+    )
+
+    assert len(rows) == 9  # no answer is dropped
+    # case and spaces are normalised, a stated experience is kept
+    assert rows[0] == (
+        "qa",
+        "senior",
+        5.0,
+        "upper-intermediate",
+        "<=50",
+        "product",
+        "ukraine",
+        1000.0,
+    )
+    # a missing value becomes "unknown" (not null), so the model sees it as a category
+    assert rows[1][3:6] == ("unknown", "unknown", "unknown")
+    # experience over 40 years or below 0 is blanked, the salary stays
+    implausible = [r for r in rows if r[7] in (9100.0, 9200.0)]
+    assert [r[2] for r in implausible] == [None, None]
 
 
 def test_lifetime_counts_only_closed_vacancies_that_were_not_open_before_the_data_began(
