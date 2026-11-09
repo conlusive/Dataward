@@ -1,5 +1,13 @@
 # Changelog
 
+## Unreleased
+
+### Changed
+- **Dashboard redesign**: a home page with six numbered tiles, five pages with tabs (Головна, Ринок,
+  Навички, Зарплати, Стан і дані), a searchable and sortable skill ranking with the change against the
+  previous month, declared salaries by skill, CSV downloads, and a dark "smoky lilac" theme with monospace
+  type. The stack graph now draws at most 60 of the strongest links.
+
 ## 0.2.1: the first measured accuracy
 
 ### Added

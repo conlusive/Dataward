@@ -179,6 +179,27 @@ def open_by_category(market: pd.DataFrame, *, top: int = 15) -> pd.DataFrame:
     return counts.sort_values("open_vacancies", ascending=False).head(top).reset_index(drop=True)
 
 
+def market_totals(market: pd.DataFrame) -> pd.DataFrame:
+    """One row per day: open, new and closed vacancies summed over the selected slice."""
+    daily = market.groupby("date", as_index=False)[
+        ["open_vacancies", "new_vacancies", "closed_vacancies"]
+    ].sum()
+    return daily.sort_values("date").reset_index(drop=True)
+
+
+def open_by_seniority(market: pd.DataFrame) -> pd.DataFrame:
+    """Open vacancies by level on the latest day in ``market``, most first.
+
+    A vacancy that names no level is stored as "unknown"; it is shown as "не вказано".
+    """
+    if market.empty:
+        return pd.DataFrame(columns=["seniority", "open_vacancies"])
+    latest = market[market["date"] == market["date"].max()]
+    counts = latest.groupby("seniority", as_index=False)["open_vacancies"].sum()
+    counts["seniority"] = counts["seniority"].replace({"unknown": "не вказано"})
+    return counts.sort_values("open_vacancies", ascending=False).reset_index(drop=True)
+
+
 # ---- skills ----------------------------------------------------------------------------------
 MIN_MONTH_VACANCIES = 200  # fewer new vacancies than this and a share is mostly noise
 
@@ -212,6 +233,63 @@ def top_skills(
         .head(n)[columns]
         .reset_index(drop=True)
     )
+
+
+def month_options(demand: pd.DataFrame, *, min_vacancies: int = MIN_MONTH_VACANCIES) -> list[Any]:
+    """Months to choose from, newest first; those with too few vacancies for a share are left out
+    unless that would leave nothing (a young dataset)."""
+    sizes = demand.groupby("month")["month_vacancies"].max()
+    enough = sizes[sizes >= min_vacancies]
+    chosen = enough if len(enough) else sizes
+    return sorted(chosen.index, reverse=True)
+
+
+def skill_ranking(
+    demand: pd.DataFrame,
+    skills: pd.DataFrame,
+    salary: pd.DataFrame,
+    *,
+    month: Any,
+    previous: Any = None,
+) -> pd.DataFrame:
+    """Every skill seen in ``month`` with what an analyst compares: share, how often it is a hard
+    requirement, the change against ``previous`` (percentage points) and the declared salary.
+
+    ``change_pp`` is empty when there is no earlier month or the skill was not seen then.
+    """
+    rows = demand[demand["month"] == month].merge(skills, on="skill_id", how="left")
+    rows["required_share"] = rows["vacancies_required"] / rows["month_vacancies"]
+    if previous is not None:
+        before = demand.loc[demand["month"] == previous, ["skill_id", "share"]]
+        rows = rows.merge(
+            before.rename(columns={"share": "share_before"}), on="skill_id", how="left"
+        )
+        rows["change_pp"] = (rows["share"] - rows["share_before"]) * 100
+    else:
+        rows["change_pp"] = float("nan")
+    paid = salary[["skill_id", "vacancies_with_salary", "salary_median"]]
+    rows = rows.merge(paid, on="skill_id", how="left")
+    columns = [
+        "skill_id", "canonical", "category", "vacancies", "share", "required_share",
+        "change_pp", "salary_median", "vacancies_with_salary",
+    ]  # fmt: skip
+    ranked = rows.sort_values(["share", "canonical"], ascending=[False, True])[columns]
+    return ranked.reset_index(drop=True)
+
+
+def salary_ranking(
+    salary: pd.DataFrame, skills: pd.DataFrame, *, min_vacancies: int = 1
+) -> pd.DataFrame:
+    """Declared-salary percentiles per skill, highest median first (the mart already hides skills
+    with too few vacancies; ``min_vacancies`` lets the reader ask for more)."""
+    rows = salary[salary["vacancies_with_salary"] >= min_vacancies].merge(
+        skills[["skill_id", "canonical", "category"]], on="skill_id", how="left"
+    )
+    columns = [
+        "canonical", "category", "vacancies_with_salary", "salary_p25", "salary_median",
+        "salary_p75",
+    ]  # fmt: skip
+    return rows.sort_values("salary_median", ascending=False)[columns].reset_index(drop=True)
 
 
 def skill_trend(demand: pd.DataFrame, skill_id: str) -> pd.DataFrame:
@@ -282,24 +360,45 @@ def cluster_overview(clusters: pd.DataFrame, skills: pd.DataFrame) -> pd.DataFra
     return pd.DataFrame(rows, columns=["cluster_id", "size", "label", "members"])
 
 
-def stack_dot(
-    pairs: pd.DataFrame, clusters: pd.DataFrame, skills: pd.DataFrame, cluster_id: int,
-    *, min_npmi: float = 0.3,
-) -> str:  # fmt: skip
-    """The pair graph of one cluster as Graphviz DOT; edge width grows with NPMI."""
+STACK_EDGE_LIMIT = 60  # more lines than this turn a graph into a hairball nobody can read
+
+
+def stack_edges(
+    pairs: pd.DataFrame, clusters: pd.DataFrame, cluster_id: int, *, min_npmi: float = 0.3
+) -> tuple[pd.DataFrame, int]:
+    """The strongest links of one cluster: (at most STACK_EDGE_LIMIT edges, how many qualified)."""
     members = set(clusters.loc[clusters["cluster_id"] == cluster_id, "skill_id"])
-    names = dict(zip(skills["skill_id"], skills["canonical"], strict=False))
     edges = pairs[
         pairs["skill_a"].isin(members)
         & pairs["skill_b"].isin(members)
         & (pairs["npmi"] >= min_npmi)
-    ]
+    ].sort_values("npmi", ascending=False)
+    return edges.head(STACK_EDGE_LIMIT), len(edges)
+
+
+def stack_dot(
+    pairs: pd.DataFrame, clusters: pd.DataFrame, skills: pd.DataFrame, cluster_id: int,
+    *, min_npmi: float = 0.3,
+) -> str:  # fmt: skip
+    """The pair graph of one cluster as Graphviz DOT; edge width grows with NPMI.
+
+    Only the strongest links are drawn and only the skills they touch, so the graph stays readable.
+    """
+    edges, _ = stack_edges(pairs, clusters, cluster_id, min_npmi=min_npmi)
+    names = dict(zip(skills["skill_id"], skills["canonical"], strict=False))
+    touched = set(edges["skill_a"]) | set(edges["skill_b"])
 
     def quote(text: str) -> str:
         return '"' + text.replace("\\", "\\\\").replace('"', '\\"') + '"'
 
-    lines = ["graph G {", "  layout=neato; overlap=false; node [shape=ellipse, fontsize=11];"]
-    lines += [f"  {quote(names.get(m, m))};" for m in sorted(members)]
+    lines = [
+        "graph G {",
+        '  bgcolor="transparent"; layout=neato; overlap=false; sep="+8";',
+        '  node [shape=ellipse, style=filled, fillcolor="#28282A", color="#AAA8FF",'
+        ' fontcolor="#ECECF1", fontname="Helvetica", fontsize=14];',
+        '  edge [color="#8481F5"];',
+    ]
+    lines += [f"  {quote(names.get(m, m))};" for m in sorted(touched)]
     for _, e in edges.iterrows():
         width = 0.5 + 3.5 * float(e["npmi"])
         a, b = names.get(e["skill_a"], e["skill_a"]), names.get(e["skill_b"], e["skill_b"])
@@ -331,7 +430,7 @@ def survey_benchmark(
 
 # ---- status and about ------------------------------------------------------------------------
 def slo_table(status: dict[str, Any]) -> pd.DataFrame:
-    marks = {True: "виконано", False: "порушено", None: "замало даних"}
+    marks = {True: "✓ виконано", False: "✕ порушено", None: "… замало даних"}
     return pd.DataFrame(
         [
             {
@@ -360,3 +459,36 @@ def runs_table(status: dict[str, Any]) -> pd.DataFrame:
             for r in status["runs"]
         ]
     )
+
+
+def health(status: dict[str, Any]) -> tuple[str, str, str]:
+    """The pipeline in one line: (tone, headline, detail); tone is ok, warn, bad or neutral."""
+    slos = status["slo"]
+    broken = [s for s in slos if s["ok"] is False]
+    checks = status.get("dq_latest", [])
+    errors = [c for c in checks if c["status"] == "error"]
+    warnings = [c for c in checks if c["status"] == "warn"]
+    kept = sum(1 for s in slos if s["ok"] is True)
+    if broken or errors:
+        return (
+            "bad",
+            "Є порушення",
+            f"SLO порушено: {len(broken)}, перевірок із помилкою: {len(errors)}",
+        )
+    if warnings:
+        return "warn", "Є зауваження", f"перевірок із попередженням: {len(warnings)}"
+    if slos and kept == 0:
+        return "neutral", "Замало даних", "SLO ще не мають достатньо запусків"
+    return "ok", "Усе в нормі", f"SLO виконано: {kept} з {len(slos)}"
+
+
+def fmt_int(number: float) -> str:
+    """1234567 -> "1 234 567" (a no-break space, as in Ukrainian typography)."""
+    return f"{int(round(number)):,}".replace(",", "\u00a0")
+
+
+def stamp(iso: str) -> str:
+    """An ISO time as "09.11.2026 00:19 UTC" (the exports are written in UTC)."""
+    moment = pd.Timestamp(iso)
+    moment = moment.tz_localize("UTC") if moment.tzinfo is None else moment.tz_convert("UTC")
+    return str(moment.strftime("%d.%m.%Y %H:%M UTC"))

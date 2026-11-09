@@ -100,8 +100,10 @@ the gold file as the list of what to add next.
 
 ## Consumers
 
-- **Dashboard** (Streamlit, Ukrainian, reads only the exported parquet): market overview, skills, stacks,
-  salaries, pipeline status, about the data. [docs/dashboard.md](docs/dashboard.md)
+- **Dashboard** (Streamlit, Ukrainian, reads only the exported parquet): a home page with numbered key
+  figures, then market, skills (a searchable ranking, one skill, stacks), salaries and pipeline health, each
+  with tabs and tables you can sort and download. Dark "smoky lilac" theme.
+  [docs/dashboard.md](docs/dashboard.md)
 - **Salary model** (CatBoost p10/p50/p90, MLflow): trained on the survey, because only a few hundred
   vacancies state a salary. Judged on the last survey year, which it never saw. [docs/ml.md](docs/ml.md)
 
