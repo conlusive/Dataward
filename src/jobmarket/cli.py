@@ -7,7 +7,9 @@ import sys
 from collections.abc import Sequence
 from dataclasses import replace
 from datetime import UTC, date, datetime
+from pathlib import Path
 
+import duckdb
 import yaml
 from loguru import logger
 
@@ -15,10 +17,24 @@ from jobmarket.bronze import BronzeStore
 from jobmarket.config import Settings
 from jobmarket.dq import LAYERS, run_checks
 from jobmarket.export import EXPORT_DIR, ExportError, export_gold
-from jobmarket.flow import backfill_steps, daily_steps, run_flow, summarize
+from jobmarket.flow import (
+    StepResult,
+    backfill_steps,
+    daily_steps,
+    run_flow,
+    run_url_from_env,
+    summarize,
+)
 from jobmarket.gold_commands import evaluate, import_labels, make_sheet
 from jobmarket.gold_seeds import write_seeds
 from jobmarket.notify import send_telegram
+from jobmarket.observe import (
+    render_message,
+    render_status,
+    run_report,
+    status_document,
+    write_status,
+)
 from jobmarket.ops import OpsStore
 from jobmarket.registry import DAILY_SOURCES, SOURCES
 from jobmarket.runner import run_source
@@ -61,6 +77,10 @@ def _build_parser() -> argparse.ArgumentParser:
     scrape.add_argument(
         "--max-pages", type=int, default=None, help="cap listing pages per category (for testing)"
     )
+    status_cmd = commands.add_parser(
+        "status", help="pipeline runs, SLOs and the checks that need attention"
+    )
+    status_cmd.add_argument("--json", dest="json_path", type=Path, default=None)
     flow_cmd = commands.add_parser(
         "flow", help="run a whole flow (steps, retries, timeouts, ops rows): daily or backfill"
     )
@@ -240,14 +260,40 @@ def _flow(args: argparse.Namespace) -> int:
         steps = daily_steps()
     only = args.only.split(",") if args.only else None
     try:
-        results = run_flow(steps, run_date, Settings.from_env().duckdb_path, only=only)
+        results = run_flow(
+            steps, run_date, Settings.from_env().duckdb_path, only=only, flow=args.name
+        )
     except ValueError as error:
         logger.error("{}", error)
         return 2
-    summary = summarize(args.name, run_date, results)
-    logger.info("flow summary\n{}", summary)
-    send_telegram(summary)
+    logger.info("flow summary\n{}", summarize(args.name, run_date, results))
+    _publish_run(args.name, run_date, results, Settings.from_env().duckdb_path)
     return 0 if all(r.status == "success" for r in results) else 1
+
+
+def _publish_run(flow: str, run_date: date, results: list[StepResult], db_path: Path) -> None:
+    """status.json for the dashboard and the Telegram message. Observability must never fail the
+    run, so a problem here is logged and the run's own result stands."""
+    report = None
+    try:
+        con = duckdb.connect(str(db_path), read_only=True)
+        try:
+            report = run_report(con, run_date)
+        finally:
+            con.close()
+        write_status(db_path, EXPORT_DIR / "status.json")
+    except (duckdb.Error, OSError) as error:
+        logger.warning("could not build the run report: {!r}", error)
+    send_telegram(render_message(flow, run_date, results, report, run_url_from_env()))
+
+
+def _status(json_path: Path | None) -> int:
+    db_path = Settings.from_env().duckdb_path
+    document = status_document(db_path)
+    print(render_status(document))
+    if json_path is not None:
+        write_status(db_path, json_path)
+    return 0
 
 
 def _dq(layer: str | None) -> int:
@@ -397,6 +443,8 @@ def main(argv: Sequence[str] | None = None) -> int:
         return _skills_review(args.top)
     if args.command == "skills-renormalize":
         return _skills_renormalize()
+    if args.command == "status":
+        return _status(args.json_path)
     if args.command == "flow":
         return _flow(args)
     if args.command == "backfill":

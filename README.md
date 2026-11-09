@@ -83,6 +83,17 @@ make docker-pipeline   # the same in a container, data in ./data
 Each step has a timeout, the scrape steps retry, a failed step skips the steps that depend on it, and
 every attempt is recorded in `ops_task_runs`. See [docs/orchestration.md](docs/orchestration.md).
 
+## Observability
+
+```bash
+uv run jobmarket status    # SLOs, recent runs and the checks that need attention
+```
+
+SLOs: data at most 36 h old, at least 95% of runs in 30 days succeed, under 10% of vacancies without
+a skill. Every run is a row in `ops_pipeline_runs`, a Telegram summary is sent when the bot is
+configured, and `status.json` is written next to the parquet export. See
+[docs/observability.md](docs/observability.md) and [docs/postmortems](docs/postmortems).
+
 ## Reliability
 
 A run for a date can be repeated and gives the same data (`tests/test_idempotency.py` compares hashes
@@ -90,7 +101,7 @@ of every silver table and mart after two runs). Backfill and the data-quality ch
 
 ```bash
 make backfill FROM=2026-11-01 TO=2026-11-30   # re-parse stored days (no network), rebuild gold
-make dq                                       # 11 checks; exit 1 on an error, a warning only reports
+make dq                                       # 13 checks; exit 1 on an error, a warning only reports
 ```
 
 `dq` runs in the daily workflow before the export, so bad data stops there and the consumers keep the
