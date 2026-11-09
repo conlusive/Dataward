@@ -12,6 +12,12 @@
 - Parts of the product have a colour (vacancies teal, growth amber, market violet, system orange) in the
   headings, markers and the menu.
 
+- The vacancy list is **paged** (15 a page) with few columns that fit without a sideways scroll; the
+  full set of columns stays in the card and the CSV. The header chips that flew off the home page are
+  gone: the pipeline state sits in its own block at the end. The menu scrolls on its own and the avatar
+  is pinned below it, so no menu item is out of reach on a short window. The filter bar has a label of one
+  height above every control, so the rows line up.
+
 ### Added (workspace)
 - A **vacancy list** shared by the catalog and a new "Вакансії" tab of the market page: sort, pick one row
   for a card with an analysis against the market (each skill's share, salary against the direction's

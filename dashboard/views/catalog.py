@@ -44,40 +44,58 @@ head = st.container()  # the header goes here once the number of results is know
 ADVANCED = ("cat_skill_mode", "cat_open", "cat_salary_only", "cat_min_salary", "cat_remote",
             "cat_since")  # fmt: skip
 changed = sum(st.session_state[k] != DEFAULTS[k] for k in ADVANCED)
+
+
+def label(text: str) -> None:
+    ui.html(f'<div class="dw-fl">{text}</div>')  # one height for every label: the rows line up
+
+
 with st.container(key="cat_filters"):
-    first, second, third = st.columns([3, 3, 3])
-    query = first.text_input(
-        "Назва або компанія", key="cat_q", placeholder="назва або компанія",
-        label_visibility="collapsed", icon=":material/search:",
-    )  # fmt: skip
-    directions = second.multiselect(
-        "Напрямок", dd.catalog_options(catalog, "category"), key="cat_dirs",
-        placeholder="Усі напрямки", label_visibility="collapsed",
-        format_func=lambda name: f"{name} ({category_counts.get(name, 0)})",
-    )  # fmt: skip
-    skills = third.multiselect(
-        "Навички", dd.skill_options(catalog), key="cat_skills", placeholder="Будь-які навички",
-        label_visibility="collapsed",
-    )  # fmt: skip
-    levels_col, sources_col, more_col, reset_col = st.columns(
-        [4, 3, 2, 2], vertical_alignment="bottom"
-    )
+    first, second, third = st.columns(3)
+    with first:
+        label("Пошук")
+        query = st.text_input(
+            "Назва або компанія", key="cat_q", placeholder="назва або компанія",
+            label_visibility="collapsed", icon=":material/search:",
+        )  # fmt: skip
+    with second:
+        label("Напрямок")
+        directions = st.multiselect(
+            "Напрямок", dd.catalog_options(catalog, "category"), key="cat_dirs",
+            placeholder="Усі напрямки", label_visibility="collapsed",
+            format_func=lambda name: f"{name} ({category_counts.get(name, 0)})",
+        )  # fmt: skip
+    with third:
+        label("Навички")
+        skills = st.multiselect(
+            "Навички", dd.skill_options(catalog), key="cat_skills", placeholder="Будь-які навички",
+            label_visibility="collapsed",
+        )  # fmt: skip
+    levels_col, sources_col, more_col, reset_col = st.columns([6, 3, 2, 2])
     with levels_col:
-        ui.html('<div class="dw-fl">Рівень</div>')
+        label("Рівень")
         levels = st.pills(
             "Рівень", dd.catalog_options(catalog, "seniority"), selection_mode="multi",
             key="cat_levels", label_visibility="collapsed",
             format_func=lambda name: level_names.get(name, name),
         )  # fmt: skip
     with sources_col:
-        ui.html('<div class="dw-fl">Джерело</div>')
+        label("Джерело")
         sources = st.pills(
             "Джерело", dd.catalog_options(catalog, "source"), selection_mode="multi",
             key="cat_sources", label_visibility="collapsed",
         )  # fmt: skip
-    with more_col.popover(
-        f"Ще фільтри{f' · {changed}' if changed else ''}", icon=":material/tune:", width="stretch"
-    ):
+    with more_col:
+        label("Додатково")
+        popover = st.popover(
+            f"Ще фільтри{f' · {changed}' if changed else ''}",
+            icon=":material/tune:",
+            width="stretch",
+        )
+    with reset_col:
+        label("&nbsp;")
+        st.button("Скинути", on_click=reset_filters, icon=":material/restart_alt:", width="stretch")
+    with popover:
         mode = st.radio(
             "Потрібні навички", ["усі", "будь-яка"], key="cat_skill_mode", horizontal=True
         )
@@ -91,9 +109,6 @@ with st.container(key="cat_filters"):
             else 0
         )
         since = st.selectbox("З'явилась", list(SINCE), key="cat_since")
-    reset_col.button(
-        "Скинути", on_click=reset_filters, icon=":material/restart_alt:", width="stretch"
-    )
 
 latest = catalog["first_listed_on"].max()
 result = dd.filter_catalog(
@@ -130,7 +145,6 @@ with head:
         "Каталог вакансій",
         "Шукайте за напрямком, рівнем, навичками й зарплатою. Клік по рядку відкриває вакансію.",
         eyebrow="вакансії · каталог",
-        pills=[theme.pill(f"{dd.fmt_int(len(result))} з {dd.fmt_int(len(catalog))}")],
         domain="jobs",
     )
 

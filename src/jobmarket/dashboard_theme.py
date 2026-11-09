@@ -340,22 +340,36 @@ _WORKSPACE = """
 [data-testid="stSidebarHeader"] { padding-top: 0.6rem; padding-bottom: 0.2rem; }
 [data-testid="stSidebarNav"] { padding-bottom: 0; }
 [data-testid="stSidebarUserContent"] { padding-bottom: 0 !important; }
-[data-testid="stSidebarContent"] { scrollbar-width: none; }
-[data-testid="stSidebarContent"]::-webkit-scrollbar { display: none; }
+
 
 .st-key-dw_keys { position: absolute; width: 0; height: 0; overflow: hidden; }
 
-/* the filter bar sits above the list, not in the menu */
+.dw-pager { text-align: right; font-size: var(--fs-sm); color: var(--ink-3);
+  padding-bottom: 0.6rem; }
+
+/* the filter bar sits above the list, not in the menu: every control has a label of one height
+   above it and the same height, so the rows line up */
+.st-key-cat_filters [data-testid="stHorizontalBlock"] { gap: var(--s3); align-items: flex-start; }
+.st-key-cat_filters .dw-fl { height: 1.4rem; margin: 0 0 var(--s1); line-height: 1.4rem; }
+.st-key-cat_filters button, .st-key-cat_filters [data-baseweb="select"] > div,
+.st-key-cat_filters input { min-height: 2.5rem; }
+.st-key-cat_filters [data-testid="stPills"] { min-height: 2.5rem; align-items: center; }
 .st-key-cat_filters { border: 2px solid var(--line); background: var(--card);
   padding: var(--s3) var(--s4); margin-bottom: var(--s3); }
 .st-key-cat_filters [data-testid="stVerticalBlock"] { gap: var(--s2); }
 
 /* the avatar sits at the bottom of the sidebar whatever else is above it */
-[data-testid="stSidebarContent"] { display: flex; flex-direction: column; min-height: 100%; }
-[data-testid="stSidebarUserContent"] { flex: 1 1 auto; display: flex; flex-direction: column; }
-[data-testid="stSidebarUserContent"] > [data-testid="stVerticalBlock"] { flex: 1 1 auto; }
-.st-key-dw_avatar { position: sticky; bottom: 0; order: 999; margin-top: auto; z-index: 5;
-  background: var(--card); border-top: 2px solid var(--line); padding: var(--s2) 0 var(--s1); }
+[data-testid="stSidebarContent"] { display: flex; flex-direction: column; height: 100vh;
+  overflow: hidden; }
+[data-testid="stSidebarNav"] { flex: 1 1 auto; min-height: 0; overflow-y: auto;
+  scrollbar-width: thin; scrollbar-color: var(--line) transparent; }
+[data-testid="stSidebarUserContent"] { flex: none; }
+.st-key-dw_avatar { position: relative; z-index: 5; background: var(--card);
+  border-top: 2px solid var(--line); padding: var(--s2) 0 var(--s1); }
+@media (max-height: 780px) {
+  [data-testid="stSidebarNavLink"] { min-height: 1.6rem !important; }
+  [data-testid="stNavSectionHeader"] { margin-top: 0.1rem; }
+}
 /* the whole card opens the profile: the page link is stretched over it and left invisible */
 .st-key-dw_avatar { cursor: pointer; }
 .st-key-dw_avatar .st-key-dw_avatar_open { position: absolute; inset: 0; z-index: 2; }

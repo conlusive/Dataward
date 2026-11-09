@@ -678,6 +678,53 @@ def catalog_table(catalog: pd.DataFrame) -> pd.DataFrame:
     )
 
 
+LIST_SKILLS = 3  # skills shown in a row of the compact list; the card shows all of them
+PAGE_SIZE = 15  # vacancies on a page of the list
+
+
+def list_table(catalog: pd.DataFrame) -> pd.DataFrame:
+    """The compact table of the vacancy list: few columns, so it never scrolls sideways.
+
+    The title and the company share one cell; everything else (direction, place, dates, both links)
+    is in the card of the picked vacancy and in the CSV, which uses ``catalog_table``.
+    """
+    names = [
+        f"{title} · {company}" if isinstance(company, str) and company.strip() else str(title)
+        for title, company in zip(catalog["title"], catalog["company"], strict=True)
+    ]
+    skills = catalog["skills"].map(
+        lambda have: (
+            ", ".join(have[:LIST_SKILLS])
+            + (f" +{len(have) - LIST_SKILLS}" if len(have) > LIST_SKILLS else "")
+        )
+    )
+    return pd.DataFrame(
+        {
+            "Вакансія": names,
+            "Рівень": catalog["seniority"].replace({NO_LEVEL: "—"}).to_numpy(),
+            "Зарплата": [
+                salary_label(low, high)
+                for low, high in zip(
+                    catalog["salary_usd_min"], catalog["salary_usd_max"], strict=True
+                )
+            ],
+            "Навички": skills.to_numpy(),
+            "Посилання": catalog["url"].to_numpy(),
+        }
+    )
+
+
+def page_of(total: int, page: int, size: int = PAGE_SIZE) -> tuple[int, int, int]:
+    """(page, first, last) for a list of ``total`` rows: the page is kept inside the list.
+
+    ``first`` is the index of the first row and ``last`` one past the last, so ``rows[first:last]``
+    is the page; an empty list has one empty page.
+    """
+    pages = max(1, -(-total // size))
+    page = min(max(page, 0), pages - 1)
+    return page, page * size, min(total, (page + 1) * size)
+
+
 def median_salary(catalog: pd.DataFrame) -> float | None:
     """The median mid-range salary (USD a month), or None when no vacancy states a salary."""
     mids = catalog["salary_mid"].dropna()

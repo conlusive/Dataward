@@ -12,6 +12,7 @@ import pytest
 pytest.importorskip("streamlit")
 from streamlit.testing.v1 import AppTest  # noqa: E402  (after the skip on purpose)
 
+from jobmarket import dashboard_data as dd  # noqa: E402
 from jobmarket import dashboard_profile as pr  # noqa: E402
 from tests.dashboard_fixtures import write_catalog, write_export  # noqa: E402
 
@@ -334,7 +335,7 @@ def _found(app: AppTest) -> str:
 
 
 def _titles(app: AppTest) -> list[str]:
-    return list(app.dataframe[0].value["Назва"])
+    return list(app.dataframe[0].value["Вакансія"].str.split(" · ").str[0])
 
 
 def test_without_a_catalog_the_page_explains_why_and_how_to_get_one(export: Path) -> None:
@@ -916,7 +917,7 @@ def test_a_vacancy_card_without_a_profile_has_no_save_button(tmp_path: Path, exp
 
 # ---- the vacancy list: pick, analyse, save ----------------------------------------------------
 def _pick(app: AppTest, key: str, *rows: int) -> AppTest:
-    app.session_state[key] = {"selection": {"rows": list(rows), "columns": []}}
+    app.session_state[f"{key}_0"] = {"selection": {"rows": list(rows), "columns": []}}  # page one
     return app.run()
 
 
@@ -958,3 +959,43 @@ def test_the_pages_do_not_print_the_shortcuts_the_question_mark_shows_them(expor
     for page in ("home", "catalog", "market"):
         html = _markdown(_run(page))
         assert 'class="dw-kbd"' not in html and 'class="dw-hint"' not in html, page
+
+
+def test_the_list_is_paged_and_the_pager_moves_between_pages(
+    with_catalog: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(dd, "PAGE_SIZE", 2)
+    app = _run("catalog")
+    first = _titles(app)
+
+    assert len(first) == 2 and next(b for b in app.button if b.key == "cat_back").disabled
+    next(b for b in app.button if b.key == "cat_next").click().run()
+
+    second = _titles(app)
+    assert len(second) == 2 and not set(first) & set(second)  # other vacancies, not the same two
+    assert not next(b for b in app.button if b.key == "cat_back").disabled
+    assert any("3–4 з 5" in m.value for m in app.markdown)
+
+
+def test_changing_a_filter_takes_the_list_back_to_page_one(
+    with_catalog: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(dd, "PAGE_SIZE", 2)
+    app = _run("catalog")
+    next(b for b in app.button if b.key == "cat_next").click().run()
+
+    app.multiselect(key="cat_dirs").set_value(["Python"]).run()
+
+    assert any("1–" in m.value and "dw-pager" in m.value for m in app.markdown)
+
+
+def test_the_list_shows_few_columns_and_the_csv_keeps_them_all(with_catalog: Path) -> None:
+    app = _run("catalog")
+
+    assert list(app.dataframe[0].value.columns) == [
+        "Вакансія",
+        "Рівень",
+        "Зарплата",
+        "Навички",
+        "Посилання",
+    ]

@@ -25,20 +25,10 @@ update = ui.optional_document("last_update.json")
 status = ui.optional_document("status.json")
 vacancies = ui.catalog()
 
-pills = []
-if status:
-    runs = dd.run_states(status)
-    if runs:
-        pills.append(theme.pulse(runs))
-    health = dd.health(status)
-    pills.append(theme.pill(health[1], health[0]))
-if update:
-    pills.append(theme.pill(f"дані: {dd.stamp(update['exported_at'])}"))
 ui.header(
     "Ринок праці IT·UA",
     "вакансії DOU і Djinni · навички · стеки · зарплати · оновлюється щодня",
     eyebrow="dataward / головна",
-    pills=pills,
     typed=True,
 )
 
@@ -193,6 +183,13 @@ if vacancies is not None:
 # ---- the pipeline behind the numbers -----------------------------------------------------------
 if status:
     ui.section("Конвеєр даних", domain="system")
+    health = dd.health(status)
+    runs = dd.run_states(status)
+    marks = [theme.pulse(runs)] if runs else []
+    marks.append(theme.pill(health[1], health[0]))
+    if update:
+        marks.append(theme.pill(f"дані: {dd.stamp(update['exported_at'])}"))
+    ui.html(f'<div class="dw-pills">{"".join(marks)}</div>')
     checks = status.get("dq_latest", [])
     slos = status.get("slo", [])
     volumes = status.get("volumes", {})

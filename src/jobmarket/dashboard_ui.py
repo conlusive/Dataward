@@ -309,6 +309,11 @@ def vacancy_card(row: Any, *, profile: pr.Profile | None = None) -> None:
 
 
 # ---- a list of vacancies you can act on ---------------------------------------------------------
+def _turn(key: str, step: int) -> None:
+    """A pager button: one page forward or back (the page is clamped when it is drawn)."""
+    st.session_state[f"{key}_page"] = st.session_state.get(f"{key}_page", 0) + step
+
+
 def _save_picked(key: str) -> None:
     """A button callback: keep every selected vacancy of the list ``key`` in the profile."""
     rows = st.session_state.get(f"{key}_picked", [])
@@ -371,39 +376,59 @@ def vacancy_list(
 
     @st.fragment
     def view() -> None:
-        sort = st.selectbox("Сортування", list(dd.SORTS), key=f"{key}_sort")
+        sorting, back, forward, where = st.columns([4, 1, 1, 3], vertical_alignment="bottom")
+        sort = sorting.selectbox("Сортування", list(dd.SORTS), key=f"{key}_sort")
         ordered = dd.sort_catalog(frame, sort).reset_index(drop=True)
-        table = dd.catalog_table(ordered)
+        signature = (sort, len(ordered), str(ordered.iloc[0]["vacancy_id"]))
+        if st.session_state.get(f"{key}_sig") != signature:  # other filters or order: page one
+            st.session_state[f"{key}_sig"] = signature
+            st.session_state[f"{key}_page"] = 0
+        page, first, last = dd.page_of(
+            len(ordered), st.session_state.get(f"{key}_page", 0), dd.PAGE_SIZE
+        )
+        st.session_state[f"{key}_page"] = page
+        pages = max(1, -(-len(ordered) // dd.PAGE_SIZE))
+        back.button(
+            "←", key=f"{key}_back", on_click=_turn, args=(key, -1), disabled=page == 0,
+            width="stretch", help="Попередня сторінка",
+        )  # fmt: skip
+        forward.button(
+            "→", key=f"{key}_next", on_click=_turn, args=(key, 1), disabled=page >= pages - 1,
+            width="stretch", help="Наступна сторінка",
+        )  # fmt: skip
+        where.markdown(
+            f'<div class="dw-pager">{first + 1}–{last} з {dd.fmt_int(len(ordered))}</div>',
+            unsafe_allow_html=True,
+        )
+        shown = ordered.iloc[first:last]
+        table = dd.list_table(shown)
         if mine:
             scores = [
                 pr.match(list(s), list(r), mine)[0]
-                for s, r in zip(ordered["skills"], ordered["skills_required"], strict=True)
+                for s, r in zip(shown["skills"], shown["skills_required"], strict=True)
             ]
             table.insert(0, "Збіг, %", [round((x or 0) * 100) for x in scores])
         event = st.dataframe(
-            table, hide_index=True, height=460, key=f"{key}_table", on_select="rerun",
-            selection_mode="multi-row",
+            table, hide_index=True, height=35 * (len(table) + 1) + 3,
+            key=f"{key}_table_{page}", on_select="rerun", selection_mode="multi-row",
             column_config={
                 "Збіг, %": st.column_config.ProgressColumn(
-                    format="%d", min_value=0, max_value=100, width=110
+                    format="%d", min_value=0, max_value=100, width=90
                 ),
-                "Назва": st.column_config.TextColumn(width=300),
-                "Компанія": st.column_config.TextColumn(width=170),
-                "Напрямок": st.column_config.TextColumn(width=150),
-                "Рівень": st.column_config.TextColumn(width=90),
-                "Зарплата": st.column_config.TextColumn(width=140),
-                "Навички": st.column_config.TextColumn(width=340),
-                "Де": st.column_config.TextColumn(width=170),
-                "Джерело": st.column_config.TextColumn(width=90),
-                "Посилання": st.column_config.LinkColumn("Посилання", display_text="відкрити ↗"),
-                "З'явилась": st.column_config.DateColumn(format="DD.MM.YYYY"),
+                "Вакансія": st.column_config.TextColumn(width=330),
+                "Рівень": st.column_config.TextColumn(width=80),
+                "Зарплата": st.column_config.TextColumn(width=125),
+                "Навички": st.column_config.TextColumn(width=230),
+                "Посилання": st.column_config.LinkColumn(
+                    "Посилання", display_text="відкрити ↗", width=100
+                ),
             },
         )  # fmt: skip
-        picked = [i for i in event.selection.rows if i < len(ordered)]
+        picked = [i for i in event.selection.rows if i < len(shown)]
         st.session_state[f"{key}_picked"] = [
             {
-                "id": str(ordered.iloc[i]["vacancy_id"]), "title": str(ordered.iloc[i]["title"]),
-                "company": str(ordered.iloc[i]["company"]), "url": str(ordered.iloc[i]["url"]),
+                "id": str(shown.iloc[i]["vacancy_id"]), "title": str(shown.iloc[i]["title"]),
+                "company": str(shown.iloc[i]["company"]), "url": str(shown.iloc[i]["url"]),
             }
             for i in picked
         ]  # fmt: skip
@@ -413,12 +438,12 @@ def vacancy_list(
             on_click=_save_picked, args=(key,),
         )  # fmt: skip
         csv.download_button(
-            "Завантажити CSV", table.to_csv(index=False).encode("utf-8"),
+            "Завантажити CSV (усе)", dd.catalog_table(ordered).to_csv(index=False).encode("utf-8"),
             file_name=f"dataward_{key}.csv", mime="text/csv", key=f"{key}_csv",
         )  # fmt: skip
         with st.container(border=True):
             if len(picked) == 1:
-                row = ordered.iloc[picked[0]]
+                row = shown.iloc[picked[0]]
                 vacancy_card(row, profile=profile)
                 analysis_block(row, dd.vacancy_analysis(row, catalog, shares), mine)
             elif picked:
