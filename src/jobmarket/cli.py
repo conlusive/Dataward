@@ -25,7 +25,9 @@ from jobmarket.flow import (
     run_url_from_env,
     summarize,
 )
+from jobmarket.gold import SHEET_FILE
 from jobmarket.gold_commands import evaluate, import_labels, make_sheet
+from jobmarket.gold_label import label_sheet
 from jobmarket.gold_seeds import write_seeds
 from jobmarket.notify import send_telegram
 from jobmarket.observe import (
@@ -159,6 +161,10 @@ def _build_parser() -> argparse.ArgumentParser:
         help="suggest method A's skills (faster, biases the metric)",
     )
     sample_cmd.add_argument("--force", action="store_true", help="replace an existing sheet")
+    label_cmd = commands.add_parser(
+        "gold-label", help="label the sheet in the terminal, blind, saving after each vacancy"
+    )
+    label_cmd.add_argument("--relabel", action="store_true", help="also go through labelled ones")
     commands.add_parser(
         "gold-import", help="read the labelled sheet into data/gold/skills_gold.yaml"
     )
@@ -255,6 +261,19 @@ def _extract_skills(source: str, limit: int | None, max_cost: float | None, dry_
 
 def _priced_models() -> set[str]:
     return set(yaml.safe_load(PRICES_FILE.read_text(encoding="utf-8"))["models"])
+
+
+def _gold_label(relabel: bool) -> int:
+    if not SHEET_FILE.exists():
+        logger.error("{} not found: run `jobmarket gold-sample` first", SHEET_FILE)
+        return 1
+    stats = label_sheet(load_taxonomy(), relabel=relabel)
+    print(f"\nРозмічено {stats.labelled} з {stats.total}.")
+    if stats.labelled == stats.total:
+        print("Усе розмічено. Далі: gold-import, потім gold-eval.")
+    else:
+        print("Продовжити: jobmarket gold-label. Імпорт частково розміченого аркуша теж безпечний.")
+    return 0
 
 
 def _gold(args: argparse.Namespace) -> int:
@@ -505,6 +524,8 @@ def main(argv: Sequence[str] | None = None) -> int:
         return _parse_surveys()
     if args.command == "extract-skills":
         return _extract_skills(args.source, args.limit, args.max_cost_usd, args.dry_run)
+    if args.command == "gold-label":
+        return _gold_label(args.relabel)
     if args.command in ("gold-sample", "gold-import", "gold-eval"):
         return _gold(args)
     if args.command == "dq":

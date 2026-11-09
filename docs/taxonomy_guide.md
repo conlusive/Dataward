@@ -47,7 +47,7 @@ as in `case` (default: the name) **and** one of its `context` words is within 80
 ## Measuring it
 
 Precision and recall of the dictionary and the LLM method are measured against a hand-labelled set
-(`uv run jobmarket gold-sample`, label the sheet **without suggestions**, `gold-import`, `gold-eval`;
+(`uv run jobmarket gold-sample`, `gold-label` in the terminal **without suggestions**, `gold-import`, `gold-eval`;
 results go to `docs/metrics.md`). The labelling is blind on purpose: a list prepared in advance makes a
 person agree with it, and the metric would measure the agreement. Once the first evaluation exists, a
 regression test fails if the dictionary's F1 drops below the recorded value.

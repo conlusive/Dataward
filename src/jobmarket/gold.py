@@ -37,10 +37,17 @@ class Candidate:
     content_hash: str
 
 
+NONE_MARK = "= none"  # under Labels: the vacancy asks for no technical skill (labelled, but empty)
+
+
 @dataclass
 class SheetLabels:
-    labels: dict[str, set[str]] = field(default_factory=dict)  # vacancy id -> skill ids
+    """What a sheet says. A vacancy with no label line at all is *not labelled yet* and is left out
+    of ``labels``: it must not be taken for "asks for nothing", which would corrupt the metric."""
+
+    labels: dict[str, set[str]] = field(default_factory=dict)  # labelled vacancy id -> skill ids
     wanted: dict[str, list[str]] = field(default_factory=dict)  # vacancy id -> "+ new skill" lines
+    unlabelled: set[str] = field(default_factory=set)
     problems: list[str] = field(default_factory=list)
 
 
@@ -97,6 +104,8 @@ def render_sheet(candidates: list[Candidate], prefill: dict[str, list[str]] | No
         "Under **Labels** of each vacancy list, one per line as `- skill-id`, every technical",
         "skill the vacancy asks for (required or nice to have). Ids are in `_skill_ids.md`.",
         "A skill missing from the taxonomy: write `+ its name` (reported as a taxonomy gap).",
+        f"A vacancy that asks for no technical skill: write `{NONE_MARK}`.",
+        "Left empty, it counts as not labelled yet and is skipped by the import.",
         "Spoken languages, soft skills and benefits are not skills here.",
         "",
         "Labelling blind (nothing is suggested) is slower but keeps the metric honest."
@@ -119,11 +128,14 @@ def parse_sheet(text: str, known_ids: set[str]) -> SheetLabels:
     parsed = SheetLabels()
     current: str | None = None
     in_labels = False
+    seen: dict[str, set[str]] = {}  # every vacancy in the sheet -> its label lines
+    marked_none: set[str] = set()
+    marked: set[str] = set()  # vacancies with at least one label line
     for number, line in enumerate(text.splitlines(), start=1):
         heading = _HEADING.match(line)
         if heading:
             current, in_labels = heading.group(1), False
-            parsed.labels.setdefault(current, set())
+            seen.setdefault(current, set())
             continue
         if current is None:
             continue
@@ -131,14 +143,26 @@ def parse_sheet(text: str, known_ids: set[str]) -> SheetLabels:
             in_labels = True
         elif line.strip() == "---":
             in_labels = False
+        elif in_labels and line.strip() == NONE_MARK:
+            marked_none.add(current)
+            marked.add(current)
         elif in_labels and line.startswith("- "):
             skill = line[2:].strip()
             if skill and skill not in known_ids:
                 parsed.problems.append(f"line {number}: {current}: unknown skill id {skill!r}")
             elif skill:
-                parsed.labels[current].add(skill)
+                seen[current].add(skill)
+                marked.add(current)
         elif in_labels and line.startswith("+ "):
             parsed.wanted.setdefault(current, []).append(line[2:].strip())
+            marked.add(current)
+    for vid, skills in seen.items():
+        if vid in marked_none and skills:
+            parsed.problems.append(f"{vid}: marked `{NONE_MARK}` but also lists skills")
+        if vid in marked:
+            parsed.labels[vid] = skills
+        else:
+            parsed.unlabelled.add(vid)
     return parsed
 
 
