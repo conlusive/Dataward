@@ -9,7 +9,11 @@ import pandas as pd
 import streamlit as st
 
 from jobmarket import dashboard_data as dd
+from jobmarket import dashboard_interview as iv
+from jobmarket import dashboard_mascot as mascot
 from jobmarket import dashboard_profile as pr
+from jobmarket import dashboard_progress as pg
+from jobmarket import dashboard_resources as rs
 from jobmarket import dashboard_theme as theme
 
 CACHE_SECONDS = 300  # the data changes once a day; five minutes keeps a deploy's new files visible
@@ -145,6 +149,62 @@ def card(title: str, note: str = "") -> Any:
 def sidebar_label(text: str) -> None:
     """A small heading in the sidebar, above a group of filters."""
     st.sidebar.markdown(theme.side_label(text), unsafe_allow_html=True)
+
+
+@st.cache_resource(show_spinner=False)
+def question_bank() -> list[iv.Question]:
+    """The interview questions (a file that does not change while the app runs)."""
+    return iv.load_bank()
+
+
+@st.cache_resource(show_spinner=False)
+def resource_bank() -> dict[str, list[rs.Resource]]:
+    """The curated learning resources."""
+    return rs.load()
+
+
+def pet_state(profile: pr.Profile, today: date | None = None) -> dict[str, Any]:
+    """What the frog shows: stage, level, mood, experience, streak and the questions due."""
+    today = today or date.today()
+    counts = iv.counts(question_bank(), profile.practice, today)
+    parts = pg.xp_breakdown(profile, counts)
+    info = pg.level_info(sum(parts.values()))
+    return {
+        "counts": counts, "parts": parts, "level": info, "stage": pg.stage(info.level),
+        "mood": pg.mood(profile, today), "streak": pg.streak(profile.activity, today),
+        "today": pg.answers_on(profile, today),
+    }  # fmt: skip
+
+
+def pet_card() -> None:
+    """The frog in the sidebar: it grows with what you do and tells you what waits."""
+    profile = pr.load()
+    state = pet_state(profile)
+    info = state["level"]
+    notes = []
+    if state["streak"]:
+        notes.append(f"серія: {state['streak']} дн.")
+    notes.append(f"сьогодні: {state['today']} з {profile.goal}")
+    st.sidebar.markdown(
+        theme.pet(
+            mascot.frog_svg(state["stage"].key, state["mood"], label=state["stage"].name),
+            state["stage"].name,
+            info.level,
+            info.ratio,
+            f"{info.into} / {info.need} XP",
+            notes,
+        ),
+        unsafe_allow_html=True,
+    )
+    due = state["counts"]["due"]
+    if due:
+        st.sidebar.page_link("views/practice.py", label=f"Повторити питань: {due} →")
+
+
+def go_practice(skill: str) -> None:
+    """A button callback: open the trainer on one skill."""
+    st.session_state.update(iv_scope="Одна навичка", iv_skill=skill)
+    st.switch_page("views/practice.py")
 
 
 def profile() -> pr.Profile:

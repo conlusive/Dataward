@@ -16,6 +16,7 @@ st.set_page_config(
     page_title="Dataward · ринок праці в ІТ України",
     page_icon=str(STATIC / "favicon.png"),
     layout="wide",
+    initial_sidebar_state="expanded",
 )
 st.logo(str(STATIC / "logo.svg"), size="large", icon_image=str(STATIC / "icon.svg"))
 ui.setup()
@@ -27,9 +28,13 @@ navigation = st.navigation(
         ],
         "Вакансії": [
             st.Page("views/catalog.py", title="Каталог", icon=":material/list_alt:"),
+            st.Page("views/fit.py", title="Для мене", icon=":material/person_search:"),
+            st.Page("views/saved.py", title="Збережені", icon=":material/bookmark:"),
         ],
-        "Кабінет": [
+        "Розвиток": [
             st.Page("views/profile.py", title="Профіль", icon=":material/account_circle:"),
+            st.Page("views/learn.py", title="Навчання", icon=":material/school:"),
+            st.Page("views/practice.py", title="Практика", icon=":material/quiz:"),
         ],
         "Аналітика": [
             st.Page("views/market.py", title="Ринок", icon=":material/monitoring:"),
@@ -41,4 +46,5 @@ navigation = st.navigation(
         ],
     }
 )
+ui.pet_card()  # the frog sits under the menu on every page
 navigation.run()

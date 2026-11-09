@@ -1,11 +1,8 @@
-from datetime import date
-
 import pandas as pd
 import streamlit as st
 
 from jobmarket import dashboard_charts as charts
 from jobmarket import dashboard_data as dd
-from jobmarket import dashboard_interview as iv
 from jobmarket import dashboard_profile as pr
 from jobmarket import dashboard_theme as theme
 from jobmarket import dashboard_ui as ui
@@ -60,22 +57,22 @@ mine = ui.profile()
 ui.section("Мій профіль")
 if mine.is_empty():
     st.caption(
-        "Додайте свої навички: дашборд знайде вакансії, що вам підходять, складе план навчання "
-        "і дасть тренажер до співбесід."
+        "Додайте свої навички: дашборд знайде вакансії, що вам підходять, складе план навчання, "
+        "підкаже матеріали й дасть тренажер до співбесід. Жабка росте разом із вами."
     )
     st.page_link("views/profile.py", label="Створити профіль →")
 else:
     fit = None
     if vacancies is not None and mine.known():
         fit = pr.readiness(pr.rank_vacancies(vacancies, mine))
-    due = iv.counts(iv.load_bank(), mine.practice, date.today())["due"]
+    pet = ui.pet_state(mine)
     ui.html(
         theme.stats(
             [
+                ("Рівень", str(pet["level"].level)),
+                ("Серія", f"{pet['streak']} дн."),
                 ("Знаю", str(len(mine.known()))),
-                ("Вчу", str(len(mine.learning()))),
-                ("Збережено", str(len(mine.saved))),
-                ("До повтору", str(due)),
+                ("До повтору", str(pet["counts"]["due"])),
                 ("Готовність", f"{fit:.0%}" if fit is not None else "—"),
             ]
         )
@@ -84,15 +81,25 @@ else:
 
 # ---- the breakdown panel: a metric split by source, level or direction -----------------------
 ui.section("Динаміка")
-with ui.card("Розріз ринку за днями", "тонкий стовпчик — один день; кольори — частини розрізу."):
-    left, middle, right = st.columns([3, 1, 1])
-    metric = middle.selectbox("Показник", list(dd.METRICS), key="home_metric")
-    split = right.selectbox("Розріз", list(dd.BREAKDOWNS), key="home_split")
-    daily, order = dd.daily_breakdown(market, dd.METRICS[metric], dd.BREAKDOWNS[split])
-    names, colours = charts.series_domain(order, keep_order=True)
-    left.markdown("")
-    ui.html(theme.legend(names, colours))
-    ui.chart(charts.stacked_bars(daily, order=order, unit=metric))
+
+
+@st.fragment
+def breakdown_panel() -> None:
+    """Only this panel reruns when a selector changes."""
+    with ui.card(
+        "Розріз ринку за днями", "тонкий стовпчик — один день; кольори — частини розрізу."
+    ):
+        left, middle, right = st.columns([3, 1, 1])
+        metric = middle.selectbox("Показник", list(dd.METRICS), key="home_metric")
+        split = right.selectbox("Розріз", list(dd.BREAKDOWNS), key="home_split")
+        daily, order = dd.daily_breakdown(market, dd.METRICS[metric], dd.BREAKDOWNS[split])
+        names, colours = charts.series_domain(order, keep_order=True)
+        left.markdown("")
+        ui.html(theme.legend(names, colours))
+        ui.chart(charts.stacked_bars(daily, order=order, unit=metric))
+
+
+breakdown_panel()
 
 # ---- directions: the way into the catalog ---------------------------------------------------
 directions = dd.direction_stats(market, vacancies)

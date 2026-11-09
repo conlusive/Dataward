@@ -83,3 +83,32 @@ def test_a_module_that_imported_the_edited_one_is_dropped_with_it(
     assert importlib.import_module("dwtest_user").SEEN == 2
     sys.modules.pop("dwtest_user", None)
     reload._loaded_at.pop("dwtest_user", None)
+
+
+def test_a_module_inside_a_package_is_replaced_for_from_import_too(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Regression: `from pkg import sub` reads the package attribute, which kept the old module."""
+    package = tmp_path / "dwpkg"
+    package.mkdir()
+    (package / "__init__.py").write_text("", encoding="utf-8")
+    (package / "dwsub.py").write_text("VALUE = 1\n", encoding="utf-8")
+    monkeypatch.syspath_prepend(str(tmp_path))
+    monkeypatch.setattr(reload, "_STARTED", time.time() - 1000)
+    before = reload._STARTED - 100
+    os.utime(package / "dwsub.py", (before, before))
+    try:
+        from dwpkg import dwsub  # type: ignore[import-not-found]
+
+        assert dwsub.VALUE == 1
+        _edit(package / "dwsub.py", "VALUE = 2\n")
+
+        assert reload.refresh(prefix="dwpkg.dw") == ["dwpkg.dwsub"]
+
+        from dwpkg import dwsub as fresh
+
+        assert fresh.VALUE == 2 and fresh is not dwsub
+    finally:
+        for name in ("dwpkg.dwsub", "dwpkg"):
+            sys.modules.pop(name, None)
+        reload._loaded_at.pop("dwpkg.dwsub", None)

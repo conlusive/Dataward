@@ -2,6 +2,20 @@
 
 ## Unreleased
 
+### Added (cabinet v2)
+- The profile became a **cabinet of five pages** under a menu grouped by what you do: Для мене, Збережені,
+  Профіль, Навчання, Практика. The sidebar cannot be collapsed and carries a **pixel frog** (a tadpole that
+  grows into a king of frogs, six moods) with a level, experience bar, streak and the questions due.
+- **Learning resources** for about 45 skills (links checked when written), with a "finished" tick; the
+  trainer can be aimed at one skill; experience, levels, a streak, ten achievements and "what to do next".
+- Smoother: the question card and the breakdown panels are fragments (a click redraws only them), a rerun
+  no longer dims the page, entrances are shorter.
+
+### Fixed
+- Hot reload did not work for modules inside a package: `from jobmarket import dashboard_ui` read the
+  package attribute, which still held the old module. Both are dropped now (a regression test uses a real
+  package).
+
 ### Added (profile)
 - **Профіль** page: skills you know and learn, a target, vacancies ranked by how well they fit (with what is
   missing and a readiness figure), saved vacancies with a stage and a note, a learning plan ordered by what
