@@ -85,3 +85,7 @@ ignore_missing_imports = true  # networkx ships no type information
 [[tool.mypy.overrides]]
 module = ["pandas.*", "streamlit.*", "altair.*"]
 ignore_missing_imports = true  # optional dashboard group; pandas is typed loosely on purpose
+
+[[tool.mypy.overrides]]
+module = ["catboost.*", "mlflow.*"]
+ignore_missing_imports = true  # optional ml group; neither ships complete type information

@@ -1,7 +1,7 @@
-.PHONY: install lint test test-all scrape scrape-surveys parse backfill dbt-build dq dq-silver dq-gold pipeline export docker-build docker-pipeline dashboard docker-dashboard gold
+.PHONY: install lint test test-all scrape scrape-surveys parse backfill dbt-build dq dq-silver dq-gold pipeline export docker-build docker-pipeline dashboard docker-dashboard train gold
 
 install:
-	uv sync --group dashboard
+	uv sync --group dashboard --group ml
 
 lint:
 	uv run ruff check .
@@ -69,6 +69,12 @@ dashboard:
 
 docker-dashboard:
 	docker compose up --build dashboard
+
+# Train the salary model on the exported survey rows and write the dashboard's grid. Needs the ml
+# group (`uv sync --group ml`) and `make export` first. Writes docs/ml_report.md.
+train:
+	uv run --group ml jobmarket train-salary
+	uv run --group ml jobmarket salary-grid
 
 # Gold marts -> parquet in data/export (needs `make dbt-build` first).
 export:

@@ -77,6 +77,26 @@ def _build_parser() -> argparse.ArgumentParser:
     scrape.add_argument(
         "--max-pages", type=int, default=None, help="cap listing pages per category (for testing)"
     )
+    train_cmd = commands.add_parser(
+        "train-salary", help="train the salary model on the exported survey rows (needs --group ml)"
+    )
+    train_cmd.add_argument("--features", type=Path, default=None)
+    train_cmd.add_argument("--iterations", type=int, default=600)
+    grid_cmd = commands.add_parser(
+        "salary-grid", help="write the production model's ranges for the dashboard"
+    )
+    grid_cmd.add_argument("--features", type=Path, default=None)
+    grid_cmd.add_argument("--out", type=Path, default=None)
+    predict_cmd = commands.add_parser(
+        "predict-salary", help="the production model's salary range for one profile, explained"
+    )
+    predict_cmd.add_argument("--role", required=True)
+    predict_cmd.add_argument("--seniority", default="unknown")
+    predict_cmd.add_argument("--experience", type=float, default=None, help="years")
+    predict_cmd.add_argument("--english", default="unknown")
+    predict_cmd.add_argument("--city-group", default="ukraine")
+    predict_cmd.add_argument("--company-type", default="unknown")
+    predict_cmd.add_argument("--company-size", default="unknown")
     status_cmd = commands.add_parser(
         "status", help="pipeline runs, SLOs and the checks that need attention"
     )
@@ -287,6 +307,60 @@ def _publish_run(flow: str, run_date: date, results: list[StepResult], db_path: 
     send_telegram(render_message(flow, run_date, results, report, run_url_from_env()))
 
 
+def _salary_model(args: argparse.Namespace) -> int:
+    try:
+        from jobmarket.ml import predict, report, train
+    except ImportError:
+        logger.error("the model needs the ml dependencies: `uv sync --group ml`")
+        return 2
+    features: Path = EXPORT_DIR / "ml_features_salary.parquet"
+    if args.command != "predict-salary":  # the other two read the exported survey rows
+        features = args.features or features
+        if not features.exists():
+            logger.error("{} not found: run `make export` first", features)
+            return 1
+    if args.command == "train-salary":
+        result = train.train_salary_model(features, iterations=args.iterations)
+        Path("docs").mkdir(exist_ok=True)
+        Path("docs/ml_report.md").write_text(report.render_report(result), encoding="utf-8")
+        logger.info(
+            "trained: MAE {:.0f} (baseline {:.0f}), 10-90 coverage {:.0%}; {}",
+            result.model["mae"],
+            result.baseline["mae"],
+            result.model["coverage_10_90"],
+            result.reason,
+        )
+        return 0
+    try:
+        production = predict.load_production()
+    except predict.ModelError as error:
+        logger.error("{}", error)
+        return 1
+    if args.command == "salary-grid":
+        out = args.out or EXPORT_DIR
+        rows = predict.write_grid(production, features, out)
+        logger.info("wrote {} profiles to {}", rows, out)
+        return 0
+    profile = {
+        "role": args.role,
+        "seniority": args.seniority,
+        "english": args.english,
+        "city_group": args.city_group,
+        "company_type": args.company_type,
+        "company_size": args.company_size,
+    }
+    if args.experience is not None:
+        profile["experience_years"] = args.experience
+    year = int(production.report.get("test_year", 0))
+    result_row = predict.predict_profile(production, profile, year)
+    print(f"{args.role} ({args.seniority}): {result_row['p10']:.0f} - {result_row['p50']:.0f} - "
+          f"{result_row['p90']:.0f} USD/month (p10 - p50 - p90)")  # fmt: skip
+    moves = sorted(result_row["contributions"].items(), key=lambda kv: -abs(kv[1]))
+    for name, value in [m for m in moves if m[0] != "base"][:5]:
+        print(f"  {name:<18} {value:+.0f}")
+    return 0
+
+
 def _status(json_path: Path | None) -> int:
     db_path = Settings.from_env().duckdb_path
     document = status_document(db_path)
@@ -443,6 +517,8 @@ def main(argv: Sequence[str] | None = None) -> int:
         return _skills_review(args.top)
     if args.command == "skills-renormalize":
         return _skills_renormalize()
+    if args.command in ("train-salary", "salary-grid", "predict-salary"):
+        return _salary_model(args)
     if args.command == "status":
         return _status(args.json_path)
     if args.command == "flow":

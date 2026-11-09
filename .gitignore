@@ -2,6 +2,7 @@
 data/bronze/
 data/export/
 data/export.tmp/
+data/mlflow/
 .env
 *.duckdb
 *.duckdb.wal

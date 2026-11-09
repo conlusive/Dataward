@@ -143,3 +143,29 @@ def test_from_the_second_day_on_there_is_no_such_note(export: Path) -> None:
     app = _run("overview")
 
     assert not any("перший день спостереження" in c.value for c in app.caption)
+
+
+# ---- the salary calculator -----------------------------------------------------------------------
+def test_without_a_trained_model_the_calculator_says_how_to_get_one(export: Path) -> None:
+    app = _run("salary")
+
+    assert any("make train" in i.value for i in app.info)
+
+
+def test_the_calculator_shows_the_models_range_for_the_chosen_profile(export: Path) -> None:
+    from tests.dashboard_fixtures import write_grid
+
+    write_grid(export)
+    app = _run("salary")
+
+    app.slider(key="calc_experience").set_value(5.0)
+    app.selectbox(key="calc_english").select("upper-intermediate")
+    app.run()
+
+    metrics = _metrics(app)
+    assert metrics["Нижня межа (p10), USD/міс"] == "2000"
+    assert metrics["Типова (p50), USD/міс"] == "3300"
+    assert metrics["Верхня межа (p90), USD/міс"] == "4800"
+    assert any(
+        "1245" in c.value and "1405" in c.value for c in app.caption
+    )  # model vs baseline error
