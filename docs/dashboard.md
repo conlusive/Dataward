@@ -14,7 +14,9 @@ on the "about the data" page.
 
 ## Pages
 
-Six pages in a sidebar under the pixel logo, grouped as Огляд / Вакансії / Аналітика / Система. Tabs
+Eleven pages in a sidebar under the pixel logo, grouped by what you are doing: Огляд, Вакансії
+(Каталог, Для мене, Збережені), Розвиток (Профіль, Навчання, Практика), Аналітика, Система. The
+sidebar is part of the layout and cannot be collapsed; the frog sits under the menu on every page. Tabs
 inside a page split one topic into views; the filters of the catalog live in the sidebar so that they stay
 in view while the list scrolls.
 
@@ -22,7 +24,11 @@ in view while the list scrolls.
 |---|---|---|---|
 | Головна | - | a header with the last pipeline runs as squares and a typed line; bracketed figures (open, new, closed, skills, sources); a "BREAKDOWN" panel (thin stacked bars per day, a metric and a cut chosen from two selectors); the biggest **directions** as tiles, each with a button that opens its vacancies (the catalog, or the market page without one); the top-10 skills and what changed since last month; the freshest vacancies as tiles (when there is a catalog) | `fct_market_daily`, `fct_skill_demand_monthly`, `dim_skill`, `status.json`, `last_update.json`, the catalog |
 | Каталог | Вакансії / Що вимагають / Компанії | **the vacancies themselves**: filters (search in the title and company, direction, level, skills with "all" or "any", only open, only with a salary, minimum salary, remote, when it appeared, source), four tiles describing the selection, a sortable table with links, a card of the vacancy you click (all skills, required ones marked, dates, both links when it is on both sites), what the selection asks for, which companies hire, a CSV download | `fct_vacancy_catalog` (local only) |
-| Профіль | Профіль / Вакансії для мене / Збережені / Що вчити / Практика | **your own space**: skills you know and learn, a target (direction, level, salary, remote); the vacancies that fit, ranked by how well your skills cover them, with what is missing; saved vacancies with a stage (збережено, відгукнувся, співбесіда, оффер, відмова) and a note; a learning plan ordered by what unlocks the most vacancies; an interview trainer | the catalog (for the three vacancy tabs), `dim_skill`, `fct_market_daily`, the profile file |
+| Для мене | - | the open vacancies that suit your target, ranked by how well your skills cover them (a required skill counts twice), with what you have and what is missing, a readiness figure, a minimum-match slider and a card with a save button | the catalog, the profile |
+| Збережені | - | saved vacancies by stage (збережено, відгукнувся, співбесіда, оффер, відмова) with a note, edited in a table | the profile |
+| Профіль | - | **your frog**, its level and experience, the streak, what to do next, achievements, and the settings: skills you know and learn, a target (direction, level, minimum salary, remote), a daily goal | the profile file, `dim_skill`, `fct_market_daily` |
+| Навчання | - | skills you are learning with their progress, the plan ("what completes the most vacancies") and **learning resources** for any skill, with a "finished" tick | the profile, the catalog, `learning_resources.yaml` |
+| Практика | - | the interview trainer: a session of questions with a reacting frog, and your progress by skill | the profile, `interview_questions.yaml` |
 | Ринок | Динаміка / Категорії / Рівні / Таблиця | the same tiles for the filtered slice (source, category, level), a line per source, new vs closed per day, ranked bars, and the rows as a table with a CSV download | `fct_market_daily` |
 | Навички | Рейтинг / Навичка / Стеки | a searchable, sortable ranking (share, how often a hard requirement, change against the previous month in percentage points, declared salary) with a CSV download; one skill with its trend, salary and related skills; the stack clusters and a graph of one of them | demand, `dim_skill`, `fct_skill_pairs`, `fct_salary_by_skill`, `skill_clusters` |
 | Зарплати | Калькулятор / Орієнтири DOU / За навичками / Тривалість вакансій | the model's p10-p50-p90 for a profile; the survey's median by year with its p25-p75 band; declared salaries by skill; how long a vacancy stays open | `salary_model_grid` (optional), `fct_salary_survey`, `fct_salary_by_skill`, `fct_vacancy_lifetime` |
@@ -49,7 +55,7 @@ make dashboard         # the Каталог page now lists the vacancies
 On an export without it (the CI artifact) the page says so instead of failing. Showing the catalog to other
 people is a separate decision about the sites' terms; nothing here publishes it.
 
-## The profile and the interview trainer
+## The profile, the frog and learning
 
 The profile is one small JSON file on this machine, `data/profile/profile.json` (git-ignored; set
 `PROFILE_PATH` to move it). There is no account and no server-side storage: it is a single-user tool. The
@@ -63,14 +69,24 @@ dashboard container mount a folder to keep it: `-v "$PWD/data/profile:/app/data/
   a lower one (most state none). **Readiness** is the median match of your 20 best vacancies.
 - **Learning plan**: for the vacancies that fit your target, which skills you lack. "Відкриває" counts the
   vacancies where a skill is the only required one still missing, so learning it completes the vacancy.
+- **Learning resources** (`learning_resources.yaml`): about 45 skills with official docs first, then
+  practice platforms and courses, in Ukrainian where there is a good one. Every link was opened when the list
+  was made, and a test checks the shape (https, a known kind, skills from the taxonomy). A skill without a
+  list gets two search links marked as not curated. Tick a material "Пройшов" and it is remembered.
 - **Saved vacancies** keep a snapshot (title, company, link), so they outlive the catalog, which is rebuilt.
-- **Trainer** (`interview_questions.yaml`): 60 questions with short model answers for 12 skills (Python,
-  SQL, Git, Docker, REST, CI/CD, PostgreSQL, JavaScript, TypeScript, Linux, AWS, Kubernetes), at three
-  levels. A session draws from your skills, from the learning plan or from everything. You read the
-  question, reveal the answer and rate yourself: "Знаю" moves the question up a Leitner box (it comes back
-  after 2, 4, 8, 16 days), "Частково" keeps the box, "Не знаю" sends it back to box 1 (tomorrow). A question
-  in box 4 or higher counts as learned. A test checks that every question's skill is in the taxonomy. The
-  answers remind the idea; learn from them and say it in your own words.
+- **Trainer** (`interview_questions.yaml`): 60 questions with short model answers for 12 skills at three
+  levels. A session draws from your skills, from the plan, from one skill or from everything. You reveal the
+  answer and rate yourself: "Знаю" moves the question up a Leitner box (it comes back after 2, 4, 8, 16
+  days), "Частково" keeps the box, "Не знаю" sends it back to box 1 (tomorrow). The session card is a
+  Streamlit fragment, so a click redraws only the card.
+- **The frog** is a pixel mascot drawn from character grids (`dashboard_mascot.py`): a tadpole, a froglet
+  (level 3), a frog (level 6) and a king of frogs (level 10), each in a mood: idle, happy (answered today),
+  party (the daily goal is met), sleepy (three days away), sad and thinking (reacting to an answer). It bobs
+  and blinks in steps and stops for reduced motion.
+- **Experience** is worked out from the saved profile, so it cannot drift or be earned twice: 2 per answer,
+  10 per question learned (box 4 or higher), 5 per finished material, 2 per saved vacancy, 5 per application,
+  1 per known skill. Level n starts at 25 (n - 1)^2 XP. The **streak** is days in a row with an answer
+  (yesterday still counts until today is over). There are ten achievements and a list of "what to do next".
 
 ## Filters you can tell apart
 
@@ -128,8 +144,10 @@ after the very first update to this version.
 - `src/jobmarket/dashboard_theme.py`: colour tokens, the stylesheet and small HTML pieces (header, status
   chip, section label, skill tags, fact list); text is escaped. No Streamlit import either.
 - `src/jobmarket/dashboard_logo.py`: the pixel logo, the sidebar icon and the favicon.
-- `src/jobmarket/dashboard_profile.py` and `dashboard_interview.py`: the profile file, matching, the
-  learning plan, and the question bank with its schedule. No Streamlit, so they are tested directly.
+- `src/jobmarket/dashboard_profile.py`, `dashboard_interview.py`, `dashboard_resources.py`,
+  `dashboard_progress.py` and `dashboard_mascot.py`: the profile file and matching, the question bank and
+  its schedule, the learning resources, experience and levels, and the frog. No Streamlit, so they are
+  tested directly.
 - `src/jobmarket/dashboard_charts.py`: the charts, each taking a frame with fixed column names.
 - `src/jobmarket/dashboard_ui.py`: cached loading (`st.cache_data`, 5 minutes), one place that turns a
   missing file or column into a message instead of a stack trace, and the tile/card helpers.

@@ -36,5 +36,15 @@ def refresh(prefix: str = PREFIX) -> list[str]:
         return []
     for name in loaded:
         del sys.modules[name]
+        _forget_in_parent(name)
         _loaded_at[name] = time.time()  # the copy imported next is newer than any edit so far
     return sorted(loaded)
+
+
+def _forget_in_parent(name: str) -> None:
+    """``from pkg import sub`` reads the attribute ``sub`` of the package first, so the old module
+    would still be returned after it left ``sys.modules``: remove that attribute as well."""
+    parent, _, child = name.rpartition(".")
+    package = sys.modules.get(parent)
+    if package is not None and hasattr(package, child):
+        delattr(package, child)

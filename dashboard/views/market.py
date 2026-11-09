@@ -101,14 +101,20 @@ dynamics, categories_tab, levels_tab, table_tab = st.tabs(
 )
 
 with dynamics:
-    with ui.card("Розріз за днями", "тонкий стовпчик — один день; кольори — частини розрізу."):
-        pick_metric, pick_split = st.columns(2)
-        metric = pick_metric.selectbox("Показник", list(dd.METRICS), key="mk_metric")
-        split = pick_split.selectbox("Розріз", list(dd.BREAKDOWNS), key="mk_split")
-        daily, order = dd.daily_breakdown(selected, dd.METRICS[metric], dd.BREAKDOWNS[split])
-        names, colours = charts.series_domain(order, keep_order=True)
-        ui.html(theme.legend(names, colours))
-        ui.chart(charts.stacked_bars(daily, order=order, unit=metric))
+
+    @st.fragment
+    def breakdown_panel() -> None:
+        """Only this panel reruns when a selector changes."""
+        with ui.card("Розріз за днями", "тонкий стовпчик — один день; кольори — частини розрізу."):
+            pick_metric, pick_split = st.columns(2)
+            metric = pick_metric.selectbox("Показник", list(dd.METRICS), key="mk_metric")
+            split = pick_split.selectbox("Розріз", list(dd.BREAKDOWNS), key="mk_split")
+            daily, order = dd.daily_breakdown(selected, dd.METRICS[metric], dd.BREAKDOWNS[split])
+            names, colours = charts.series_domain(order, keep_order=True)
+            ui.html(theme.legend(names, colours))
+            ui.chart(charts.stacked_bars(daily, order=order, unit=metric))
+
+    breakdown_panel()
     flow = totals.melt(
         id_vars="date", value_vars=["new_vacancies", "closed_vacancies"], var_name="series"
     ).replace({"new_vacancies": "Нові", "closed_vacancies": "Закриті"})

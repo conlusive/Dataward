@@ -155,13 +155,13 @@ button[kind], [data-testid="stDownloadButton"] button, [data-testid="stLinkButto
 
 _MOTION = """
 /* motion: things arrive in steps (pixel style), never glide; all of it stops for reduced motion */
-@keyframes dw-rise { from { opacity: 0; transform: translateY(10px); }
+@keyframes dw-rise { from { opacity: 0; transform: translateY(6px); }
   to { opacity: 1; transform: none; } }
 @keyframes dw-wipe { from { clip-path: inset(0 100% 0 0); } to { clip-path: inset(0 0 0 0); } }
 @keyframes dw-type { from { width: 0; } to { width: var(--chars); } }
 @keyframes dw-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
 [data-testid="stMetric"], .dw-stat, .dw-dir, .dw-vac, .dw-hero {
-  animation: dw-rise 0.55s steps(7) both; animation-delay: calc(var(--i, 0) * 70ms);
+  animation: dw-rise 0.4s steps(5) both; animation-delay: calc(var(--i, 0) * 50ms);
 }
 [data-testid="stVegaLiteChart"] { animation: dw-wipe 1.1s steps(28) both; }
 .dw-typed { display: inline-block; overflow: hidden; white-space: nowrap;
@@ -173,6 +173,14 @@ _MOTION = """
   border-color 0.12s steps(2); }
 .dw-dir:hover, .dw-vac:hover, [data-testid="stMetric"]:hover {
   transform: translate(-2px, -2px); border-color: var(--accent); }
+@keyframes dw-bob { 0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-3px); } }
+@keyframes dw-blink-lid { 0%, 91% { opacity: 0; } 92%, 96% { opacity: 1; }
+  97%, 100% { opacity: 0; } }
+.dw-frog { animation: dw-bob 1.8s steps(2) infinite; image-rendering: pixelated; }
+.dw-frog-sleepy { animation-duration: 2.8s; }
+.dw-frog-party { animation-duration: 0.6s; }
+.dw-lid { animation: dw-blink-lid 4.2s steps(1) infinite; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; }
   .dw-typed { width: auto; border-right: 0; }
@@ -188,6 +196,28 @@ _BLOCKS = """
 .dw-stat b { font-family: var(--display); font-weight: 400; color: var(--ink); font-size: 1.9rem;
   letter-spacing: 0.02em; }
 .dw-stat em { font-style: normal; }
+
+/* the frog card in the sidebar and the profile */
+.dw-pet { display: flex; gap: 0.8rem; align-items: center; padding: 0.6rem 0.4rem 0.2rem; }
+.dw-pet-text { min-width: 0; flex: 1; font-size: 0.78rem; color: var(--ink-3); line-height: 1.5; }
+.dw-pet-name { font-family: var(--display); font-size: 1.05rem; color: var(--ink); }
+.dw-pet-name b { color: var(--accent); font-weight: 400; }
+.dw-xp { height: 8px; background: var(--line); margin: 0.35rem 0 0.25rem; }
+.dw-xp span { display: block; height: 100%; background: var(--accent); }
+.dw-medal { display: inline-block; border: 2px solid var(--line); color: var(--ink-3);
+  padding: 0.15rem 0.55rem; margin: 0 0.4rem 0.4rem 0; font-size: 0.78rem; }
+.dw-medal.on { border-color: var(--accent); color: var(--accent);
+  background: rgba(170, 168, 255, 0.1); }
+.dw-medal.on::before { content: "★ "; }
+.dw-resource { font-size: 0.85rem; }
+
+/* the sidebar is part of the layout, not a drawer: it cannot be collapsed */
+[data-testid="stSidebarCollapseButton"], [data-testid="stSidebarCollapsedControl"],
+[data-testid="stExpandSidebarButton"], button[kind="headerNoPadding"] { display: none !important; }
+
+/* a rerun must not dim the page: the old content stays, then is replaced in place */
+[data-stale="true"] { opacity: 1 !important; transition: none !important; }
+[data-testid="stAppViewContainer"] [data-stale="true"] * { transition: none !important; }
 
 /* the last pipeline runs as squares, the newest pulsing */
 .dw-pulse { display: inline-flex; gap: 4px; vertical-align: middle; }
@@ -399,3 +429,34 @@ def active_filters(items: list[tuple[str, str]]) -> str:
 def count_badge(count: int) -> str:
     """A small filled square with a number, for a heading with active filters."""
     return f'<span class="dw-badge">{count}</span>' if count else ""
+
+
+def pet(svg: str, name: str, level: int, ratio: float, xp: str, notes: list[str]) -> str:
+    """The frog with its stage, level, an experience bar and a few short notes beside it.
+
+    ``svg`` is the mascot's inline SVG (see ``dashboard_mascot``); the text is escaped.
+    """
+    width = max(2, min(100, round(ratio * 100)))
+    lines = "".join(f"<div>{escape(note)}</div>" for note in notes)
+    return (
+        f'<div class="dw-pet">{svg}<div class="dw-pet-text">'
+        f'<div class="dw-pet-name">{escape(name)} · <b>рівень {level}</b></div>'
+        f'<div class="dw-xp" role="img" aria-label="{width}% до наступного рівня">'
+        f'<span style="width:{width}%"></span></div>'
+        f"<div>{escape(xp)}</div>{lines}</div></div>"
+    )
+
+
+def medals(items: list[tuple[str, str, bool]]) -> str:
+    """Achievements as small tags: (title, how to earn it, earned); the earned ones are lit."""
+    parts = "".join(
+        f'<span class="dw-medal{" on" if earned else ""}" title="{escape(hint)}">'
+        f"{escape(title)}</span>"
+        for title, hint, earned in items
+    )
+    return f'<div class="dw-medals">{parts}</div>'
+
+
+def pet_free(svg: str) -> str:
+    """The frog on its own (no text), centred in its column."""
+    return f'<div class="dw-pet" style="justify-content:center">{svg}</div>'

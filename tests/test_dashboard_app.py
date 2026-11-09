@@ -4,7 +4,7 @@ Pages are opened through the entry point (``app.py`` + ``switch_page``): the hom
 others, and that only works inside the navigation.
 """
 
-from datetime import date
+from datetime import date, timedelta
 from pathlib import Path
 
 import pytest
@@ -16,7 +16,10 @@ from jobmarket import dashboard_profile as pr  # noqa: E402
 from tests.dashboard_fixtures import write_catalog, write_export  # noqa: E402
 
 ROOT = Path(__file__).parent.parent / "dashboard"
-PAGES = ["home", "catalog", "profile", "market", "skills", "salary", "system"]
+PAGES = [
+    "home", "catalog", "fit", "saved", "profile", "learn", "practice", "market", "skills", "salary",
+    "system",
+]  # fmt: skip
 NBSP = " "  # thousands are separated by a no-break space
 
 
@@ -64,7 +67,7 @@ def test_the_app_starts_on_the_home_page(export: Path) -> None:
     assert "Ринок праці IT·UA" in _markdown(app)
 
 
-# ---- home --------------------------------------------------------------------------------------
+# ---- home -------------------------------------------------------------------------------------
 def test_home_shows_the_latest_day_as_bracketed_figures(export: Path) -> None:
     html = _markdown(_run("home"))
 
@@ -144,7 +147,7 @@ def test_a_missing_data_directory_is_a_message_not_a_stack_trace(
     assert not app.exception and "Немає даних" in app.error[0].value
 
 
-# ---- market ------------------------------------------------------------------------------------
+# ---- market -----------------------------------------------------------------------------------
 def test_the_filters_change_the_market_numbers(export: Path) -> None:
     app = _run("market")
     assert _metrics(app)["01 · Відкриті вакансії"] == "17"
@@ -206,7 +209,7 @@ def test_the_market_table_lists_the_filtered_rows(export: Path) -> None:
     assert set(table["Джерело"]) == {"djinni"} and len(table) == 2
 
 
-# ---- skills ------------------------------------------------------------------------------------
+# ---- skills -----------------------------------------------------------------------------------
 def test_the_ranking_lists_every_skill_with_its_change_and_salary(export: Path) -> None:
     app = _run("skills")
 
@@ -276,7 +279,7 @@ def test_a_threshold_that_keeps_a_link_draws_the_graph_without_the_empty_note(
     assert not app.exception and not any("зв'язків немає" in i.value for i in app.info)
 
 
-# ---- salary ------------------------------------------------------------------------------------
+# ---- salary -----------------------------------------------------------------------------------
 def test_the_salary_page_shows_the_survey_for_the_chosen_role(export: Path) -> None:
     app = _run("salary")
 
@@ -310,7 +313,7 @@ def test_the_calculator_shows_the_models_range_for_the_chosen_profile(export: Pa
     )  # model vs baseline error
 
 
-# ---- system ------------------------------------------------------------------------------------
+# ---- system -----------------------------------------------------------------------------------
 def test_the_system_page_counts_the_checks_that_need_attention(export: Path) -> None:
     assert _metrics(_run("system"))["01 · Перевірок, що потребують уваги"] == "1"
 
@@ -325,7 +328,7 @@ def test_the_about_tab_gives_the_update_time(export: Path) -> None:
     assert "2026-11-09T04:15:00" in _markdown(_run("system"))
 
 
-# ---- the vacancy catalog ---------------------------------------------------------------------
+# ---- the vacancy catalog ----------------------------------------------------------------------
 def _found(app: AppTest) -> str:
     return _metrics(app)["01 · Знайдено"]
 
@@ -531,11 +534,15 @@ def test_the_catalog_source_filter_is_a_set_of_pills(with_catalog: Path) -> None
     assert "Джерело: djinni" in _markdown(app)
 
 
-# ---- the profile ---------------------------------------------------------------------------------
+# ---- the profile ------------------------------------------------------------------------------
 def _saved_profile(**changes: object) -> pr.Profile:
     profile = pr.Profile(**changes)  # type: ignore[arg-type]
     pr.save(profile)
     return profile
+
+
+def _today() -> str:
+    return date.today().isoformat()
 
 
 def test_a_new_profile_is_filled_in_with_a_form_and_kept_in_a_file(export: Path) -> None:
@@ -545,11 +552,12 @@ def test_a_new_profile_is_filled_in_with_a_form_and_kept_in_a_file(export: Path)
     app.multiselect(key="pf_know").set_value(["Python", "SQL"])
     app.multiselect(key="pf_learning").set_value(["Docker"])
     app.selectbox(key="pf_level").select("middle")
+    app.number_input(key="pf_goal").set_value(8)
     next(b for b in app.button if b.label == "Зберегти профіль").click().run()
 
     saved = pr.load()
     assert saved.name == "Ярослав" and saved.known() == {"Python", "SQL"}
-    assert saved.learning() == {"Docker"} and saved.level == "middle"
+    assert saved.learning() == {"Docker"} and saved.level == "middle" and saved.goal == 8
     assert "Профіль збережено" in "".join(s.value for s in app.success)
     assert "<em>Знаю:</em><b>2</b>" in _markdown(app)
 
@@ -578,27 +586,55 @@ def test_a_profile_that_cannot_be_written_says_so_instead_of_crashing(
     assert not app.exception and any("read-only" in e.value for e in app.error)
 
 
+def test_a_new_profile_has_a_tadpole_and_asks_for_skills_first(export: Path) -> None:
+    html = _markdown(_run("profile"))
+
+    assert "Пуголовок · <b>рівень 1</b>" in html and 'class="dw-frog dw-frog-idle"' in html
+    assert "Досягнення" in html and "Перший крок" in html and 'class="dw-medal on"' not in html
+
+
+def test_the_profile_shows_the_streak_and_lights_the_medals_that_were_earned(export: Path) -> None:
+    days = {(date.today() - timedelta(days=n)).isoformat(): 5 for n in range(3)}
+    _saved_profile(skills={"Python": "know"}, activity=days)
+
+    html = _markdown(_run("profile"))
+
+    assert "серія: 3 дн." in html and 'class="dw-medal on"' in html
+    assert 'class="dw-frog dw-frog-party"' in html  # five answers today meet the goal of five
+
+
+def test_the_frog_is_in_the_sidebar_on_every_page(export: Path) -> None:
+    for page in ("home", "market", "learn"):
+        app = _run(page)
+        assert any("dw-pet" in m.value for m in app.sidebar.markdown), page
+
+
+def test_the_sidebar_cannot_be_collapsed() -> None:
+    from jobmarket import dashboard_theme as theme
+
+    assert "stSidebarCollapseButton" in theme.css() and "display: none" in theme.css()
+
+
 def test_home_invites_to_make_a_profile_and_then_shows_it(export: Path) -> None:
     assert "Мій профіль" in _markdown(_run("home"))
-    assert "<em>Знаю:</em>" not in _markdown(_run("home"))
+    assert "<em>Рівень:</em>" not in _markdown(_run("home"))
 
     _saved_profile(skills={"Python": "know", "SQL": "know", "Docker": "learning"})
     html = _markdown(_run("home"))
 
-    assert "<em>Знаю:</em><b>2</b>" in html and "<em>Вчу:</em><b>1</b>" in html
+    assert "<em>Знаю:</em><b>2</b>" in html and "<em>Рівень:</em><b>1</b>" in html
 
 
-def test_without_a_catalog_the_vacancy_tabs_say_so_and_practice_still_works(export: Path) -> None:
-    app = _run("profile")
-
-    text = " ".join(i.value for i in app.info)
-    assert "каталогу" in text and "make pipeline" in text
-    assert app.button(key="iv_start") is not None and not app.exception
+# ---- vacancies for me -------------------------------------------------------------------------
+def test_without_a_catalog_the_vacancy_pages_say_so(export: Path) -> None:
+    for page in ("fit", "learn"):
+        app = _run(page)
+        assert any("каталог" in i.value for i in app.info), page
 
 
 def test_vacancies_are_offered_by_how_well_they_fit(with_catalog: Path) -> None:
     _saved_profile(skills={"Python": "know"})
-    app = _run("profile")
+    app = _run("fit")
 
     metrics = _metrics(app)
     assert metrics["01 · Вакансій за ціллю"] == "5"
@@ -611,7 +647,7 @@ def test_vacancies_are_offered_by_how_well_they_fit(with_catalog: Path) -> None:
 
 def test_the_match_floor_hides_the_weaker_vacancies(with_catalog: Path) -> None:
     _saved_profile(skills={"Python": "know"})
-    app = _run("profile")
+    app = _run("fit")
 
     app.slider(key="pf_floor").set_value(50).run()
 
@@ -619,16 +655,13 @@ def test_the_match_floor_hides_the_weaker_vacancies(with_catalog: Path) -> None:
 
 
 def test_without_known_skills_the_page_asks_for_them_before_matching(with_catalog: Path) -> None:
-    app = _run("profile")
-
-    assert any("навички, які ви вмієте" in i.value for i in app.info)
+    assert any("навички, які ви вмієте" in i.value for i in _run("fit").info)
 
 
 def test_the_target_narrows_the_offered_vacancies(with_catalog: Path) -> None:
     _saved_profile(skills={"Python": "know"}, category="QA")
-    app = _run("profile")
 
-    assert _metrics(app)["01 · Вакансій за ціллю"] == "1"
+    assert _metrics(_run("fit"))["01 · Вакансій за ціллю"] == "1"
 
 
 def test_saved_vacancies_are_counted_by_stage(with_catalog: Path) -> None:
@@ -638,12 +671,76 @@ def test_saved_vacancies_are_counted_by_stage(with_catalog: Path) -> None:
     pr.update_saved(profile, "v2", status="interview", note="")
     pr.save(profile)
 
-    html = _markdown(_run("profile"))
+    html = _markdown(_run("saved"))
 
     assert "<em>збережено:</em><b>1</b>" in html and "<em>співбесіда:</em><b>1</b>" in html
     assert "<em>оффер:</em><b>0</b>" in html
 
 
+def test_with_nothing_saved_the_page_says_where_to_save(export: Path) -> None:
+    assert any("Збережених вакансій ще немає" in i.value for i in _run("saved").info)
+
+
+# ---- learning ---------------------------------------------------------------------------------
+def test_the_learning_page_lists_curated_materials_even_without_a_catalog(export: Path) -> None:
+    app = _run("learn")
+
+    html = _markdown(app)
+    assert "Матеріали" in html and 'class="dw-resource"' in html
+    assert app.selectbox(key="learn_skill").value in app.selectbox(key="learn_skill").options
+
+
+def test_a_skill_with_materials_shows_them_and_one_without_shows_search(export: Path) -> None:
+    app = _run("learn")
+
+    app.selectbox(key="learn_skill").select("Python").run()
+    assert "Офіційний туторіал Python" in _markdown(app) and not any(
+        "Добірки для цієї навички ще немає" in c.value for c in app.caption
+    )
+
+    assert "Docker: Get started" not in _markdown(app)
+    app.selectbox(key="learn_skill").select("Docker").run()
+    assert "Docker: Get started" in _markdown(app)
+
+
+def test_a_finished_material_is_remembered_and_earns_experience(export: Path) -> None:
+    app = _run("learn")
+    app.selectbox(key="learn_skill").select("Python").run()
+
+    app.checkbox(key="res_Python_0").check().run()
+
+    done = pr.load().done
+    assert list(done) == ["https://docs.python.org/3/tutorial/"] and list(done.values()) == [
+        _today()
+    ]
+    app.checkbox(key="res_Python_0").uncheck().run()
+    assert pr.load().done == {}  # the mark can be taken back
+
+
+def test_a_skill_being_learned_shows_its_progress_and_can_be_declared_known(
+    export: Path,
+) -> None:
+    _saved_profile(skills={"Python": "learning"})
+    app = _run("learn")
+    assert "матеріалів: 0 з 4" in " ".join(c.value for c in app.caption)
+
+    app.button(key="fin_Python").click().run()
+
+    assert pr.load().known() == {"Python"}
+    assert "тепер серед ваших навичок" in "".join(s.value for s in app.success)
+
+
+def test_the_plan_names_what_to_learn_and_how_many_vacancies_it_completes(
+    with_catalog: Path,
+) -> None:
+    _saved_profile(skills={"Python": "know"})
+    app = _run("learn")
+
+    text = " ".join(c.value for c in app.caption)
+    assert "5 відкритих вакансій" in text and "«Відкриває»" in text
+
+
+# ---- practice ---------------------------------------------------------------------------------
 def _finish_a_session(app: AppTest, size: int, rating: str = "know") -> None:
     app.radio(key="iv_scope").set_value("Усі питання")
     app.selectbox(key="iv_size").select(size)
@@ -655,7 +752,7 @@ def _finish_a_session(app: AppTest, size: int, rating: str = "know") -> None:
 
 
 def test_a_practice_session_asks_reveals_rates_and_remembers(export: Path) -> None:
-    app = _run("profile")
+    app = _run("practice")
     app.radio(key="iv_scope").set_value("Усі питання")
     app.selectbox(key="iv_size").select(5)
     app.run()
@@ -673,19 +770,37 @@ def test_a_practice_session_asks_reveals_rates_and_remembers(export: Path) -> No
     assert "Питання 2 з 5" in _markdown(app) and len(pr.load().practice) == 1
 
 
-def test_a_finished_session_summarises_and_its_questions_come_back_later(export: Path) -> None:
-    app = _run("profile")
+def test_the_frog_reacts_to_each_answer_and_celebrates_the_end(export: Path) -> None:
+    app = _run("practice")
+    app.radio(key="iv_scope").set_value("Усі питання")
+    app.selectbox(key="iv_size").select(5)
+    app.run()
+    app.button(key="iv_start").click().run()
+
+    for rating, mood in (("dont", "sad"), ("partial", "think"), ("know", "happy")):
+        app.button(key="iv_reveal").click().run()
+        app.button(key=f"iv_rate_{rating}").click().run()
+        assert app.session_state["iv_mood"] == mood
+        assert f"dw-frog-{mood}" in _markdown(app)
+
+
+def test_a_finished_session_summarises_celebrates_and_counts_the_days_answers(
+    export: Path,
+) -> None:
+    app = _run("practice")
 
     _finish_a_session(app, 5)
 
     html = _markdown(app)
     assert "Сесію завершено" in html and "<em>Знаю:</em><b>5</b>" in html
-    practice = pr.load().practice
-    assert len(practice) == 5 and {e["box"] for e in practice.values()} == {2}
+    assert "dw-frog-party" in html
+    profile = pr.load()
+    assert len(profile.practice) == 5 and {e["box"] for e in profile.practice.values()} == {2}
+    assert profile.activity == {_today(): 5}  # the history behind the streak
 
 
 def test_a_question_that_was_not_known_goes_back_to_the_first_box(export: Path) -> None:
-    app = _run("profile")
+    app = _run("practice")
 
     _finish_a_session(app, 5, rating="dont")
 
@@ -693,18 +808,18 @@ def test_a_question_that_was_not_known_goes_back_to_the_first_box(export: Path) 
 
 
 def test_a_second_session_the_same_day_asks_other_questions(export: Path) -> None:
-    app = _run("profile")
+    app = _run("practice")
     _finish_a_session(app, 5)
     first = set(pr.load().practice)
 
-    again = _run("profile")
+    again = _run("practice")
     _finish_a_session(again, 5)
 
     assert len(pr.load().practice) == 10 and not first & (set(pr.load().practice) - first)
 
 
 def test_practice_by_my_skills_needs_skills_and_says_so(export: Path) -> None:
-    app = _run("profile")
+    app = _run("practice")
 
     assert any("немає навичок із питаннями" in i.value for i in app.info)
     assert app.button(key="iv_start").disabled
@@ -712,7 +827,7 @@ def test_practice_by_my_skills_needs_skills_and_says_so(export: Path) -> None:
 
 def test_practice_by_my_skills_asks_only_about_them(export: Path) -> None:
     _saved_profile(skills={"Python": "know"})
-    app = _run("profile")
+    app = _run("practice")
     app.selectbox(key="iv_size").select(5)
     app.run()
 
@@ -721,6 +836,20 @@ def test_practice_by_my_skills_asks_only_about_them(export: Path) -> None:
     assert 'class="dw-q-meta">Python · ' in _markdown(app)
 
 
+def test_practice_can_be_aimed_at_one_skill(export: Path) -> None:
+    app = _run("practice")
+    app.radio(key="iv_scope").set_value("Одна навичка").run()
+    app.selectbox(key="iv_skill").select("Git").run()
+    app.selectbox(key="iv_size").select(5)
+    app.run()
+
+    app.button(key="iv_start").click().run()
+
+    assert 'class="dw-q-meta">Git · ' in _markdown(app)
+    assert 'class="dw-q-meta">Python' not in _markdown(app)
+
+
+# ---- a vacancy card with a profile ------------------------------------------------------------
 def _card_with_profile(tmp_path: Path, index: int) -> AppTest:
     def script(directory: str, position: int) -> None:
         from pathlib import Path
@@ -748,10 +877,8 @@ def test_a_vacancy_card_says_how_it_fits_the_profile_and_can_be_saved(
     assert "Збіг із вашим профілем: <b>40%</b>; бракує: Django, Docker" in _markdown(app)
     app.button(key="save_v1").click().run()
 
-    assert (
-        list(pr.load().saved) == ["v1"]
-        and pr.load().saved["v1"]["title"] == "Senior Python Developer"
-    )
+    saved = pr.load().saved
+    assert list(saved) == ["v1"] and saved["v1"]["title"] == "Senior Python Developer"
     assert app.button(key="save_v1").disabled and app.button(key="save_v1").label == "✓ У профілі"
 
 

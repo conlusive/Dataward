@@ -1,0 +1,123 @@
+# Where to learn a skill: official docs first, then practice and courses. `skill` is a name from the
+# skill taxonomy (a test checks it); every link was opened when this list was made and a test checks
+# its shape. kind: docs | practice | course | roadmap | book. lang: uk | en.
+version: 1
+resources:
+  Python:
+    - {title: "Офіційний туторіал Python", url: "https://docs.python.org/3/tutorial/", kind: docs, lang: en}
+    - {title: "Exercism: Python track (задачі з менторами)", url: "https://exercism.org/tracks/python", kind: practice, lang: en}
+    - {title: "Real Python: статті й туторіали", url: "https://realpython.com/", kind: course, lang: en, note: "частина матеріалів платна"}
+    - {title: "roadmap.sh: Python", url: "https://roadmap.sh/python", kind: roadmap, lang: en}
+  SQL:
+    - {title: "SQLBolt: інтерактивні уроки SQL", url: "https://sqlbolt.com/", kind: practice, lang: en}
+    - {title: "SQLZoo: вправи з SQL", url: "https://sqlzoo.net/wiki/SQL_Tutorial", kind: practice, lang: en}
+    - {title: "ThoughtSpot (раніше Mode): SQL Tutorial", url: "https://www.thoughtspot.com/sql-tutorial", kind: course, lang: en}
+  PostgreSQL:
+    - {title: "Офіційний туторіал PostgreSQL", url: "https://www.postgresql.org/docs/current/tutorial.html", kind: docs, lang: en}
+    - {title: "PostgreSQL Exercises", url: "https://pgexercises.com/", kind: practice, lang: en}
+  Git:
+    - {title: "Pro Git (українською)", url: "https://git-scm.com/book/uk/v2", kind: book, lang: uk}
+    - {title: "Learn Git Branching: гра з гілками", url: "https://learngitbranching.js.org/", kind: practice, lang: en}
+    - {title: "GitHub Skills: практика в репозиторії", url: "https://skills.github.com/", kind: practice, lang: en}
+  Docker:
+    - {title: "Docker: Get started", url: "https://docs.docker.com/get-started/", kind: docs, lang: en}
+    - {title: "Play with Docker: лабораторії в браузері", url: "https://labs.play-with-docker.com/", kind: practice, lang: en}
+    - {title: "roadmap.sh: Docker", url: "https://roadmap.sh/docker", kind: roadmap, lang: en}
+  Kubernetes:
+    - {title: "Kubernetes Basics (офіційний інтерактивний туторіал)", url: "https://kubernetes.io/docs/tutorials/kubernetes-basics/", kind: docs, lang: en}
+    - {title: "Killercoda: сценарії Kubernetes у браузері", url: "https://killercoda.com/", kind: practice, lang: en}
+    - {title: "roadmap.sh: Kubernetes", url: "https://roadmap.sh/kubernetes", kind: roadmap, lang: en}
+  REST:
+    - {title: "RESTful API: основи", url: "https://restfulapi.net/", kind: docs, lang: en}
+    - {title: "MDN: HTTP", url: "https://developer.mozilla.org/en-US/docs/Web/HTTP", kind: docs, lang: en}
+  HTTP:
+    - {title: "MDN: HTTP", url: "https://developer.mozilla.org/en-US/docs/Web/HTTP", kind: docs, lang: en}
+    - {title: "MDN: HTTP-заголовки й методи", url: "https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Methods", kind: docs, lang: en}
+  CI/CD:
+    - {title: "GitHub Actions: документація", url: "https://docs.github.com/en/actions", kind: docs, lang: en}
+    - {title: "GitLab CI/CD: документація", url: "https://docs.gitlab.com/ci/", kind: docs, lang: en}
+  GitHub Actions:
+    - {title: "GitHub Actions: швидкий старт", url: "https://docs.github.com/en/actions/get-started/quickstart", kind: docs, lang: en}
+    - {title: "GitHub Skills: Hello GitHub Actions", url: "https://github.com/skills/hello-github-actions", kind: practice, lang: en}
+  JavaScript:
+    - {title: "Сучасний підручник JavaScript (українською)", url: "https://uk.javascript.info/", kind: course, lang: uk}
+    - {title: "MDN: JavaScript Guide", url: "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide", kind: docs, lang: en}
+    - {title: "roadmap.sh: JavaScript", url: "https://roadmap.sh/javascript", kind: roadmap, lang: en}
+  TypeScript:
+    - {title: "TypeScript Handbook", url: "https://www.typescriptlang.org/docs/handbook/intro.html", kind: docs, lang: en}
+    - {title: "Type Challenges: задачі на типи", url: "https://github.com/type-challenges/type-challenges", kind: practice, lang: en}
+  React:
+    - {title: "React: Learn (офіційний курс)", url: "https://react.dev/learn", kind: docs, lang: en}
+  Linux:
+    - {title: "Linux Journey", url: "https://labex.io/linuxjourney", kind: course, lang: en}
+    - {title: "OverTheWire: Bandit (практика в терміналі)", url: "https://overthewire.org/wargames/bandit/", kind: practice, lang: en}
+    - {title: "linuxcommand.org: The Linux Command Line (книга)", url: "https://linuxcommand.org/", kind: book, lang: en}
+  Bash:
+    - {title: "Learn Shell: інтерактивний туторіал", url: "https://www.learnshell.org/", kind: practice, lang: en}
+    - {title: "GNU Bash: довідник", url: "https://www.gnu.org/software/bash/manual/bash.html", kind: docs, lang: en}
+  AWS:
+    - {title: "AWS Skill Builder", url: "https://skillbuilder.aws/", kind: course, lang: en}
+    - {title: "AWS: Getting Started", url: "https://aws.amazon.com/getting-started/", kind: docs, lang: en}
+    - {title: "roadmap.sh: AWS", url: "https://roadmap.sh/aws", kind: roadmap, lang: en}
+  Azure:
+    - {title: "Microsoft Learn: Azure", url: "https://learn.microsoft.com/en-us/training/azure/", kind: course, lang: en}
+  Terraform:
+    - {title: "HashiCorp: Terraform tutorials", url: "https://developer.hashicorp.com/terraform/tutorials", kind: course, lang: en}
+  Ansible:
+    - {title: "Ansible: Getting started", url: "https://docs.ansible.com/projects/ansible/latest/getting_started/index.html", kind: docs, lang: en}
+  Java:
+    - {title: "dev.java: Learn", url: "https://dev.java/learn/", kind: docs, lang: en}
+    - {title: "roadmap.sh: Java", url: "https://roadmap.sh/java", kind: roadmap, lang: en}
+  Go:
+    - {title: "A Tour of Go", url: "https://go.dev/tour/", kind: practice, lang: en}
+  "C#":
+    - {title: "Microsoft Learn: C#", url: "https://learn.microsoft.com/en-us/dotnet/csharp/tour-of-csharp/", kind: course, lang: en}
+  Django:
+    - {title: "Django: туторіал із 7 частин", url: "https://docs.djangoproject.com/en/stable/intro/tutorial01/", kind: docs, lang: en}
+  FastAPI:
+    - {title: "FastAPI: Tutorial", url: "https://fastapi.tiangolo.com/tutorial/", kind: docs, lang: en}
+  Pandas:
+    - {title: "pandas: 10 minutes to pandas", url: "https://pandas.pydata.org/docs/user_guide/10min.html", kind: docs, lang: en}
+  NumPy:
+    - {title: "NumPy: absolute beginners", url: "https://numpy.org/doc/stable/user/absolute_beginners.html", kind: docs, lang: en}
+  Machine Learning:
+    - {title: "Google: Machine Learning Crash Course", url: "https://developers.google.com/machine-learning/crash-course", kind: course, lang: en}
+  Redis:
+    - {title: "Redis: Get started", url: "https://redis.io/docs/latest/develop/get-started/", kind: docs, lang: en}
+  Kafka:
+    - {title: "Apache Kafka: Quickstart", url: "https://kafka.apache.org/quickstart", kind: docs, lang: en}
+  Airflow:
+    - {title: "Apache Airflow: Tutorial", url: "https://airflow.apache.org/docs/apache-airflow/stable/tutorial/index.html", kind: docs, lang: en}
+  Prometheus:
+    - {title: "Prometheus: Overview", url: "https://prometheus.io/docs/introduction/overview/", kind: docs, lang: en}
+  Playwright:
+    - {title: "Playwright: Getting started", url: "https://playwright.dev/docs/intro", kind: docs, lang: en}
+  Postman:
+    - {title: "Postman Learning Center", url: "https://learning.postman.com/", kind: course, lang: en}
+  Selenium:
+    - {title: "Selenium: документація", url: "https://www.selenium.dev/documentation/", kind: docs, lang: en}
+  Cypress:
+    - {title: "Cypress: документація", url: "https://docs.cypress.io/", kind: docs, lang: en}
+  Test Automation:
+    - {title: "Test Automation University", url: "https://testautomationu.applitools.com/", kind: course, lang: en}
+  Manual Testing:
+    - {title: "Ministry of Testing", url: "https://www.ministryoftesting.com/", kind: course, lang: en}
+    - {title: "ISTQB: глосарій термінів тестування", url: "https://glossary.istqb.org/", kind: docs, lang: en}
+  QA Processes:
+    - {title: "ISTQB: глосарій термінів тестування", url: "https://glossary.istqb.org/", kind: docs, lang: en}
+    - {title: "Ministry of Testing", url: "https://www.ministryoftesting.com/", kind: course, lang: en}
+  Agile:
+    - {title: "Agile Manifesto", url: "https://agilemanifesto.org/", kind: docs, lang: en}
+    - {title: "Scrum Guide", url: "https://scrumguides.org/", kind: docs, lang: en}
+  Jira:
+    - {title: "Atlassian: Jira guides", url: "https://www.atlassian.com/software/jira/guides/getting-started/introduction", kind: docs, lang: en}
+  Prompt Engineering:
+    - {title: "Prompt Engineering Guide", url: "https://www.promptingguide.ai/", kind: course, lang: en}
+  LLM:
+    - {title: "Prompt Engineering Guide", url: "https://www.promptingguide.ai/", kind: course, lang: en}
+  SEO:
+    - {title: "Google: SEO Starter Guide", url: "https://developers.google.com/search/docs/fundamentals/seo-starter-guide", kind: docs, lang: en}
+  Google Ads:
+    - {title: "Google Skillshop", url: "https://skillshop.withgoogle.com/", kind: course, lang: en}
+  CRM:
+    - {title: "HubSpot Academy", url: "https://academy.hubspot.com/", kind: course, lang: en}

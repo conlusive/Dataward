@@ -332,3 +332,69 @@ def test_ticks_in_the_plan_table_set_forget_and_prefer_known_over_learning() -> 
 
     edited.loc[:, ["Вчу", "Знаю"]] = False  # untick everything: forgotten
     assert pr.apply_plan_table(profile, edited) == 2 and profile.skills == {}
+
+
+# ---- activity, finished materials and the goal -------------------------------------------------
+def test_answers_are_counted_per_day() -> None:
+    profile = pr.Profile()
+
+    pr.record_answer(profile, TODAY)
+    pr.record_answer(profile, TODAY)
+    pr.record_answer(profile, date(2026, 11, 8))
+
+    assert profile.activity == {"2026-11-09": 2, "2026-11-08": 1}
+
+
+def test_a_very_old_day_is_forgotten() -> None:
+    profile = pr.Profile(activity={"2020-01-01": 5})
+
+    pr.record_answer(profile, TODAY)
+
+    assert list(profile.activity) == ["2026-11-09"]
+
+
+def test_a_finished_material_can_be_marked_and_unmarked() -> None:
+    profile = pr.Profile()
+
+    assert pr.toggle_resource(profile, "https://x.test/a", TODAY) is True
+    assert profile.done == {"https://x.test/a": "2026-11-09"}
+    assert pr.toggle_resource(profile, "https://x.test/a", TODAY) is False
+    assert profile.done == {}
+
+
+def test_activity_materials_and_the_goal_survive_a_round_trip(tmp_path: Path) -> None:
+    path = tmp_path / "profile.json"
+    profile = pr.Profile(
+        goal=8, done={"https://x.test/a": "2026-11-01"}, activity={"2026-11-09": 3}
+    )
+
+    pr.save(profile, path)
+
+    assert pr.load(path) == profile
+
+
+def test_a_hand_edited_activity_goal_and_materials_are_coerced(tmp_path: Path) -> None:
+    path = tmp_path / "profile.json"
+    path.write_text(
+        json.dumps(
+            {
+                "goal": 9999,
+                "activity": {"2026-11-09": 4, "not a day": 3, "2026-11-08": "x", "2026-11-07": -5},
+                "done": {"https://x.test/a": "2026-11-01", "": "2026-11-02"},
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    profile = pr.load(path)
+
+    assert profile.goal == 50  # at most fifty answers a day
+    assert profile.activity == {"2026-11-09": 4, "2026-11-07": 0}
+    assert profile.done == {"https://x.test/a": "2026-11-01"}
+
+
+def test_a_goal_that_is_not_a_number_falls_back_to_the_default(tmp_path: Path) -> None:
+    path = tmp_path / "profile.json"
+    path.write_text(json.dumps({"goal": "many"}), encoding="utf-8")
+
+    assert pr.load(path).goal == pr.DEFAULT_GOAL

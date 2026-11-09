@@ -163,3 +163,27 @@ def test_the_motion_has_a_way_out_and_filters_have_an_active_look() -> None:
     assert "@keyframes dw-wipe" in css and "prefers-reduced-motion" in css
     assert "animation: none !important" in css
     assert 'button[kind="pillsActive"]' in css and 'has([data-baseweb="tag"])' in css
+
+
+def test_the_pet_card_shows_the_stage_level_and_a_bounded_experience_bar() -> None:
+    html = t.pet("<svg></svg>", "Жабеня <b>", 3, 0.4, "40 / 100 XP", ["серія: 2 дн."])
+
+    assert "<svg></svg>" in html and "рівень 3" in html and "width:40%" in html
+    assert "&lt;b&gt;" in html and "серія: 2 дн." in html
+    assert "width:2%" in t.pet("", "x", 1, 0.0, "", []) and "width:100%" in t.pet(
+        "", "x", 1, 3.0, "", []
+    )
+
+
+def test_medals_light_the_earned_ones_and_carry_the_hint() -> None:
+    html = t.medals([("Перший крок", "дайте відповідь", True), ("Оффер <i>", "мрія", False)])
+
+    assert html.count('class="dw-medal on"') == 1 and html.count('<span class="dw-medal') == 2
+    assert 'title="дайте відповідь"' in html and "&lt;i&gt;" in html
+
+
+def test_the_frog_has_its_motion_and_the_page_is_never_dimmed_during_a_rerun() -> None:
+    css = t.css()
+
+    assert "@keyframes dw-bob" in css and "@keyframes dw-blink-lid" in css
+    assert '[data-stale="true"] { opacity: 1 !important' in css  # smoother reruns

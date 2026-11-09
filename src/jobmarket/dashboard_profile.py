@@ -13,7 +13,7 @@ import json
 import os
 import tempfile
 from dataclasses import dataclass, field
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 from pathlib import Path
 from typing import Any
 
@@ -29,6 +29,8 @@ STATUS_LABELS = {
 LEVELS = ("", "intern", "junior", "middle", "senior", "lead")
 MAX_NAME, MAX_NOTE, MAX_TEXT = 80, 2000, 300
 REQUIRED_WEIGHT = 2  # a required skill counts twice in a match
+ACTIVITY_DAYS = 400  # how far back the answer history is kept
+DEFAULT_GOAL = 5  # answers a day that count as "a good day"
 
 
 def default_path() -> Path:
@@ -49,6 +51,9 @@ class Profile:
     skills: dict[str, str] = field(default_factory=dict)  # skill name -> "know" | "learning"
     saved: dict[str, dict[str, str]] = field(default_factory=dict)  # vacancy id -> a snapshot
     practice: dict[str, dict[str, Any]] = field(default_factory=dict)  # question id -> its box
+    done: dict[str, str] = field(default_factory=dict)  # learning resource url -> the day finished
+    activity: dict[str, int] = field(default_factory=dict)  # day -> answers given that day
+    goal: int = DEFAULT_GOAL
 
     def known(self) -> set[str]:
         return {name for name, state in self.skills.items() if state == "know"}
@@ -63,7 +68,8 @@ class Profile:
         return {
             "version": VERSION, "name": self.name, "category": self.category, "level": self.level,
             "min_salary": self.min_salary, "remote": self.remote, "skills": self.skills,
-            "saved": self.saved, "practice": self.practice,
+            "saved": self.saved, "practice": self.practice, "done": self.done,
+            "activity": self.activity, "goal": self.goal,
         }  # fmt: skip
 
     @classmethod
@@ -92,6 +98,22 @@ class Profile:
             for question_id, entry in (raw.get("practice") or {}).items()
             if isinstance(entry, dict) and isinstance(entry.get("box"), int)
         }
+        done = {
+            _text(url, 1000): _text(day, 10)
+            for url, day in (raw.get("done") or {}).items()
+            if _text(url, 1000)
+        }
+        activity: dict[str, int] = {}
+        for day, count in (raw.get("activity") or {}).items():
+            try:
+                date.fromisoformat(str(day))
+                activity[str(day)] = max(0, min(int(count), 10_000))
+            except (TypeError, ValueError):
+                continue
+        try:
+            goal = max(1, min(int(raw.get("goal") or DEFAULT_GOAL), 50))
+        except (TypeError, ValueError):
+            goal = DEFAULT_GOAL
         level = raw.get("level")
         try:
             min_salary = max(0, int(raw.get("min_salary") or 0))
@@ -106,6 +128,9 @@ class Profile:
             skills=skills,
             saved=saved,
             practice=practice,
+            done=done,
+            activity=activity,
+            goal=goal,
         )
 
 
@@ -182,6 +207,23 @@ def update_saved(profile: Profile, vacancy_id: str, *, status: str, note: str) -
 
 def remove_saved(profile: Profile, vacancy_id: str) -> None:
     profile.saved.pop(vacancy_id, None)
+
+
+def record_answer(profile: Profile, today: date) -> None:
+    """Count one answer given today (the history behind the streak); old days are forgotten."""
+    key = today.isoformat()
+    profile.activity[key] = profile.activity.get(key, 0) + 1
+    cutoff = (today - timedelta(days=ACTIVITY_DAYS)).isoformat()
+    profile.activity = {day: n for day, n in profile.activity.items() if day >= cutoff}
+
+
+def toggle_resource(profile: Profile, url: str, today: date) -> bool:
+    """Mark a learning resource finished, or take the mark back; True if it is finished now."""
+    if url in profile.done:
+        del profile.done[url]
+        return False
+    profile.done[_text(url, 1000)] = today.isoformat()
+    return True
 
 
 def status_counts(profile: Profile) -> dict[str, int]:
