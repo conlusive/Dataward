@@ -20,13 +20,13 @@ blueTextColor = "#D2D1FF"
 baseRadius = "none"
 buttonRadius = "none"
 showSidebarBorder = true
-# Pixel headings (Tiny5) and a terminal body font. Cyrillic is required (the UI is Ukrainian): both have it. If the font host is not
+# Headings in Tektur (angular, technical, not pixelated) and a terminal body font. Cyrillic is required (the UI is Ukrainian): both have it. If the font host is not
 # reachable the browser falls back to its own monospace font.
 font = "JetBrains Mono:https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap, monospace"
-headingFont = "Tiny5:https://fonts.googleapis.com/css2?family=Tiny5&display=swap, monospace"
+headingFont = "Tektur:https://fonts.googleapis.com/css2?family=Tektur:wght@400;500;600;700&display=swap, monospace"
 codeFont = "JetBrains Mono, monospace"
-headingFontWeights = [400, 400, 400, 400, 400, 400]
-metricValueFontSize = "1.9rem"
+headingFontWeights = [600, 600, 600, 600, 600, 600]
+metricValueFontSize = "1.75rem"
 metricValueFontWeight = 500
 chartCategoricalColors = ["#8481F5", "#E5603B", "#26A08F", "#B58A1F"]
 

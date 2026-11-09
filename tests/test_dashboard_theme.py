@@ -93,7 +93,7 @@ def test_a_sidebar_label_is_escaped() -> None:
 def test_the_style_is_pixel_and_terminal() -> None:
     css = t.css()
 
-    assert "'Tiny5'" in css and "clip-path" in css  # pixel type and stepped corners
+    assert "'Tektur'" in css and "clip-path" in css  # a technical face and stepped corners
     assert "prefers-reduced-motion" in css  # the blinking cursor can be switched off
 
 
@@ -187,3 +187,35 @@ def test_the_frog_has_its_motion_and_the_page_is_never_dimmed_during_a_rerun() -
 
     assert "@keyframes dw-bob" in css and "@keyframes dw-blink-lid" in css
     assert '[data-stale="true"] { opacity: 1 !important' in css  # smoother reruns
+
+
+def test_every_font_size_comes_from_the_one_scale() -> None:
+    """Twenty-one ad-hoc sizes made the page look out of proportion; there are six steps now."""
+    css = t.css()
+    sizes = re.findall(r"font-size:\s*([^;}]+)", css)
+
+    assert sizes and all(
+        s.strip().startswith("var(--fs-") or s.strip().endswith("em") for s in sizes
+    ), sizes
+    steps = re.findall(r"--fs-([a-z0-9]+):\s*([0-9.]+)rem", css)
+    assert [name for name, _ in steps] == ["xs", "sm", "md", "lg", "xl", "2xl"]
+    values = [float(v) for _, v in steps]
+    assert values == sorted(values) and values[0] >= 0.75 and values[-1] <= 2.5
+
+
+def test_the_spacing_scale_is_used_for_the_main_boxes() -> None:
+    css = t.css()
+
+    assert "--s4: 1rem" in css and "padding: var(--s4)" in css
+
+
+def test_cards_in_a_row_are_as_tall_as_the_tallest_and_the_menu_sections_cannot_be_folded() -> None:
+    css = t.css()
+
+    assert '[data-testid="stHorizontalBlock"] { align-items: stretch; }' in css
+    assert "height: 100%" in css and "min-height: 8rem" in css
+    assert '[data-testid="stNavSectionHeader"] { pointer-events: none' in css
+    assert (
+        '[data-testid="stNavSectionHeader"] [data-testid="stIconMaterial"] { display: none; }'
+        in css
+    )
