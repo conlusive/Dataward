@@ -28,6 +28,9 @@ navigation = st.navigation(
         "Вакансії": [
             st.Page("views/catalog.py", title="Каталог", icon=":material/list_alt:"),
         ],
+        "Кабінет": [
+            st.Page("views/profile.py", title="Профіль", icon=":material/account_circle:"),
+        ],
         "Аналітика": [
             st.Page("views/market.py", title="Ринок", icon=":material/monitoring:"),
             st.Page("views/skills.py", title="Навички", icon=":material/psychology:"),

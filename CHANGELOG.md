@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+### Added (profile)
+- **Профіль** page: skills you know and learn, a target, vacancies ranked by how well they fit (with what is
+  missing and a readiness figure), saved vacancies with a stage and a note, a learning plan ordered by what
+  completes the most vacancies, and an **interview trainer** (60 questions for 12 skills, Leitner boxes). A
+  saved vacancy and its fit with the profile are also available in the catalog; the home page shows a
+  profile strip. Everything lives in a local JSON file (`data/profile/`, git-ignored, written atomically).
+
 ### Changed (dashboard v3)
 - **Home page** rebuilt: pipeline runs as squares, bracketed figures, a "BREAKDOWN" panel (thin stacked bars,
   a metric and a cut from two selectors), direction tiles that open their vacancies, top skills and what
