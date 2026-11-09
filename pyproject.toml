@@ -75,3 +75,7 @@ markers = [
 [[tool.mypy.overrides]]
 module = "networkx.*"
 ignore_missing_imports = true  # networkx ships no type information
+
+[[tool.mypy.overrides]]
+module = ["pandas.*", "streamlit.*", "altair.*"]
+ignore_missing_imports = true  # optional dashboard group; pandas is typed loosely on purpose

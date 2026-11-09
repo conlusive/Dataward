@@ -17,3 +17,14 @@ services:
       BRONZE_DIR: /app/data/bronze
     volumes:
       - ./data:/app/data
+
+  # The dashboard reads only the export written by the pipeline: http://localhost:8501
+  dashboard:
+    build:
+      context: .
+      dockerfile: Dockerfile.dashboard
+    image: jobmarket-dashboard
+    ports:
+      - "8501:8501"
+    volumes:
+      - ./data/export:/app/data/export:ro

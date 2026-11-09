@@ -21,7 +21,7 @@ jobs:
       - uses: astral-sh/setup-uv@v5
         with:
           enable-cache: true
-      - run: uv sync --frozen
+      - run: uv sync --frozen --group dashboard
       - run: make lint
       - run: make test
 
@@ -43,3 +43,20 @@ jobs:
           set +e
           docker run --rm jobmarket-pipeline jobmarket flow daily --only nope
           test $? -eq 2
+
+  # The dashboard image must build and serve its health endpoint (without any data it shows a message).
+  dashboard-image:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - run: docker build -f Dockerfile.dashboard -t jobmarket-dashboard .
+      - name: The server answers
+        run: |
+          docker run -d --name dashboard -p 8501:8501 jobmarket-dashboard
+          for i in $(seq 1 30); do
+            curl -fsS http://localhost:8501/_stcore/health && exit 0
+            sleep 2
+          done
+          docker logs dashboard
+          exit 1
