@@ -761,3 +761,97 @@ def short_list(values: list[str], limit: int = 2) -> str:
     """ "a, b" for up to ``limit`` values, "a, b +3" for more: a long selection in a small tag."""
     shown = ", ".join(values[:limit])
     return f"{shown} +{len(values) - limit}" if len(values) > limit else shown
+
+
+# ---- analysing one vacancy ----------------------------------------------------------------------
+PEER_MIN = 5  # fewer comparable salaries than this say nothing about a direction
+
+
+def skill_shares(demand: pd.DataFrame, skills: pd.DataFrame, *, month: Any) -> dict[str, float]:
+    """Skill name -> the share of that month's vacancies that ask for it (0-1)."""
+    rows = demand[demand["month"] == month].merge(skills[["skill_id", "canonical"]], on="skill_id")
+    return {
+        str(name): float(share)
+        for name, share in zip(rows["canonical"], rows["share"], strict=True)
+    }
+
+
+def vacancy_analysis(row: Any, catalog: pd.DataFrame, shares: dict[str, float]) -> dict[str, Any]:
+    """What a reader wants to know about one vacancy next to the market.
+
+    ``skills``: each skill of the vacancy with its share of the whole market and whether it is
+    required; ``salary``: the vacancy's mid-range against the median of the open vacancies of the
+    same direction (None when too few state a salary); ``days_listed`` and ``similar`` (open
+    vacancies of the same direction and level, not counting this one).
+    """
+    required = set(row["skills_required"])
+    skills = sorted(
+        (
+            {"skill": name, "share": shares.get(name), "required": name in required}
+            for name in row["skills"]
+        ),
+        key=lambda item: (-(item["share"] or 0.0), item["skill"]),
+    )
+    peers = catalog[(catalog["category"] == row["category"]) & catalog["is_open"]]
+    paid = peers["salary_mid"].dropna()
+    mid = row["salary_mid"] if pd.notna(row["salary_mid"]) else None
+    listed = pd.Timestamp(row["last_seen_on"]) - pd.Timestamp(row["first_listed_on"])
+    same_level = peers[peers["seniority"] == row["seniority"]]
+    return {
+        "skills": skills,
+        "salary": {
+            "mid": None if mid is None else float(mid),
+            "peer_median": float(paid.median()) if len(paid) >= PEER_MIN else None,
+            "peers": len(paid),
+        },
+        "days_listed": int(listed.days) + 1 if pd.notna(listed) else None,
+        "similar": max(0, len(same_level) - 1),
+    }
+
+
+# ---- parts of a whole and activity ---------------------------------------------------------------
+ACTIVITY_STEPS = (1, 3, 5, 10)  # answers a day that start the levels 1, 2, 3 and 4 of the grid
+WEEKDAYS = ("Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Нд")
+
+
+def latest_shares(market: pd.DataFrame, by: str, *, top: int = 4) -> pd.DataFrame:
+    """Open vacancies on the latest day split by ``by``: ``label``, ``value``, ``share``.
+
+    The ``top`` biggest stay as they are and the rest are folded into "Інші", so a ring never has
+    more than ``top`` + 1 parts.
+    """
+    if market.empty:
+        return pd.DataFrame(columns=["label", "value", "share"])
+    latest = market[market["date"] == market["date"].max()]
+    named = latest.assign(**{by: latest[by].replace({NO_LEVEL: "не вказано"})})
+    counts = named.groupby(by)["open_vacancies"].sum().sort_values(ascending=False)
+    keep = counts.head(top)
+    rest = int(counts.iloc[top:].sum())
+    rows = [{"label": str(name), "value": int(n)} for name, n in keep.items()]
+    if rest:
+        rows.append({"label": OTHER, "value": rest})
+    frame = pd.DataFrame(rows)
+    frame["share"] = frame["value"] / frame["value"].sum()
+    return frame
+
+
+def activity_grid(activity: dict[str, int], today: Any, *, weeks: int = 20) -> pd.DataFrame:
+    """A GitHub-style grid of the last ``weeks`` weeks: one row per day, the newest day is today.
+
+    Columns: ``date``, ``week`` (0 is the oldest), ``weekday`` (0 is Monday), ``count`` and
+    ``level`` (0 for no answers, 1-4 by ``ACTIVITY_STEPS``).
+    """
+    end = pd.Timestamp(today).normalize()
+    start = end - pd.Timedelta(days=end.weekday()) - pd.Timedelta(weeks=weeks - 1)
+    days = pd.date_range(start, end, freq="D")
+    counts = [int(activity.get(day.date().isoformat(), 0)) for day in days]
+    levels = [sum(1 for step in ACTIVITY_STEPS if n >= step) for n in counts]
+    return pd.DataFrame(
+        {
+            "date": [day.date() for day in days],
+            "week": [(day - start).days // 7 for day in days],
+            "weekday": [day.weekday() for day in days],
+            "count": counts,
+            "level": levels,
+        }
+    )

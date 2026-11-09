@@ -81,10 +81,12 @@ def header(
     eyebrow: str = "Dataward",
     pills: list[str] | None = None,
     typed: bool = False,
+    domain: str | None = None,
 ) -> None:
     """The page title: an <h1> with a small label above it and status chips on the right."""
     st.markdown(
-        theme.hero(eyebrow, title, subtitle, pills, typed_subtitle=typed), unsafe_allow_html=True
+        theme.hero(eyebrow, title, subtitle, pills, typed_subtitle=typed, domain=domain),
+        unsafe_allow_html=True,
     )
 
 
@@ -99,8 +101,8 @@ def open_with(page: str, key: str, value: object) -> None:
     st.switch_page(page)
 
 
-def section(label: str, number: int | None = None) -> None:
-    st.markdown(theme.section(label, number), unsafe_allow_html=True)
+def section(label: str, number: int | None = None, domain: str | None = None) -> None:
+    st.markdown(theme.section(label, number, domain), unsafe_allow_html=True)
 
 
 def kpi(
@@ -176,29 +178,34 @@ def pet_state(profile: pr.Profile, today: date | None = None) -> dict[str, Any]:
     }  # fmt: skip
 
 
-def pet_card() -> None:
-    """The frog in the sidebar: it grows with what you do and tells you what waits."""
+def avatar_card() -> None:
+    """You, at the foot of the sidebar: the frog in a frame, a name, a level, what waits."""
     profile = pr.load()
     state = pet_state(profile)
-    info = state["level"]
-    notes = []
-    if state["streak"]:
-        notes.append(f"серія: {state['streak']} дн.")
-    notes.append(f"сьогодні: {state['today']} з {profile.goal}")
-    st.sidebar.markdown(
-        theme.pet(
-            mascot.frog_svg(state["stage"].key, state["mood"], label=state["stage"].name),
-            state["stage"].name,
-            info.level,
-            info.ratio,
-            f"{info.into} / {info.need} XP",
-            notes,
-        ),
-        unsafe_allow_html=True,
-    )
+    info, stage = state["level"], state["stage"]
+    notes = [f"серія {state['streak']} дн."] if state["streak"] else []
+    notes.append(f"сьогодні {state['today']}/{profile.goal}")
     due = state["counts"]["due"]
-    if due:
-        st.sidebar.page_link("views/practice.py", label=f"Повторити питань: {due} →")
+    with st.sidebar.container(key="dw_avatar"):
+        st.markdown(
+            theme.avatar(
+                mascot.frog_svg(stage.key, state["mood"], label=stage.name),
+                profile.name or "Гість",
+                info.level,
+                stage.name,
+                info.ratio,
+                notes,
+            ),  # fmt: skip
+            unsafe_allow_html=True,
+        )
+        st.page_link("views/profile.py", label="Мій профіль →")
+        if due:
+            st.page_link("views/practice.py", label=f"Повторити питань: {due} →")
+        st.markdown(
+            f'<div class="dw-hint">{theme.kbd("?")} гарячі клавіші · {theme.kbd("Ctrl", "K")} '
+            "палітра</div>",
+            unsafe_allow_html=True,
+        )
 
 
 def go_practice(skill: str) -> None:
@@ -241,7 +248,7 @@ def _save_vacancy(row: Any) -> None:
         url=str(row["url"]), today=date.today(),
     )  # fmt: skip
     if added and persist(current):
-        flash("Вакансію збережено в профілі: етап «збережено».")
+        st.toast("Вакансію збережено в профілі.", icon=":material/bookmark_added:")
 
 
 def _has(value: Any) -> bool:
@@ -296,3 +303,133 @@ def vacancy_card(row: Any, *, profile: pr.Profile | None = None) -> None:
         "✓ У профілі" if saved else "★ Зберегти у профіль",
         key=f"save_{row['vacancy_id']}", disabled=saved, on_click=_save_vacancy, args=(row,),
     )  # fmt: skip
+
+
+# ---- a list of vacancies you can act on ---------------------------------------------------------
+def _save_picked(key: str) -> None:
+    """A button callback: keep every selected vacancy of the list ``key`` in the profile."""
+    rows = st.session_state.get(f"{key}_picked", [])
+    current = pr.load()
+    added = pr.save_vacancies(current, rows, date.today())
+    if added and persist(current):
+        st.toast(f"Збережено вакансій: {added}", icon=":material/bookmark_added:")
+    elif not added:
+        st.toast("Усі вибрані вакансії вже в профілі.")
+
+
+def analysis_block(row: Any, analysis: dict[str, Any], mine: set[str]) -> None:
+    """One vacancy next to the market: its skills by how common they are, pay, age, rivals."""
+    items = [{**item, "mine": item["skill"] in mine} for item in analysis["skills"]]
+    st.markdown(
+        theme.card_title("Аналіз проти ринку", "частка вакансій ринку, що просять навичку; "
+                         "бірюзовим обов'язкові, ✓ у вас є"),
+        unsafe_allow_html=True,
+    )  # fmt: skip
+    if items:
+        st.markdown(theme.skill_rows(items), unsafe_allow_html=True)
+    salary = analysis["salary"]
+    lines = []
+    if salary["mid"] is not None and salary["peer_median"]:
+        delta = salary["mid"] / salary["peer_median"] - 1
+        lines.append(
+            f"Зарплата вакансії {dd.fmt_int(salary['mid'])} $ — {abs(delta):.0%} "
+            f"{'вище' if delta >= 0 else 'нижче'} за медіану напрямку "
+            f"({dd.fmt_int(salary['peer_median'])} $, вакансій із вилкою: {salary['peers']})."
+        )
+    elif salary["mid"] is not None:
+        lines.append(f"Зарплата вакансії {dd.fmt_int(salary['mid'])} $; порівняти з напрямком "
+                     "нічим: замало вакансій із вилкою.")  # fmt: skip
+    else:
+        lines.append("Зарплату не вказано: порівнювати нічого.")
+    if analysis["days_listed"] is not None:
+        lines.append(
+            f"На сайті {analysis['days_listed']} дн.; схожих відкритих: {analysis['similar']}."
+        )
+    for line in lines:
+        st.caption(line)
+
+
+def vacancy_list(
+    frame: pd.DataFrame,
+    *,
+    key: str,
+    profile: pr.Profile,
+    catalog: pd.DataFrame,
+    shares: dict[str, float],
+) -> None:
+    """A list of vacancies: sort, select one or many, open, analyse, save, download.
+
+    It is a fragment, so choosing a row or a sort order redraws only the list and its card.
+    """
+    if frame.empty:
+        st.info("За цими умовами вакансій немає.")
+        return
+    mine = profile.known()
+
+    @st.fragment
+    def view() -> None:
+        sort = st.selectbox("Сортування", list(dd.SORTS), key=f"{key}_sort")
+        ordered = dd.sort_catalog(frame, sort).reset_index(drop=True)
+        table = dd.catalog_table(ordered)
+        if mine:
+            scores = [
+                pr.match(list(s), list(r), mine)[0]
+                for s, r in zip(ordered["skills"], ordered["skills_required"], strict=True)
+            ]
+            table.insert(0, "Збіг, %", [round((x or 0) * 100) for x in scores])
+        event = st.dataframe(
+            table, hide_index=True, height=460, key=f"{key}_table", on_select="rerun",
+            selection_mode="multi-row",
+            column_config={
+                "Збіг, %": st.column_config.ProgressColumn(
+                    format="%d", min_value=0, max_value=100, width=110
+                ),
+                "Назва": st.column_config.TextColumn(width=300),
+                "Компанія": st.column_config.TextColumn(width=170),
+                "Напрямок": st.column_config.TextColumn(width=150),
+                "Рівень": st.column_config.TextColumn(width=90),
+                "Зарплата": st.column_config.TextColumn(width=140),
+                "Навички": st.column_config.TextColumn(width=340),
+                "Де": st.column_config.TextColumn(width=170),
+                "Джерело": st.column_config.TextColumn(width=90),
+                "Посилання": st.column_config.LinkColumn("Посилання", display_text="відкрити ↗"),
+                "З'явилась": st.column_config.DateColumn(format="DD.MM.YYYY"),
+            },
+        )  # fmt: skip
+        picked = [i for i in event.selection.rows if i < len(ordered)]
+        st.session_state[f"{key}_picked"] = [
+            {
+                "id": str(ordered.iloc[i]["vacancy_id"]), "title": str(ordered.iloc[i]["title"]),
+                "company": str(ordered.iloc[i]["company"]), "url": str(ordered.iloc[i]["url"]),
+            }
+            for i in picked
+        ]  # fmt: skip
+        save, csv = st.columns([1, 1])
+        save.button(
+            f"★ Зберегти вибрані ({len(picked)})", key=f"{key}_save", disabled=not picked,
+            on_click=_save_picked, args=(key,),
+        )  # fmt: skip
+        csv.download_button(
+            "Завантажити CSV", table.to_csv(index=False).encode("utf-8"),
+            file_name=f"dataward_{key}.csv", mime="text/csv", key=f"{key}_csv",
+        )  # fmt: skip
+        with st.container(border=True):
+            if len(picked) == 1:
+                row = ordered.iloc[picked[0]]
+                vacancy_card(row, profile=profile)
+                analysis_block(row, dd.vacancy_analysis(row, catalog, shares), mine)
+            elif picked:
+                st.markdown(
+                    f'<div class="dw-muted">Вибрано вакансій: {len(picked)}. Натисніть «Зберегти '
+                    "вибрані», щоб додати їх у профіль, або виберіть одну, щоб побачити аналіз."
+                    "</div>",
+                    unsafe_allow_html=True,
+                )
+            else:
+                st.markdown(
+                    '<div class="dw-muted">▸ Клікніть рядок: побачите вакансію й порівняння з '
+                    "ринком; відмічайте кілька, щоб зберегти разом.</div>",
+                    unsafe_allow_html=True,
+                )
+
+    view()

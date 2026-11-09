@@ -47,5 +47,5 @@ navigation = st.navigation(
     },
     expanded=True,  # every item visible, never behind "View more"
 )
-ui.pet_card()  # the frog sits under the menu on every page
+ui.avatar_card()  # you, at the foot of the sidebar, on every page
 navigation.run()

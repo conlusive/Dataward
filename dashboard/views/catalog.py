@@ -118,6 +118,7 @@ ui.header(
     "Клік по рядку відкриває вакансію докладно.",
     eyebrow="вакансії · каталог",
     pills=[theme.pill(f"{dd.fmt_int(len(result))} з {dd.fmt_int(len(catalog))}")],
+    domain="jobs",
 )
 
 ui.html(theme.active_filters(active))
@@ -156,45 +157,9 @@ st.write("")
 list_tab, skills_tab, companies_tab = st.tabs(["Вакансії", "Що вимагають", "Компанії"])
 
 with list_tab:
-    sort = st.selectbox("Сортування", list(dd.SORTS), key="cat_sort")
-    ordered = dd.sort_catalog(result, sort).reset_index(drop=True)
-    table = dd.catalog_table(ordered)
-    event = st.dataframe(
-        table,
-        hide_index=True,
-        height=520,
-        key="cat_table",
-        on_select="rerun",
-        selection_mode="single-row",
-        column_config={
-            "Посилання": st.column_config.LinkColumn("Посилання", display_text="відкрити ↗"),
-            "Назва": st.column_config.TextColumn(width=320),
-            "Компанія": st.column_config.TextColumn(width=170),
-            "Напрямок": st.column_config.TextColumn(width=150),
-            "Рівень": st.column_config.TextColumn(width=90),
-            "Зарплата": st.column_config.TextColumn(width=140),
-            "Навички": st.column_config.TextColumn(width=340),
-            "Де": st.column_config.TextColumn(width=170),
-            "Джерело": st.column_config.TextColumn(width=90),
-            "З'явилась": st.column_config.DateColumn(format="DD.MM.YYYY"),
-        },
-    )
-    picked = event.selection.rows
-    with st.container(border=True):
-        if picked and picked[0] < len(ordered):
-            ui.vacancy_card(ordered.iloc[picked[0]], profile=ui.profile())
-        else:
-            st.markdown(
-                '<div class="dw-muted">▸ Клікніть рядок у таблиці, щоб побачити вакансію '
-                "докладно: усі навички (з позначкою вимог), дати й посилання.</div>",
-                unsafe_allow_html=True,
-            )
-    st.download_button(
-        "Завантажити CSV",
-        table.to_csv(index=False).encode("utf-8"),
-        file_name="dataward_vacancies.csv",
-        mime="text/csv",
-    )
+    demand, skill_table = ui.table("fct_skill_demand_monthly"), ui.table("dim_skill")
+    shares = dd.skill_shares(demand, skill_table, month=dd.latest_month(demand))
+    ui.vacancy_list(result, key="cat", profile=ui.profile(), catalog=catalog, shares=shares)
 
 with skills_tab:
     counts = dd.skill_counts(result, top=15)

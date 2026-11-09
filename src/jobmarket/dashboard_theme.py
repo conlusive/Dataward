@@ -10,6 +10,7 @@ large fills, so it is used for text, lines and highlights, and the charts use th
 """
 
 from html import escape
+from typing import Any
 
 BG = "#303032"
 CARD = "#28282A"
@@ -26,6 +27,11 @@ ACCENT = "#AAA8FF"
 SERIES = ("#8481F5", "#E5603B", "#26A08F", "#B58A1F")
 SOURCE_ORDER = ("dou", "djinni")  # the sources always wear the first two colours in this order
 MARK = SERIES[0]  # one-series bars and lines
+# Each part of the product has its own colour, so a glance says where you are: vacancies are teal,
+# growth (profile, learning, practice) amber, the market lilac, the system terracotta.
+DOMAINS = {
+    "jobs": "#26A08F", "grow": "#B58A1F", "market": "#8481F5", "system": "#E5603B",
+}  # fmt: skip
 MUTED_MARK = "#7A7A82"  # context marks next to an emphasised one (3:1 on the card)
 
 FONT_BODY = "'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace"
@@ -299,6 +305,77 @@ button[kind="pills"], button[kind="pillsActive"],
   background: var(--accent); color: #1B1B1D; text-align: center; font-size: var(--fs-xs); }
 """
 
+_WORKSPACE = """
+.dw-skillrow { display: grid; grid-template-columns: 11rem 1fr 7.5rem; gap: var(--s3);
+  align-items: center; font-size: var(--fs-sm); margin: 0.25rem 0; }
+.dw-skillrow .dw-bar { height: 8px; background: var(--line); }
+.dw-skillrow .dw-bar span { display: block; height: 100%; background: var(--d-market); }
+.dw-skillrow.req .dw-bar span { background: var(--d-jobs); }
+.dw-skillrow .dw-pct { color: var(--ink-3); text-align: right; }
+.dw-skillrow .dw-name.mine::after { content: " ✓"; color: var(--d-jobs); }
+/* domains: a colour per part of the product, used for the label, the marker and the accent */
+.dw-d-jobs { --dom: var(--d-jobs); } .dw-d-grow { --dom: var(--d-grow); }
+.dw-d-market { --dom: var(--d-market); } .dw-d-system { --dom: var(--d-system); }
+.dw-section::before, .dw-eyebrow, .dw-stat i, .dw-card-title::before { color: var(--dom,
+  var(--accent)); }
+.dw-section b { color: var(--dom, var(--accent)); }
+[data-testid="stSidebarNavItems"] > div:nth-child(2) { --dom: var(--d-jobs); }
+[data-testid="stSidebarNavItems"] > div:nth-child(3) { --dom: var(--d-grow); }
+[data-testid="stSidebarNavItems"] > div:nth-child(4) { --dom: var(--d-market); }
+[data-testid="stSidebarNavItems"] > div:nth-child(5) { --dom: var(--d-system); }
+[data-testid="stNavSectionHeader"] { border-left: 4px solid var(--dom, var(--line));
+  padding-left: 0.5rem; }
+[data-testid="stSidebarNavItems"] a[aria-current="page"] {
+  border-left-color: var(--dom, var(--accent)) !important;
+  color: var(--dom, var(--accent)) !important; }
+
+/* the avatar sits at the bottom of the sidebar whatever else is above it */
+[data-testid="stSidebarContent"] { display: flex; flex-direction: column; min-height: 100%; }
+[data-testid="stSidebarUserContent"] { flex: 1 1 auto; display: flex; flex-direction: column; }
+[data-testid="stSidebarUserContent"] > [data-testid="stVerticalBlock"] { flex: 1 1 auto; }
+.st-key-dw_avatar { position: sticky; bottom: 0; order: 999; margin-top: auto; z-index: 5;
+  background: var(--card); border-top: 2px solid var(--line); padding: var(--s3) 0 var(--s2); }
+.dw-avatar { display: flex; gap: var(--s3); align-items: center; }
+.dw-avatar-pic { flex: none; width: 56px; height: 56px; background: var(--bg); overflow: hidden;
+  border: 2px solid var(--dom, var(--d-grow)); display: flex; align-items: center;
+  justify-content: center; }
+.dw-avatar-pic svg { width: 120%; height: auto; margin-top: 6px; }
+.dw-avatar-text { min-width: 0; flex: 1; font-size: var(--fs-xs); color: var(--ink-3);
+  line-height: 1.45; }
+.dw-avatar-name { font-family: var(--display); font-size: var(--fs-md); color: var(--ink);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.dw-avatar-name b { color: var(--d-grow); font-weight: 600; }
+.dw-kbd { display: inline-block; border: 2px solid var(--line); border-bottom-width: 4px;
+  padding: 0 0.4rem; font-size: var(--fs-xs); color: var(--ink-2); background: var(--bg);
+  font-family: var(--body); line-height: 1.5; margin: 0 0.15rem; }
+.dw-hint { font-size: var(--fs-xs); color: var(--ink-3); margin-top: var(--s2); }
+
+/* an action: what to do now, coloured by the part of the product it leads to */
+.dw-todo { background: var(--card); border: 2px solid var(--line);
+  border-left: 6px solid var(--dom);
+  padding: var(--s3) var(--s4); margin-bottom: var(--s2); }
+.dw-todo-kind { font-family: var(--display); font-size: var(--fs-xs); letter-spacing: 0.12em;
+  text-transform: uppercase; color: var(--dom); }
+.dw-todo-text { font-size: var(--fs-md); color: var(--ink); margin-top: 0.15rem; }
+
+/* a key chip row for the help overlay and the command palette (built by dashboard_keys) */
+#dw-overlay { position: fixed; inset: 0; z-index: 100000; background: rgba(20, 20, 22, 0.72);
+  display: flex; align-items: flex-start; justify-content: center; padding-top: 12vh; }
+#dw-overlay .dw-box { width: min(640px, 92vw); background: var(--card);
+  border: 2px solid var(--accent);
+  color: var(--ink); font-family: var(--body); max-height: 70vh; overflow: auto; }
+#dw-overlay input { width: 100%; box-sizing: border-box; padding: var(--s3) var(--s4);
+  font: inherit;
+  font-size: var(--fs-md); background: var(--bg); color: var(--ink); border: 0;
+  border-bottom: 2px solid var(--line); outline: none; }
+#dw-overlay .dw-row { display: flex; justify-content: space-between; gap: var(--s4);
+  padding: var(--s2) var(--s4); font-size: var(--fs-sm); cursor: pointer; }
+#dw-overlay .dw-row.on { background: rgba(170, 168, 255, 0.16); color: var(--accent); }
+#dw-overlay .dw-row span:last-child { color: var(--ink-3); }
+#dw-overlay h3 { margin: 0; padding: var(--s3) var(--s4); font-family: var(--display);
+  font-size: var(--fs-md); color: var(--accent); border-bottom: 2px solid var(--line); }
+"""
+
 
 def css() -> str:
     """The stylesheet, ready for a <style> tag."""
@@ -309,9 +386,10 @@ def css() -> str:
         f" --body: {FONT_BODY}; --display: {FONT_DISPLAY};"
         f" --fs-xs: 0.75rem; --fs-sm: 0.85rem; --fs-md: 1rem; --fs-lg: 1.25rem; --fs-xl: 1.75rem;"
         f" --fs-2xl: 2.5rem; --s1: 0.25rem; --s2: 0.5rem; --s3: 0.75rem; --s4: 1rem; --s5: 1.5rem;"
-        f" --s6: 2rem; }}"
+        f" --s6: 2rem; --d-jobs: {DOMAINS['jobs']}; --d-grow: {DOMAINS['grow']};"
+        f" --d-market: {DOMAINS['market']}; --d-system: {DOMAINS['system']}; }}"
     )
-    return f"<style>{variables}{_STYLE}{_MOTION}{_BLOCKS}</style>"
+    return f"<style>{variables}{_STYLE}{_MOTION}{_BLOCKS}{_WORKSPACE}</style>"
 
 
 def pill(text: str, tone: str = "neutral") -> str:
@@ -327,6 +405,7 @@ def hero(
     pills: list[str] | None = None,
     *,
     typed_subtitle: bool = False,
+    domain: str | None = None,
 ) -> str:
     """The header of a page; ``pills`` are already-built chips (see ``pill``).
 
@@ -336,16 +415,20 @@ def hero(
     sub = f'<div class="dw-sub">{line}</div>' if subtitle else ""
     chips = f'<div class="dw-pills">{"".join(pills)}</div>' if pills else ""
     return (
-        '<div class="dw-hero"><div>'
+        f'<div class="dw-hero{_domain(domain)}"><div>'
         f'<div class="dw-eyebrow">{escape(eyebrow)}</div>'
         f'<h1 class="dw-title">{escape(title)}</h1>{sub}</div>{chips}</div>'
     )
 
 
-def section(label: str, number: int | None = None) -> str:
-    """A small uppercase label above a block, numbered like the cards of a control panel."""
+def _domain(domain: str | None) -> str:
+    return f" dw-d-{domain}" if domain in DOMAINS else ""
+
+
+def section(label: str, number: int | None = None, domain: str | None = None) -> str:
+    """A small uppercase label above a block; ``domain`` (jobs, grow, market, system) colours it."""
     mark = f"<b>{number:02d}</b>" if number is not None else ""
-    return f'<div class="dw-section">{mark}{escape(label)}</div>'
+    return f'<div class="dw-section{_domain(domain)}">{mark}{escape(label)}</div>'
 
 
 def card_title(title: str, note: str = "") -> str:
@@ -376,14 +459,14 @@ def facts(rows: list[tuple[str, str]]) -> str:
     return f'<dl class="dw-facts">{body}</dl>' if body else ""
 
 
-def stats(items: list[tuple[str, str]]) -> str:
+def stats(items: list[tuple[str, str]], domain: str | None = None) -> str:
     """Bracketed figures in a row: ``[ ВІДКРИТО: 6 710 ]``; they arrive one after another."""
     parts = "".join(
         f'<span class="dw-stat" style="--i:{n}"><i>[</i><em>{escape(label)}:</em>'
         f"<b>{escape(value)}</b><i>]</i></span>"
         for n, (label, value) in enumerate(items)
     )
-    return f'<div class="dw-stats">{parts}</div>'
+    return f'<div class="dw-stats{_domain(domain)}">{parts}</div>'
 
 
 def pulse(states: list[tuple[str, str]]) -> str:
@@ -479,3 +562,48 @@ def medals(items: list[tuple[str, str, bool]]) -> str:
 def pet_free(svg: str) -> str:
     """The frog on its own (no text), centred in its column."""
     return f'<div class="dw-pet" style="justify-content:center">{svg}</div>'
+
+
+def todo(kind: str, text: str, domain: str) -> str:
+    """One thing to do now: a small label, the text, and the colour of where it leads."""
+    return (
+        f'<div class="dw-todo{_domain(domain)}"><div class="dw-todo-kind">{escape(kind)}</div>'
+        f'<div class="dw-todo-text">{escape(text)}</div></div>'
+    )
+
+
+def avatar(svg: str, name: str, level: int, stage: str, ratio: float, notes: list[str]) -> str:
+    """The user card for the foot of the sidebar: the frog in a frame, a name, a level bar."""
+    width = max(2, min(100, round(ratio * 100)))
+    lines = " · ".join(escape(note) for note in notes)
+    return (
+        f'<div class="dw-avatar dw-d-grow"><div class="dw-avatar-pic">{svg}</div>'
+        f'<div class="dw-avatar-text"><div class="dw-avatar-name">{escape(name)}</div>'
+        f"<div>{escape(stage)} · <b>рівень {level}</b></div>"
+        f'<div class="dw-xp" role="img" aria-label="{width}% до наступного рівня">'
+        f'<span style="width:{width}%"></span></div><div>{lines}</div></div></div>'
+    )
+
+
+def kbd(*keys: str) -> str:
+    """Key caps for a shortcut hint: ``kbd("g", "c")``."""
+    return "".join(f'<span class="dw-kbd">{escape(key)}</span>' for key in keys)
+
+
+def skill_rows(items: list[dict[str, Any]]) -> str:
+    """Skills of one vacancy against the market: a bar for the share of all vacancies asking for
+    each, required ones in teal, a tick on the ones you know. Items: skill, share (0-1 or None),
+    required, mine."""
+    top = max([float(i["share"] or 0) for i in items] + [0.01])
+    rows = []
+    for item in items:
+        share = float(item["share"] or 0)
+        width = max(2, round(share / top * 100)) if item["share"] else 0
+        pct = f"{share:.0%}" if item["share"] else "—"
+        rows.append(
+            f'<div class="dw-skillrow{" req" if item["required"] else ""}">'
+            f'<span class="dw-name{" mine" if item["mine"] else ""}">{escape(str(item["skill"]))}'
+            f'</span><span class="dw-bar"><span style="width:{width}%"></span></span>'
+            f'<span class="dw-pct">{pct} ринку</span></div>'
+        )
+    return "".join(rows)
