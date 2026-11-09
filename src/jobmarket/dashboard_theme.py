@@ -330,12 +330,20 @@ _WORKSPACE = """
   color: var(--dom, var(--accent)) !important; }
 
 /* the menu is compact so that it fits without a scrollbar; the profile is the avatar below */
-[data-testid="stSidebarNavLink"] { padding-top: 0.2rem; padding-bottom: 0.2rem; min-height: 0; }
+[data-testid="stSidebarNavLink"] { padding-top: 0.1rem !important;
+  padding-bottom: 0.1rem !important; min-height: 1.9rem !important; }
+[data-testid="stSidebarNavItems"] { gap: 0 !important; }
 [data-testid="stSidebarNavLink"][href$="profile"] { display: none; }
-[data-testid="stNavSectionHeader"] { margin-top: 0.4rem; padding-top: 0.1rem;
-  padding-bottom: 0.1rem; }
+[data-testid="stNavSectionHeader"] { margin-top: 0.3rem; padding-top: 0;
+  padding-bottom: 0; min-height: 0; }
+[data-testid="stNavSectionHeader"]:empty { display: none; }
 [data-testid="stSidebarHeader"] { padding-top: 0.6rem; padding-bottom: 0.2rem; }
 [data-testid="stSidebarNav"] { padding-bottom: 0; }
+[data-testid="stSidebarUserContent"] { padding-bottom: 0 !important; }
+[data-testid="stSidebarContent"] { scrollbar-width: none; }
+[data-testid="stSidebarContent"]::-webkit-scrollbar { display: none; }
+
+.st-key-dw_keys { position: absolute; width: 0; height: 0; overflow: hidden; }
 
 /* the filter bar sits above the list, not in the menu */
 .st-key-cat_filters { border: 2px solid var(--line); background: var(--card);
@@ -347,7 +355,12 @@ _WORKSPACE = """
 [data-testid="stSidebarUserContent"] { flex: 1 1 auto; display: flex; flex-direction: column; }
 [data-testid="stSidebarUserContent"] > [data-testid="stVerticalBlock"] { flex: 1 1 auto; }
 .st-key-dw_avatar { position: sticky; bottom: 0; order: 999; margin-top: auto; z-index: 5;
-  background: var(--card); border-top: 2px solid var(--line); padding: var(--s3) 0 var(--s2); }
+  background: var(--card); border-top: 2px solid var(--line); padding: var(--s2) 0 var(--s1); }
+/* the whole card opens the profile: the page link is stretched over it and left invisible */
+.st-key-dw_avatar { cursor: pointer; }
+.st-key-dw_avatar .st-key-dw_avatar_open { position: absolute; inset: 0; z-index: 2; }
+.st-key-dw_avatar .st-key-dw_avatar_open a { height: 100%; opacity: 0; }
+.st-key-dw_avatar:focus-within, .st-key-dw_avatar:hover { background: rgba(170, 168, 255, 0.08); }
 .dw-avatar { display: flex; gap: var(--s3); align-items: center; }
 .dw-avatar-pic { flex: none; width: 56px; height: 56px; background: var(--bg); overflow: hidden;
   border: 2px solid var(--dom, var(--d-grow)); display: flex; align-items: center;

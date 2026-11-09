@@ -2,6 +2,24 @@
 
 ## Unreleased
 
+### Changed (workspace)
+- The **filters of the catalog moved out of the sidebar** into a bar above the list (search, direction,
+  skills, level, source, and a "Ще фільтри" popover), so the menu no longer scrolls. The profile is the
+  **avatar at the foot of the sidebar** (the whole card is a link) and no longer appears in the menu twice.
+- The **home page** answers "what to do today": up to three coloured actions, rings for the daily goal and
+  readiness, the market as rings by source, level and direction beside the daily breakdown, four
+  directions, three fresh vacancies and the state of the pipeline (DQ checks, SLOs, rows in silver).
+- Parts of the product have a colour (vacancies teal, growth amber, market violet, system orange) in the
+  headings, markers and the menu.
+
+### Added (workspace)
+- A **vacancy list** shared by the catalog and a new "Вакансії" tab of the market page: sort, pick one row
+  for a card with an analysis against the market (each skill's share, salary against the direction's
+  median, days listed), pick several to save them together, CSV.
+- **Keyboard**: `g` + a letter to go to a page, `/` for the search, `Ctrl K` for a palette, `?` for the
+  list, `Space` and `1`-`3` in the trainer. Not printed on the pages.
+- Charts: **donut**, **ring** and a 20-week **activity grid** (profile).
+
 ### Changed (proportions)
 - Headings and figures are set in **Tektur** (technical, no longer pixelated; Tiny5 is gone).
 - **One type scale** of six steps (0.75, 0.85, 1, 1.25, 1.75, 2.5 rem) replaces twenty-one ad-hoc sizes, one

@@ -10,6 +10,7 @@ import streamlit as st
 
 from jobmarket import dashboard_data as dd
 from jobmarket import dashboard_interview as iv
+from jobmarket import dashboard_keys as dk
 from jobmarket import dashboard_mascot as mascot
 from jobmarket import dashboard_profile as pr
 from jobmarket import dashboard_progress as pg
@@ -198,9 +199,16 @@ def avatar_card() -> None:
             ),  # fmt: skip
             unsafe_allow_html=True,
         )
-        st.page_link("views/profile.py", label="Мій профіль →")
+        with st.container(key="dw_avatar_open"):
+            st.page_link("views/profile.py", label="Мій профіль")
         if due:
             st.page_link("views/practice.py", label=f"Повторити питань: {due} →")
+
+
+def keys() -> None:
+    """Install the keyboard shortcuts (``dashboard_keys``); the element itself shows nothing."""
+    with st.container(key="dw_keys"):
+        st.html(dk.script(), unsafe_allow_javascript=True)
 
 
 def go_practice(skill: str) -> None:

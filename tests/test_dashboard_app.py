@@ -912,3 +912,49 @@ def test_a_vacancy_card_without_a_profile_has_no_save_button(tmp_path: Path, exp
     app = _card(tmp_path / "plain", 0)
 
     assert not any(b.key and b.key.startswith("save_") for b in app.button)
+
+
+# ---- the vacancy list: pick, analyse, save ----------------------------------------------------
+def _pick(app: AppTest, key: str, *rows: int) -> AppTest:
+    app.session_state[key] = {"selection": {"rows": list(rows), "columns": []}}
+    return app.run()
+
+
+def test_one_picked_vacancy_opens_its_card_with_the_market_comparison(with_catalog: Path) -> None:
+    app = _pick(_run("catalog"), "cat_table", 0)
+
+    html = _markdown(app)
+    assert not app.exception
+    assert "dw-skillrow" in html  # each skill against the share of the market
+    assert "Клікніть рядок" not in html
+
+
+def test_several_picked_vacancies_are_saved_into_the_profile_together(with_catalog: Path) -> None:
+    app = _pick(_run("catalog"), "cat_table", 0, 1)
+
+    save = next(b for b in app.button if b.key == "cat_save")
+    assert "(2)" in save.label and not save.disabled
+    save.click().run()
+
+    assert not app.exception and len(pr.load().saved) == 2
+    assert next(b for b in app.button if b.key == "cat_save").label.endswith("(2)")
+
+
+def test_nothing_picked_means_nothing_to_save(with_catalog: Path) -> None:
+    app = _run("catalog")
+
+    assert next(b for b in app.button if b.key == "cat_save").disabled
+    assert pr.load().saved == {}
+
+
+def test_the_market_has_the_same_vacancy_list_in_its_own_tab(with_catalog: Path) -> None:
+    app = _run("market")
+
+    assert any(t.label == "Вакансії" for t in app.tabs)
+    assert any(b.key == "mkt_save" for b in app.button) and not app.exception
+
+
+def test_the_pages_do_not_print_the_shortcuts_the_question_mark_shows_them(export: Path) -> None:
+    for page in ("home", "catalog", "market"):
+        html = _markdown(_run(page))
+        assert 'class="dw-kbd"' not in html and 'class="dw-hint"' not in html, page

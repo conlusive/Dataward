@@ -28,7 +28,7 @@ level_names = {dd.NO_LEVEL: "не вказано"}
 
 ui.section("Фільтри")
 with st.container(border=True):
-    one, two, three = st.columns([2, 4, 4])
+    one, two, three = st.columns([2, 5, 3])
     with one:
         ui.html('<div class="dw-fl">Джерело</div>')
         sources = st.pills(

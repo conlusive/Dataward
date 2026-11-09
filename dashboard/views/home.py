@@ -121,9 +121,9 @@ with trend:
     breakdown_panel()
 with shares, ui.card("Структура ринку", "відкриті вакансії на останній день"):
     tabs = st.tabs(["Джерела", "Рівні", "Напрямки"])
-    for tab, column in zip(tabs, ("source", "seniority", "category"), strict=True):
+    for tab, by in zip(tabs, ("source", "seniority", "category"), strict=True):
         with tab:
-            ui.chart(charts.donut(dd.latest_shares(market, column, top=4)[["label", "value"]]))
+            ui.chart(charts.donut(dd.latest_shares(market, by, top=4)[["label", "value"]]))
 
 # ---- directions: the way into the catalog ---------------------------------------------------
 directions = dd.direction_stats(market, vacancies)

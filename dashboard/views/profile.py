@@ -2,6 +2,8 @@ from datetime import date
 
 import streamlit as st
 
+from jobmarket import dashboard_charts as charts
+from jobmarket import dashboard_data as dd
 from jobmarket import dashboard_mascot as mascot
 from jobmarket import dashboard_profile as pr
 from jobmarket import dashboard_progress as pg
@@ -52,6 +54,10 @@ ui.html(
         ]
     )
 )
+
+ui.section("Активність", domain="grow")
+with ui.card("Відповіді за 20 тижнів", "кожна клітинка — один день; світліша — більше відповідей"):
+    ui.chart(charts.activity_grid(dd.activity_grid(profile.activity, TODAY), cell=22))
 
 ui.section("Далі для вас")
 top = plan.iloc[0] if plan is not None and not plan.empty else None

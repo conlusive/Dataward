@@ -14,19 +14,20 @@ on the "about the data" page.
 
 ## Pages
 
-Eleven pages in a sidebar under the pixel logo, grouped by what you are doing: Огляд, Вакансії
-(Каталог, Для мене, Збережені), Розвиток (Профіль, Навчання, Практика), Аналітика, Система. The
-sidebar is part of the layout and cannot be collapsed; the frog sits under the menu on every page. Tabs
-inside a page split one topic into views; the filters of the catalog live in the sidebar so that they stay
-in view while the list scrolls.
+Eleven pages in a sidebar under the pixel logo, grouped by what you are doing: Головна, Вакансії
+(Каталог, Для мене, Збережені), Розвиток (Навчання, Практика), Аналітика, Система. The sidebar is part of
+the layout and cannot be collapsed, and it does not scroll on a window at least 760 px high. **You are
+the avatar at its foot** (the frog in a frame, a name, a level bar): the whole card opens the profile, so
+there is no "Профіль" in the menu (the page exists; its menu link is hidden). Tabs inside a page split one
+topic into views. Filters live on the page, in a bar above the list, never in the sidebar.
 
 | Page | Tabs | Shows | Reads |
 |---|---|---|---|
-| Головна | - | a header with the last pipeline runs as squares and a typed line; bracketed figures (open, new, closed, skills, sources); a "BREAKDOWN" panel (thin stacked bars per day, a metric and a cut chosen from two selectors); the biggest **directions** as tiles, each with a button that opens its vacancies (the catalog, or the market page without one); the top-10 skills and what changed since last month; the freshest vacancies as tiles (when there is a catalog) | `fct_market_daily`, `fct_skill_demand_monthly`, `dim_skill`, `status.json`, `last_update.json`, the catalog |
-| Каталог | Вакансії / Що вимагають / Компанії | **the vacancies themselves**: filters (search in the title and company, direction, level, skills with "all" or "any", only open, only with a salary, minimum salary, remote, when it appeared, source), four tiles describing the selection, a sortable table with links, a card of the vacancy you click (all skills, required ones marked, dates, both links when it is on both sites), what the selection asks for, which companies hire, a CSV download | `fct_vacancy_catalog` (local only) |
+| Головна | - | a header with the last pipeline runs as squares; four bracketed figures; **Сьогодні**: up to three things to do now (coloured by where they lead) and two rings, the daily goal and readiness; **Ринок зараз**: the breakdown panel (thin stacked bars per day) beside rings of the market by source, level and direction; the four biggest **directions** as tiles with a button that opens their vacancies; the top-10 skills and what changed; the three freshest vacancies (with a catalog); **Конвеєр даних**: DQ checks passed, SLOs kept, rows in silver | `fct_market_daily`, `fct_skill_demand_monthly`, `dim_skill`, `status.json`, `last_update.json`, the catalog |
+| Каталог | Вакансії / Що вимагають / Компанії | **the vacancies themselves**: a filter bar (search, direction, skills, level and source as pills, and a "Ще фільтри" popover with all/any skills, only open, only with a salary, minimum salary, remote, when it appeared; the popover title counts what is changed), four tiles describing the selection, a sortable table with links, a card of the vacancy you click (all skills, required ones marked, dates, both links when it is on both sites), what the selection asks for, which companies hire, a CSV download | `fct_vacancy_catalog` (local only) |
 | Для мене | - | the open vacancies that suit your target, ranked by how well your skills cover them (a required skill counts twice), with what you have and what is missing, a readiness figure, a minimum-match slider and a card with a save button | the catalog, the profile |
 | Збережені | - | saved vacancies by stage (збережено, відгукнувся, співбесіда, оффер, відмова) with a note, edited in a table | the profile |
-| Профіль | - | **your frog**, its level and experience, the streak, what to do next, achievements, and the settings: skills you know and learn, a target (direction, level, minimum salary, remote), a daily goal | the profile file, `dim_skill`, `fct_market_daily` |
+| Профіль (the avatar) | - | **your frog**, its level and experience, the streak, a 20-week **activity grid**, what to do next, achievements, and the settings: skills you know and learn, a target (direction, level, minimum salary, remote), a daily goal | the profile file, `dim_skill`, `fct_market_daily` |
 | Навчання | - | skills you are learning with their progress, the plan ("what completes the most vacancies") and **learning resources** for any skill, with a "finished" tick | the profile, the catalog, `learning_resources.yaml` |
 | Практика | - | the interview trainer: a session of questions with a reacting frog, and your progress by skill | the profile, `interview_questions.yaml` |
 | Ринок | Динаміка / Категорії / Рівні / Таблиця | the same tiles for the filtered slice (source, category, level), a line per source, new vs closed per day, ranked bars, and the rows as a table with a CSV download | `fct_market_daily` |
@@ -87,6 +88,23 @@ dashboard container mount a folder to keep it: `-v "$PWD/data/profile:/app/data/
   10 per question learned (box 4 or higher), 5 per finished material, 2 per saved vacancy, 5 per application,
   1 per known skill. Level n starts at 25 (n - 1)^2 XP. The **streak** is days in a row with an answer
   (yesterday still counts until today is over). There are ten achievements and a list of "what to do next".
+
+## Keyboard
+
+Shortcuts exist but are not printed on the pages: `?` lists them, `Ctrl K` (`⌘ K`) opens a palette.
+
+| Keys | Does |
+|---|---|
+| `g` then a letter | go to a page: `h` Головна, `c` Каталог, `f` Для мене, `b` Збережені, `u` Профіль, `l` Навчання, `p` Практика, `m` Ринок, `s` Навички, `w` Зарплати, `d` Стан і дані |
+| `/` | focus the search field of the page |
+| `Ctrl K` | the palette: type a part of a page name, arrows and Enter |
+| `Space`, `1` `2` `3` | trainer: reveal the answer, then "Знаю", "Частково", "Не знаю" |
+| `Esc` | close the window, or leave a field |
+
+The table lives in `dashboard_keys.py` and the script is generated from it (`st.html` with
+`unsafe_allow_javascript`); it clicks the sidebar links and the trainer's buttons, so it knows nothing
+about Streamlit's routing. Keys are matched by position (`KeyboardEvent.code`), so they work in the
+Ukrainian layout. A test keeps the table equal to the menu and checks the script with `node --check`.
 
 ## Filters you can tell apart
 
@@ -149,7 +167,9 @@ after the very first update to this version.
   `dashboard_progress.py` and `dashboard_mascot.py`: the profile file and matching, the question bank and
   its schedule, the learning resources, experience and levels, and the frog. No Streamlit, so they are
   tested directly.
-- `src/jobmarket/dashboard_charts.py`: the charts, each taking a frame with fixed column names.
+- `src/jobmarket/dashboard_charts.py`: the charts, each taking a frame with fixed column names: lines, ranked
+  and stacked bars, **donut** and **ring** (parts of a whole, one value), the **activity grid**.
+- `src/jobmarket/dashboard_keys.py`: the shortcut table and the script generated from it.
 - `src/jobmarket/dashboard_ui.py`: cached loading (`st.cache_data`, 5 minutes), one place that turns a
   missing file or column into a message instead of a stack trace, and the tile/card helpers.
 - `dashboard/app.py` and `dashboard/views/*.py`: navigation and one script per page.

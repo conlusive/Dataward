@@ -219,3 +219,47 @@ def test_cards_in_a_row_are_as_tall_as_the_tallest_and_the_menu_sections_cannot_
         '[data-testid="stNavSectionHeader"] [data-testid="stIconMaterial"] { display: none; }'
         in css
     )
+
+
+# ---- colours per part of the product, the avatar, a to-do, key caps, a vacancy's skills ------
+def test_a_section_and_stats_wear_the_colour_of_their_domain() -> None:
+    assert 'class="dw-section dw-d-jobs"' in t.section("Вакансії", domain="jobs")
+    assert "dw-d-" not in t.section("Без розділу")
+    assert "dw-d-" not in t.section("Вигадане", domain="nowhere")  # unknown: no class at all
+    assert "dw-d-market" in t.stats([("Відкрито", "1")], "market")
+    assert set(t.DOMAINS) == {"jobs", "grow", "market", "system"}
+
+
+def test_a_todo_says_where_it_leads_and_escapes_the_text() -> None:
+    html = t.todo("Практика", "<b>5</b> відповідей", "grow")
+
+    assert "dw-d-grow" in html and "Практика" in html
+    assert "<b>5</b>" not in html and "&lt;b&gt;5&lt;/b&gt;" in html
+
+
+def test_the_avatar_shows_the_name_level_and_a_bounded_bar() -> None:
+    low = t.avatar("<svg></svg>", "Ярослав", 3, "Жабеня", 0.0, ["серія 2 дн."])
+    high = t.avatar("<svg></svg>", "<i>x</i>", 3, "Жабеня", 7.0, [])
+
+    assert "Ярослав" in low and "рівень 3" in low and "серія 2 дн." in low
+    assert 'style="width:2%"' in low  # an empty bar still shows a sliver
+    assert 'style="width:100%"' in high and "<i>x</i>" not in high
+
+
+def test_key_caps_are_one_per_key_and_escaped() -> None:
+    html = t.kbd("g", "<")
+
+    assert html.count('class="dw-kbd"') == 2 and "&lt;" in html
+
+
+def test_skill_rows_mark_required_known_and_unknown_share() -> None:
+    html = t.skill_rows(
+        [
+            {"skill": "Python", "share": 0.5, "required": True, "mine": True},
+            {"skill": "Rust", "share": None, "required": False, "mine": False},
+        ]
+    )
+
+    assert html.count("dw-skillrow") == 2 and html.count(" req") == 1
+    assert 'class="dw-name mine">Python' in html and "50% ринку" in html
+    assert "— ринку" in html and 'style="width:0%"' in html  # no share: no bar, an honest dash

@@ -23,7 +23,7 @@ ui.setup()
 
 navigation = st.navigation(
     {
-        "Огляд": [
+        "": [  # no heading: the home page is the root of the menu
             st.Page("views/home.py", title="Головна", icon=":material/home:", default=True),
         ],
         "Вакансії": [
@@ -47,5 +47,6 @@ navigation = st.navigation(
     },
     expanded=True,  # every item visible, never behind "View more"
 )
+ui.keys()  # shortcuts: `?` lists them, they are not printed on the pages
 ui.avatar_card()  # you, at the foot of the sidebar, on every page
 navigation.run()
