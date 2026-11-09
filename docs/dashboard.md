@@ -20,7 +20,7 @@ in view while the list scrolls.
 
 | Page | Tabs | Shows | Reads |
 |---|---|---|---|
-| Головна | - | six numbered tiles (open, new, closed vacancies with a sparkline and the change since yesterday; skills seen; the leading skill; pipeline health), open vacancies by source, the top-10 skills, categories and levels, the freshest vacancies (when there is a catalog), links to the other pages | `fct_market_daily`, `fct_skill_demand_monthly`, `dim_skill`, `status.json`, `last_update.json`, the catalog |
+| Головна | - | a header with the last pipeline runs as squares and a typed line; bracketed figures (open, new, closed, skills, sources); a "BREAKDOWN" panel (thin stacked bars per day, a metric and a cut chosen from two selectors); the biggest **directions** as tiles, each with a button that opens its vacancies (the catalog, or the market page without one); the top-10 skills and what changed since last month; the freshest vacancies as tiles (when there is a catalog) | `fct_market_daily`, `fct_skill_demand_monthly`, `dim_skill`, `status.json`, `last_update.json`, the catalog |
 | Каталог | Вакансії / Що вимагають / Компанії | **the vacancies themselves**: filters (search in the title and company, direction, level, skills with "all" or "any", only open, only with a salary, minimum salary, remote, when it appeared, source), four tiles describing the selection, a sortable table with links, a card of the vacancy you click (all skills, required ones marked, dates, both links when it is on both sites), what the selection asks for, which companies hire, a CSV download | `fct_vacancy_catalog` (local only) |
 | Ринок | Динаміка / Категорії / Рівні / Таблиця | the same tiles for the filtered slice (source, category, level), a line per source, new vs closed per day, ranked bars, and the rows as a table with a CSV download | `fct_market_daily` |
 | Навички | Рейтинг / Навичка / Стеки | a searchable, sortable ranking (share, how often a hard requirement, change against the previous month in percentage points, declared salary) with a CSV download; one skill with its trend, salary and related skills; the stack clusters and a graph of one of them | demand, `dim_skill`, `fct_skill_pairs`, `fct_salary_by_skill`, `skill_clusters` |
@@ -48,6 +48,15 @@ make dashboard         # the Каталог page now lists the vacancies
 On an export without it (the CI artifact) the page says so instead of failing. Showing the catalog to other
 people is a separate decision about the sites' terms; nothing here publishes it.
 
+## Filters you can tell apart
+
+An idle filter and an active one must not look alike. Short lists (source, level) are toggle pills: the
+chosen ones are filled with the accent. Long lists are selects with a dashed border and the placeholder
+"Усі ..." while idle, and an accent border and filled tags once something is chosen. Under the filters the
+active ones are listed as tags (`Джерело: dou`), a quiet "фільтри не задано" when none is set, a count of
+what is shown ("57 з 462") and a reset button. The catalog's default "only open" is itself a filter, so it
+is shown as a tag too.
+
 ## The look
 
 - **Colours**: the "smoky lilac" pair, surface `#303032` and accent `#AAA8FF`; cards are a step darker
@@ -59,20 +68,34 @@ people is a separate decision about the sites' terms; nothing here publishes it.
   section labels read `// ВИБІРКА`, the open tab has an arrow. The fonts come from Google Fonts, and the
   browser falls back to its own monospace font offline. Pixelify Sans was tried first and dropped: its
   Cyrillic is crude.
-- **Logo**: DATAWARD spelled in a 5x7 pixel font, with a pixel shadow and a blinking terracotta cursor;
-  the sidebar icon and the favicon are the "D" and the cursor. `dashboard_logo.py` draws them from a glyph
+- **Logo**: three rising pixel bars, then DATAWARD spelled in a 5x7 pixel font with a pixel shadow, and a
+  static terracotta full stop; the sidebar icon and the favicon are the bars and the stop. `dashboard_logo.py` draws them from a glyph
   table (`python -m jobmarket.dashboard_logo` rewrites `dashboard/static/`), and a test keeps the committed
   files equal to its output.
+- **Motion**: things arrive in steps, never glide: the figures and tiles rise one after another, charts
+  are wiped in, the meters grow, the subtitle of the home page types itself, the newest pipeline square
+  pulses and the title cursor blinks. All of it stops for `prefers-reduced-motion`.
 - **Charts** (`dashboard_charts.py`, Altair) follow the dataviz rules in a pixel style: thin square-ended
   bars, two-pixel lines, square markers, a hairline grid, a tooltip on every mark, a legend only when two
-  series share a chart. The two series colours (`#8481F5`, `#E5603B`) were checked with the palette
-  validator on this surface (dark lightness band, colour-blind separation about 27, contrast over 3:1); a
-  source always wears the same colour whatever the filter leaves. The accent itself is too light for large
+  series share a chart. The four series colours (`#8481F5`, `#E5603B`, `#26A08F`, `#B58A1F`) were checked with the palette
+  validator on the card surface (dark lightness band, colour-blind separation at least 12.7, normal-vision
+  at least 17.5, contrast over 3:1); a chart never needs a fifth: the tail of a breakdown is folded into a
+  grey "Інші". A source always wears the same colour (dou the first, djinni the second) whatever the filter
+  leaves. The accent itself is too light for large
   fills, so it is used for text, lines and highlights.
 - **State is never colour alone**: a status chip or table cell carries an icon and a word (✓ ▲ ✕); a
   required skill is marked with a square as well as the accent.
 - **Graph of a stack** shows at most 60 of the strongest links and only the skills they touch; a big
   cluster drawn in full is a hairball nobody can read.
+
+## A running dashboard picks up edits
+
+Streamlit reruns a page script when it changes, but the modules it imports from `src/` stayed in memory,
+so a dashboard that was running during a `git pull` answered "module has no attribute ..." until it was
+restarted. `dashboard/app.py` now calls `dashboard_reload.refresh()` first: when any dashboard module was
+edited after the process started, all of them are forgotten and imported again (all, because the importer
+of an edited module keeps the old copy). The reload module itself cannot reload itself, so restart once
+after the very first update to this version.
 
 ## How it is built
 

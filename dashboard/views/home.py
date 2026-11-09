@@ -1,3 +1,4 @@
+import pandas as pd
 import streamlit as st
 
 from jobmarket import dashboard_charts as charts
@@ -10,144 +11,126 @@ demand = ui.table("fct_skill_demand_monthly")
 skills = ui.table("dim_skill")
 update = ui.optional_document("last_update.json")
 status = ui.optional_document("status.json")
+vacancies = ui.catalog()
 
 pills = []
+if status:
+    runs = dd.run_states(status)
+    if runs:
+        pills.append(theme.pulse(runs))
+    health = dd.health(status)
+    pills.append(theme.pill(health[1], health[0]))
 if update:
     pills.append(theme.pill(f"дані: {dd.stamp(update['exported_at'])}"))
-health = dd.health(status) if status else None
-if health:
-    pills.append(theme.pill(health[1], health[0]))
 ui.header(
-    "Ринок праці в ІТ України",
-    "Вакансії DOU і Djinni: скільки їх, яких навичок вимагають, що з чим поєднується і скільки "
-    "платять. Дані оновлюються щодня.",
-    eyebrow="Dataward · головна",
+    "Ринок праці IT·UA",
+    "вакансії DOU і Djinni · навички · стеки · зарплати · оновлюється щодня",
+    eyebrow="dataward / головна",
     pills=pills,
+    typed=True,
 )
 
 totals = dd.market_totals(market)
 last = totals.iloc[-1]
-before = totals.iloc[-2] if len(totals) > 1 else None
-
-
-def change(column: str) -> str | None:
-    return None if before is None else f"{int(last[column] - before[column]):+d}"
-
-
-def history(column: str) -> list[float]:
-    return totals[column].tail(30).astype(float).tolist()
-
-
 month = dd.latest_month(demand)
-top = dd.top_skills(demand, skills, month=month, n=10)
 seen = int((demand.loc[demand["month"] == month, "vacancies"] > 0).sum())
-
-ui.section("Показники")
-row1 = st.columns(3)
-with row1[0]:
-    ui.kpi(
-        1, "Відкриті вакансії", dd.fmt_int(last["open_vacancies"]), delta=change("open_vacancies"),
-        history=history("open_vacancies"), help="Сума по DOU і Djinni на останній день.",
-    )  # fmt: skip
-with row1[1]:
-    ui.kpi(
-        2, "Нові за день", dd.fmt_int(last["new_vacancies"]), delta=change("new_vacancies"),
-        history=history("new_vacancies"),
-    )  # fmt: skip
-with row1[2]:
-    ui.kpi(
-        3, "Закриті за день", dd.fmt_int(last["closed_vacancies"]),
-        delta=change("closed_vacancies"), history=history("closed_vacancies"),
-        direction="neutral",
-    )  # fmt: skip
-row2 = st.columns(3)
-with row2[0]:
-    ui.kpi(
-        4, "Навичок у вакансіях", dd.fmt_int(seen), delta=f"за {month:%m.%Y}", direction="neutral"
+ui.html(
+    theme.stats(
+        [
+            ("Відкрито", dd.fmt_int(last["open_vacancies"])),
+            ("Нових за день", dd.fmt_int(last["new_vacancies"])),
+            ("Закрито за день", dd.fmt_int(last["closed_vacancies"])),
+            ("Навичок", dd.fmt_int(seen)),
+            ("Джерел", str(market["source"].nunique())),
+        ]
     )
-with row2[1]:
-    if top.empty:
-        ui.kpi(5, "Найпопулярніша навичка", "—")
-    else:
-        leader = top.iloc[0]
-        ui.kpi(
-            5, "Найпопулярніша навичка", str(leader["canonical"]),
-            delta=f"{leader['share'] * 100:.1f}% вакансій", direction="neutral",
-        )  # fmt: skip
-with row2[2]:
-    if health:
-        ui.kpi(6, "Стан пайплайну", health[1], delta=health[2], direction="neutral")
-    else:
-        ui.kpi(6, "Стан пайплайну", "—", delta="немає status.json", direction="neutral")
-
-if before is None:
+)
+if len(totals) < 2:
     st.caption(
         "Це перший день спостереження: усі вакансії позначено «новими», бо раніше ми їх не бачили. "
         "Реальні нові й закриті з'являться з другого дня."
     )
 
-ui.section("Динаміка та навички")
+# ---- the breakdown panel: a metric split by source, level or direction -----------------------
+ui.section("Динаміка")
+with ui.card("Розріз ринку за днями", "тонкий стовпчик — один день; кольори — частини розрізу."):
+    left, middle, right = st.columns([3, 1, 1])
+    metric = middle.selectbox("Показник", list(dd.METRICS), key="home_metric")
+    split = right.selectbox("Розріз", list(dd.BREAKDOWNS), key="home_split")
+    daily, order = dd.daily_breakdown(market, dd.METRICS[metric], dd.BREAKDOWNS[split])
+    names, colours = charts.series_domain(order, keep_order=True)
+    left.markdown("")
+    ui.html(theme.legend(names, colours))
+    ui.chart(charts.stacked_bars(daily, order=order, unit=metric))
+
+# ---- directions: the way into the catalog ---------------------------------------------------
+directions = dd.direction_stats(market, vacancies)
+ui.section("Напрямки")
+st.caption("Найбільші напрямки за відкритими вакансіями. Кнопка відкриває вакансії цього напрямку.")
+target = "views/catalog.py" if vacancies is not None else "views/market.py"
+filter_key = "cat_dirs" if vacancies is not None else "mk_cats"
+for start in range(0, len(directions), 4):
+    for column, (n, row) in zip(
+        st.columns(4),
+        enumerate(directions.iloc[start : start + 4].itertuples(), start),
+        strict=False,
+    ):
+        with column:
+            ui.html(
+                theme.direction_tile(
+                    n % 4, row.category, dd.fmt_int(row.open), row.share, list(row.skills)
+                )
+            )
+            st.button(
+                "Вакансії →" if vacancies is not None else "Розріз →",
+                key=f"dir_{n}",
+                on_click=ui.open_with,
+                args=(target, filter_key, [row.category]),
+                width="stretch",
+            )
+
+# ---- skills -------------------------------------------------------------------------------
+ui.section("Навички")
+older = [m for m in dd.month_options(demand) if m < month]
+ranking = dd.skill_ranking(demand, skills, ui.table("fct_salary_by_skill"), month=month,
+                           previous=older[0] if older else None)  # fmt: skip
 left, right = st.columns([3, 2])
-with left, ui.card("Відкриті вакансії за днями", "DOU і Djinni рахуються окремо."):
-    ui.chart(charts.lines(dd.open_by_day(market)))
-top_note = (
-    f"частка вакансій місяця {month:%m.%Y}. Серед категорій багато нетехнічних (маркетинг, "
-    "продажі, підтримка), тому CRM чи Google Ads теж у топі; словник частково їх завищує "
-    "(docs/metrics.md)."
-)
-with right, ui.card("Топ-10 навичок", top_note):
-    ui.chart(
-        charts.ranked_bars(
-            top.rename(columns={"canonical": "label", "share": "value"})[["label", "value"]],
-            fmt=".1%",
-            unit="Частка вакансій",
-        )  # fmt: skip
-    )
-
-ui.section("Розріз ринку")
-left, right = st.columns(2)
-with left, ui.card("Категорії", "відкриті вакансії на останній день"):
-    by_category = dd.open_by_category(market, top=10)
-    ui.chart(
-        charts.ranked_bars(
-            by_category.rename(columns={"category": "label", "open_vacancies": "value"}),
-            unit="Відкритих вакансій",
+with left, ui.card("Топ-10 навичок", f"частка вакансій місяця {month:%m.%Y}"):
+    top = ranking.head(10).rename(columns={"canonical": "label", "share": "value"})
+    ui.chart(charts.ranked_bars(top[["label", "value"]], fmt=".1%", unit="Частка вакансій"))
+with right, ui.card("Що змінюється", "порівняння з минулим місяцем, в. п."):
+    moved = ranking.dropna(subset=["change_pp"])
+    if moved.empty:
+        st.caption("Динаміка з'явиться, коли накопичиться другий місяць даних.")
+    else:
+        rising = moved.sort_values("change_pp", ascending=False).head(5)
+        falling = moved.sort_values("change_pp").head(3)
+        shown = pd.concat([rising, falling]).drop_duplicates("skill_id")
+        st.dataframe(
+            shown[["canonical", "change_pp"]].rename(
+                columns={"canonical": "Навичка", "change_pp": "Зміна, п. п."}
+            ),
+            hide_index=True,
+            column_config={"Зміна, п. п.": st.column_config.NumberColumn(format="%+.1f")},
         )
-    )
-with right, ui.card("Рівні", "відкриті вакансії на останній день"):
-    by_level = dd.open_by_seniority(market)
-    ui.chart(
-        charts.ranked_bars(
-            by_level.rename(columns={"seniority": "label", "open_vacancies": "value"}),
-            unit="Відкритих вакансій",
-        )
-    )
 
-vacancies = ui.catalog()
+# ---- fresh vacancies (only where a catalog was built) --------------------------------------
 if vacancies is not None:
     ui.section("Свіжі вакансії")
-    fresh = dd.sort_catalog(dd.filter_catalog(vacancies, only_open=True), "Нові спочатку").head(8)
-    st.dataframe(
-        dd.catalog_table(fresh)[
-            ["Назва", "Компанія", "Напрямок", "Рівень", "Зарплата", "Посилання"]
-        ],
-        hide_index=True,
-        column_config={
-            "Посилання": st.column_config.LinkColumn("Посилання", display_text="відкрити ↗"),
-            "Назва": st.column_config.TextColumn(width="large"),
-        },
-    )
+    fresh = dd.sort_catalog(dd.filter_catalog(vacancies, only_open=True), "Нові спочатку").head(6)
+    for start in range(0, len(fresh), 3):
+        for column, (n, (_, row)) in zip(
+            st.columns(3), enumerate(fresh.iloc[start : start + 3].iterrows(), start), strict=False
+        ):
+            with column:
+                ui.html(
+                    theme.vacancy_tile(
+                        n % 3,
+                        str(row["title"]),
+                        str(row["company"]),
+                        dd.salary_label(row["salary_usd_min"], row["salary_usd_max"]),
+                        list(row["skills"])[:4],
+                    )
+                )
+                st.link_button("Відкрити ↗", str(row["url"]), width="stretch")
     st.page_link("views/catalog.py", label="Весь каталог з фільтрами →")
-
-ui.section("Куди далі")
-tiles = [
-    ("views/catalog.py", "Каталог", "Вакансії списком: напрямок, рівень, навички, зарплата."),
-    ("views/market.py", "Ринок", "Динаміка, категорії, рівні й таблиця з вакансіями за днями."),
-    ("views/skills.py", "Навички", "Рейтинг, одна навичка докладно, стеки, що йдуть разом."),
-    ("views/salary.py", "Зарплати", "Калькулятор, орієнтири DOU, зарплати за навичками."),
-    ("views/system.py", "Стан і дані", "Чи здорові дані, перевірки якості, звідки вони."),
-]
-for column, (page, title, text) in zip(st.columns(len(tiles)), tiles, strict=True):
-    with column, st.container(border=True):
-        st.page_link(page, label=f"{title} →")
-        st.caption(text)

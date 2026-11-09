@@ -19,12 +19,32 @@ from jobmarket import dashboard_theme as t
 FONT = "JetBrains Mono, ui-monospace, Menlo, monospace"
 
 
-def series_domain(names: list[str]) -> tuple[list[str], list[str]]:
-    """A fixed colour per series: the known sources first, any other series after them."""
-    known = [name for name in t.SOURCE_ORDER if name in names]
-    rest = sorted(name for name in names if name not in known)
-    ordered = known + rest
-    colors = [t.SERIES[i % len(t.SERIES)] for i in range(len(ordered))]
+OTHER = "Інші"  # the folded tail of a breakdown; always the grey mark, never one of the four
+
+
+def series_domain(names: list[str], *, keep_order: bool = False) -> tuple[list[str], list[str]]:
+    """The series in the order to draw them, and a colour for each.
+
+    A source always wears its own colour (dou the first, djinni the second) whatever else is on the
+    chart, so filtering one away does not repaint the other. Other series take the colours in
+    order, "Інші" the grey. With ``keep_order`` the caller's order is kept (a stack ranked by size);
+    otherwise the sources come first and the rest follow alphabetically.
+    """
+    if keep_order:
+        ordered = list(names)
+    else:
+        known = [name for name in t.SOURCE_ORDER if name in names]
+        ordered = known + sorted(name for name in names if name not in known)
+    colors: list[str] = []
+    taken = 0
+    for name in ordered:
+        if name in t.SOURCE_ORDER:
+            colors.append(t.SERIES[t.SOURCE_ORDER.index(name)])
+        elif name == OTHER:
+            colors.append(t.MUTED_MARK)
+        else:
+            colors.append(t.SERIES[taken % len(t.SERIES)])
+            taken += 1
     return ordered, colors
 
 
@@ -293,3 +313,47 @@ def survey_band(frame: pd.DataFrame, *, height: int = 260) -> Any:
         color=t.MARK, filled=True, shape="square", size=64, stroke=t.CARD, strokeWidth=2
     ).encode(y="mid:Q", tooltip=tips)
     return _finish(alt.layer(band, line, dots), height)
+
+
+def stacked_bars(
+    frame: pd.DataFrame,
+    *,
+    order: list[str] | None = None,
+    height: int = 300,
+    unit: str = "Вакансій",
+) -> Any:  # fmt: skip
+    """A thin bar per day, stacked by series. Columns: ``date``, ``series``, ``value``.
+
+    ``order`` is the stack from the bottom up (and the order of the colours); the caller shows
+    the key with ``dashboard_theme.legend`` in the same order, so the chart carries no legend.
+    """
+    data = frame.copy()
+    data["day"] = pd.to_datetime(data["date"]).dt.strftime("%d.%m")
+    days = data.sort_values("date")["day"].drop_duplicates().tolist()
+    names, colors = series_domain(
+        order or data["series"].drop_duplicates().tolist(), keep_order=True
+    )
+    data["rank"] = data["series"].map({name: n for n, name in enumerate(names)})
+    size = 12 if len(days) <= 14 else 8 if len(days) <= 31 else 5
+    step = max(1, -(-len(days) // 12))
+    bars = (
+        alt.Chart(data)
+        .mark_bar(size=size, stroke=t.CARD, strokeWidth=1.5)
+        .encode(
+            x=alt.X(
+                "day:N", sort=days,
+                axis=alt.Axis(
+                    title=None, labelAngle=0, grid=True, gridColor=t.GRID, values=days[::step]
+                ),
+            ),
+            y=alt.Y("value:Q", axis=alt.Axis(title=None, format=",d", tickCount=4)),
+            color=alt.Color("series:N", scale=alt.Scale(domain=names, range=colors), legend=None),
+            order=alt.Order("rank:Q"),
+            tooltip=[
+                alt.Tooltip("day:N", title="День"),
+                alt.Tooltip("series:N", title="Серія"),
+                alt.Tooltip("value:Q", title=unit, format=",d"),
+            ],
+        )
+    )  # fmt: skip
+    return _finish(bars, height)

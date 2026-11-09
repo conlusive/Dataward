@@ -103,8 +103,8 @@ the gold file as the list of what to add next.
 - **Dashboard** (Streamlit, Ukrainian, reads only the exported parquet): a home page with numbered key
   figures, a **vacancy catalog** (filter by direction, level, skills and salary, click a vacancy for its
   details and link), then market, skills (a searchable ranking, one skill, stacks), salaries and pipeline
-  health, each with tabs and tables you can sort and download. A dark pixel-terminal "smoky lilac" theme with
-  a pixel logo. The catalog lists other people's vacancies, so it is built locally and is not in the public
+  health, each with tabs and tables you can sort and download; directions on the home page open their
+  vacancies. A dark pixel-terminal "smoky lilac" theme with a pixel logo and stepped animations. The catalog lists other people's vacancies, so it is built locally and is not in the public
   CI artifact.
   [docs/dashboard.md](docs/dashboard.md)
 - **Salary model** (CatBoost p10/p50/p90, MLflow): trained on the survey, because only a few hundred

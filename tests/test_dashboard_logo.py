@@ -40,10 +40,19 @@ def test_the_letters_are_far_enough_apart_for_the_shadow_not_to_close_the_gap() 
     assert logo.GAP >= 2
 
 
-def test_the_cursor_blinks_and_uses_the_second_chart_colour() -> None:
-    svg = logo.wordmark_svg()
+def test_the_full_stop_is_static_and_uses_the_second_chart_colour() -> None:
+    for svg in (logo.wordmark_svg(), logo.icon_svg()):
+        assert svg.count(f'fill="{t.SERIES[1]}"') == 1  # one stop ...
+        assert "<animate" not in svg  # ... that does not blink
 
-    assert "<animate" in svg and 'repeatCount="indefinite"' in svg and t.SERIES[1] in svg
+
+def test_the_emblem_is_three_rising_bars_on_the_bottom_row() -> None:
+    cells = logo._emblem()
+
+    assert len(cells) == sum(logo.BARS)
+    heights = [sum(1 for x, _ in cells if x == col) for col in (0, 2, 4)]
+    assert heights == sorted(heights) and heights[-1] == logo.HEIGHT
+    assert all(y <= logo.HEIGHT - 1 for _, y in cells)
 
 
 def test_a_name_with_a_letter_outside_the_table_is_refused() -> None:
@@ -65,7 +74,7 @@ def test_the_favicon_is_a_square_png_in_the_dashboard_colours() -> None:
     assert image.size == (64, 64)
     colours = {colour for _, colour in image.getcolors()}
     hexes = {f"#{r:02X}{g:02X}{b:02X}" for r, g, b in colours}
-    assert hexes == {t.BG, t.ACCENT, logo.CURSOR}
+    assert hexes == {t.BG, t.ACCENT, logo.DOT_COLOUR}
 
 
 def test_the_assets_can_be_rewritten(tmp_path: Path) -> None:

@@ -20,8 +20,10 @@ INK_2 = "#B9B9C4"
 INK_3 = "#9A9AA6"  # muted text: 4.8:1 on the surface
 ACCENT = "#AAA8FF"
 
-# Chart colours, in a fixed order (an entity keeps its colour whatever the filter shows).
-SERIES = ("#8481F5", "#E5603B")
+# Chart colours, in a fixed order (an entity keeps its colour whatever the filter shows). All four
+# passed the palette validator on the card surface; a chart never needs a fifth (the tail is folded
+# into "Інші").
+SERIES = ("#8481F5", "#E5603B", "#26A08F", "#B58A1F")
 SOURCE_ORDER = ("dou", "djinni")  # the sources always wear the first two colours in this order
 MARK = SERIES[0]  # one-series bars and lines
 MUTED_MARK = "#7A7A82"  # context marks next to an emphasised one (3:1 on the card)
@@ -151,6 +153,99 @@ button[kind], [data-testid="stDownloadButton"] button, [data-testid="stLinkButto
 }
 """
 
+_MOTION = """
+/* motion: things arrive in steps (pixel style), never glide; all of it stops for reduced motion */
+@keyframes dw-rise { from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: none; } }
+@keyframes dw-wipe { from { clip-path: inset(0 100% 0 0); } to { clip-path: inset(0 0 0 0); } }
+@keyframes dw-type { from { width: 0; } to { width: var(--chars); } }
+@keyframes dw-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+[data-testid="stMetric"], .dw-stat, .dw-dir, .dw-vac, .dw-hero {
+  animation: dw-rise 0.55s steps(7) both; animation-delay: calc(var(--i, 0) * 70ms);
+}
+[data-testid="stVegaLiteChart"] { animation: dw-wipe 1.1s steps(28) both; }
+.dw-typed { display: inline-block; overflow: hidden; white-space: nowrap;
+  border-right: 2px solid var(--accent); width: var(--chars);
+  animation: dw-type 1.6s steps(var(--steps)) both, dw-caret 0.9s steps(1) 1.6s 3; }
+@keyframes dw-caret { 50% { border-right-color: transparent; } }
+.dw-pulse span:last-child { animation: dw-pulse 1.6s steps(2) infinite; }
+.dw-dir, .dw-vac, [data-testid="stMetric"] { transition: transform 0.12s steps(2),
+  border-color 0.12s steps(2); }
+.dw-dir:hover, .dw-vac:hover, [data-testid="stMetric"]:hover {
+  transform: translate(-2px, -2px); border-color: var(--accent); }
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+  .dw-typed { width: auto; border-right: 0; }
+}
+"""
+
+_BLOCKS = """
+/* bracket statistics: [ ВІДКРИТО: 6 710 ] */
+.dw-stats { display: flex; flex-wrap: wrap; gap: 0.5rem 1.6rem; margin: 0.2rem 0 1rem; }
+.dw-stat { display: inline-flex; align-items: baseline; gap: 0.55rem; font-size: 0.82rem;
+  color: var(--ink-3); letter-spacing: 0.04em; text-transform: uppercase; }
+.dw-stat i { font-style: normal; color: var(--accent); font-size: 1.5rem; line-height: 1; }
+.dw-stat b { font-family: var(--display); font-weight: 400; color: var(--ink); font-size: 1.9rem;
+  letter-spacing: 0.02em; }
+.dw-stat em { font-style: normal; }
+
+/* the last pipeline runs as squares, the newest pulsing */
+.dw-pulse { display: inline-flex; gap: 4px; vertical-align: middle; }
+.dw-pulse span { width: 12px; height: 12px; background: var(--line); }
+.dw-pulse .ok { background: var(--ok); }
+.dw-pulse .warn { background: var(--warn); }
+.dw-pulse .bad { background: var(--bad); }
+
+/* a legend of bracketed entries: [ ■ dou ] */
+.dw-legend { display: flex; flex-wrap: wrap; gap: 0.4rem 1.4rem; margin: 0.2rem 0 0.6rem;
+  font-size: 0.8rem; color: var(--ink-2); }
+.dw-leg i { font-style: normal; color: var(--accent); }
+.dw-leg b { display: inline-block; width: 0.7rem; height: 0.7rem; margin: 0 0.45rem 0 0.4rem; }
+
+/* tiles: a direction, a vacancy */
+.dw-dir, .dw-vac { background: var(--card); border: 2px solid var(--line); padding: 0.9rem 1rem;
+  margin-bottom: 0.4rem; box-sizing: border-box;
+  clip-path: polygon(0 4px, 4px 4px, 4px 0, calc(100% - 4px) 0,
+  calc(100% - 4px) 4px, 100% 4px, 100% calc(100% - 4px), calc(100% - 4px) calc(100% - 4px),
+  calc(100% - 4px) 100%, 4px 100%, 4px calc(100% - 4px), 0 calc(100% - 4px)); }
+.dw-dir-name { font-family: var(--display); font-size: 1.15rem; color: var(--ink);
+  letter-spacing: 0.04em; text-transform: uppercase; }
+.dw-dir-count { font-family: var(--display); font-size: 2.2rem; color: var(--accent);
+  line-height: 1.1; margin: 0.2rem 0; }
+.dw-dir-count small { font-size: 0.8rem; color: var(--ink-3); margin-left: 0.4rem; }
+.dw-meter { height: 8px; background: var(--line); margin: 0.4rem 0 0.7rem; }
+.dw-meter span { display: block; height: 100%; background: var(--accent);
+  animation: dw-grow 0.9s steps(16) both; }
+@keyframes dw-grow { from { width: 0; } }
+.dw-dir { height: 14.5rem; overflow: hidden; }
+.dw-vac { height: 12.5rem; overflow: hidden; }
+.dw-vac-title { font-family: var(--display); font-size: 1.15rem; color: var(--ink);
+  line-height: 1.2; }
+.dw-vac-meta { color: var(--ink-3); font-size: 0.8rem; margin: 0.3rem 0 0.5rem; }
+.dw-vac-pay { color: var(--accent); font-size: 0.9rem; }
+
+/* filters: an active one must look different from an idle one */
+[data-baseweb="select"]:not(:has([data-baseweb="tag"])) > div { border-style: dashed !important; }
+[data-baseweb="select"]:has([data-baseweb="tag"]) > div { border-color: var(--accent) !important;
+  background: rgba(170, 168, 255, 0.08) !important; }
+[data-baseweb="tag"] { background: var(--accent) !important; color: #1B1B1D !important;
+  border-radius: 0 !important; }
+[data-baseweb="tag"] span { color: #1B1B1D !important; }
+button[kind="pillsActive"] { background: var(--accent) !important; color: #1B1B1D !important;
+  border-color: var(--accent) !important; }
+button[kind="pills"], button[kind="pillsActive"] { border-radius: 0 !important;
+  border-width: 2px !important; }
+.dw-active { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center;
+  margin: 0.4rem 0 1rem; font-size: 0.78rem; }
+.dw-active .dw-tag { border: 2px solid var(--accent); color: var(--accent);
+  padding: 0.1rem 0.6rem; background: rgba(170, 168, 255, 0.08); }
+.dw-active .dw-none { color: var(--ink-3); }
+.dw-fl { font-family: var(--display); font-size: 0.95rem; letter-spacing: 0.08em;
+  text-transform: uppercase; color: var(--ink-2); margin-bottom: 0.3rem; }
+.dw-badge { display: inline-block; min-width: 1.3rem; padding: 0 0.35rem; margin-left: 0.5rem;
+  background: var(--accent); color: #1B1B1D; text-align: center; font-size: 0.78rem; }
+"""
+
 
 def css() -> str:
     """The stylesheet, ready for a <style> tag."""
@@ -160,7 +255,7 @@ def css() -> str:
         f" --warn: #F2A56D; --bad: #FF7A6B;"
         f" --body: {FONT_BODY}; --display: {FONT_DISPLAY}; }}"
     )
-    return f"<style>{variables}{_STYLE}</style>"
+    return f"<style>{variables}{_STYLE}{_MOTION}{_BLOCKS}</style>"
 
 
 def pill(text: str, tone: str = "neutral") -> str:
@@ -169,9 +264,20 @@ def pill(text: str, tone: str = "neutral") -> str:
     return f'<span class="dw-pill"><i style="color:{color}">{icon}</i>{escape(text)}</span>'
 
 
-def hero(eyebrow: str, title: str, subtitle: str = "", pills: list[str] | None = None) -> str:
-    """The header of a page; ``pills`` are already-built chips (see ``pill``)."""
-    sub = f'<div class="dw-sub">{escape(subtitle)}</div>' if subtitle else ""
+def hero(
+    eyebrow: str,
+    title: str,
+    subtitle: str = "",
+    pills: list[str] | None = None,
+    *,
+    typed_subtitle: bool = False,
+) -> str:
+    """The header of a page; ``pills`` are already-built chips (see ``pill``).
+
+    With ``typed_subtitle`` the line under the title types itself out.
+    """
+    line = typed(subtitle) if typed_subtitle and subtitle else escape(subtitle)
+    sub = f'<div class="dw-sub">{line}</div>' if subtitle else ""
     chips = f'<div class="dw-pills">{"".join(pills)}</div>' if pills else ""
     return (
         '<div class="dw-hero"><div>'
@@ -212,3 +318,77 @@ def facts(rows: list[tuple[str, str]]) -> str:
         f"<dt>{escape(label)}</dt><dd>{escape(value)}</dd>" for label, value in rows if value
     )
     return f'<dl class="dw-facts">{body}</dl>' if body else ""
+
+
+def stats(items: list[tuple[str, str]]) -> str:
+    """Bracketed figures in a row: ``[ ВІДКРИТО: 6 710 ]``; they arrive one after another."""
+    parts = "".join(
+        f'<span class="dw-stat" style="--i:{n}"><i>[</i><em>{escape(label)}:</em>'
+        f"<b>{escape(value)}</b><i>]</i></span>"
+        for n, (label, value) in enumerate(items)
+    )
+    return f'<div class="dw-stats">{parts}</div>'
+
+
+def pulse(states: list[tuple[str, str]]) -> str:
+    """Squares for the last runs, oldest first: (what it was, a tone). The newest one pulses."""
+    squares = "".join(
+        f'<span class="{tone if tone in TONES else "neutral"}" title="{escape(label)}"></span>'
+        for label, tone in states
+    )
+    return f'<div class="dw-pulse" role="img" aria-label="останні запуски">{squares}</div>'
+
+
+def legend(names: list[str], colours: list[str]) -> str:
+    """The key of a multi-series chart: ``[ ■ dou ]``, in the order of the stack."""
+    items = "".join(
+        f'<span class="dw-leg"><i>[</i><b style="background:{colour}"></b>{escape(name)}'
+        "<i>]</i></span>"
+        for name, colour in zip(names, colours, strict=False)
+    )
+    return f'<div class="dw-legend">{items}</div>'
+
+
+def typed(text: str) -> str:
+    """A line that types itself out; the text is there from the start for readers and tests."""
+    return (
+        f'<span class="dw-typed" style="--chars:{len(text)}ch;--steps:{len(text)}">'
+        f"{escape(text)}</span>"
+    )
+
+
+def direction_tile(index: int, name: str, open_count: str, share: float, skills: list[str]) -> str:
+    """A direction of the market: its name, open vacancies, a meter of its share, top skills."""
+    width = max(2, min(100, round(share * 100)))
+    return (
+        f'<div class="dw-dir" style="--i:{index}"><div class="dw-dir-name">{escape(name)}</div>'
+        f'<div class="dw-dir-count">{escape(open_count)}<small>відкритих</small></div>'
+        f'<div class="dw-meter" role="img" aria-label="{width}% ринку">'
+        f'<span style="width:{width}%"></span></div>{chips(skills)}</div>'
+    )
+
+
+def vacancy_tile(index: int, title: str, company: str, pay: str, skills: list[str]) -> str:
+    """A vacancy as a tile: title, company, salary and a few skills."""
+    meta = escape(company) if company else "компанія не вказана"
+    salary = f'<div class="dw-vac-pay">{escape(pay)}</div>' if pay else ""
+    return (
+        f'<div class="dw-vac" style="--i:{index}"><div class="dw-vac-title">{escape(title)}</div>'
+        f'<div class="dw-vac-meta">{meta}</div>{salary}{chips(skills)}</div>'
+    )
+
+
+def active_filters(items: list[tuple[str, str]]) -> str:
+    """What is filtered now, as tags: ``Джерело: dou``; a quiet note when nothing is."""
+    if not items:
+        none = "фільтри не задано: показано все"
+        return f'<div class="dw-active"><span class="dw-none">{none}</span></div>'
+    tags = "".join(
+        f'<span class="dw-tag">{escape(name)}: {escape(value)}</span>' for name, value in items
+    )
+    return f'<div class="dw-active">{tags}</div>'
+
+
+def count_badge(count: int) -> str:
+    """A small filled square with a number, for a heading with active filters."""
+    return f'<span class="dw-badge">{count}</span>' if count else ""

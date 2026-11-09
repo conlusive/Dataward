@@ -58,24 +58,52 @@ def test_every_page_renders_with_a_title_and_without_an_error(export: Path, page
 def test_the_app_starts_on_the_home_page(export: Path) -> None:
     app = _run("home")
 
-    assert "Ринок праці в ІТ України" in _markdown(app)
+    assert "Ринок праці IT·UA" in _markdown(app)
 
 
 # ---- home --------------------------------------------------------------------------------------
-def test_home_shows_the_latest_day_as_numbered_tiles(export: Path) -> None:
-    metrics = _metrics(_run("home"))
+def test_home_shows_the_latest_day_as_bracketed_figures(export: Path) -> None:
+    html = _markdown(_run("home"))
 
-    assert metrics["01 · Відкриті вакансії"] == "17"
-    assert metrics["02 · Нові за день"] == "3"
-    assert metrics["03 · Закриті за день"] == "2"
-    assert metrics["05 · Найпопулярніша навичка"] == "Django"  # ties on share are broken by name
+    assert "<em>Відкрито:</em><b>17</b>" in html
+    assert "<em>Нових за день:</em><b>3</b>" in html
+    assert "<em>Закрито за день:</em><b>2</b>" in html
+    assert "<em>Джерел:</em><b>2</b>" in html
 
 
 def test_home_says_the_pipeline_has_remarks_when_a_check_warns(export: Path) -> None:
+    html = _markdown(_run("home"))
+
+    assert "Є зауваження" in html  # a chip in the header
+    assert html.count('class="dw-pulse"') == 1  # and the squares of the last runs
+
+
+def test_home_splits_the_market_by_the_chosen_metric_and_cut(export: Path) -> None:
     app = _run("home")
 
-    assert _metrics(app)["06 · Стан пайплайну"] == "Є зауваження"
-    assert "Є зауваження" in _markdown(app)  # the same state as a chip in the header
+    app.selectbox(key="home_metric").select("Нові").run()
+    app.selectbox(key="home_split").select("Напрямок").run()
+
+    assert not app.exception
+
+
+def test_home_offers_the_biggest_directions_with_a_button_each(export: Path) -> None:
+    app = _run("home")
+
+    html = _markdown(app)
+    assert 'dw-dir-name">Python<' in html and 'dw-dir-name">QA<' in html
+    assert [b.label for b in app.button if b.key and b.key.startswith("dir_")] == [
+        "Розріз →",
+        "Розріз →",
+    ]  # without a catalog a direction opens the market, not the catalog
+
+
+def test_with_a_catalog_a_direction_opens_the_vacancies(with_catalog: Path) -> None:
+    app = _run("home")
+
+    labels = [b.label for b in app.button if b.key and b.key.startswith("dir_")]
+    assert labels == ["Вакансії →", "Вакансії →"]
+    assert "dw-dir-chips" in _markdown(app) or "dw-chip" in _markdown(app)  # top skills shown
 
 
 def _only_the_first_day(export: Path) -> None:
@@ -118,24 +146,58 @@ def test_the_filters_change_the_market_numbers(export: Path) -> None:
     app = _run("market")
     assert _metrics(app)["01 · Відкриті вакансії"] == "17"
 
-    app.multiselect[0].select("dou").run()
+    app.session_state["mk_sources"] = ["dou"]
+    app.run()
 
     assert _metrics(app)["01 · Відкриті вакансії"] == "12"
+
+
+def test_an_active_filter_is_shown_as_a_tag_and_an_idle_page_says_none_is_set(
+    export: Path,
+) -> None:
+    app = _run("market")
+    assert "фільтри не задано" in _markdown(app)
+
+    app.session_state["mk_sources"] = ["dou"]
+    app.run()
+
+    assert "Джерело: dou" in _markdown(app)
+    assert any(b.label == "Скинути фільтри" for b in app.button)
+
+
+def test_the_market_reset_button_clears_the_filters(export: Path) -> None:
+    app = _run("market")
+    app.session_state["mk_sources"] = ["dou"]
+    app.run()
+
+    next(b for b in app.button if b.label == "Скинути фільтри").click().run()
+
+    assert _metrics(app)["01 · Відкриті вакансії"] == "17" and "фільтри не задано" in _markdown(app)
 
 
 def test_a_filter_with_no_vacancies_says_so_instead_of_showing_empty_charts(export: Path) -> None:
     app = _run("market")
 
-    app.multiselect[1].select("QA").run()  # category QA ...
-    app.multiselect[0].select("dou").run()  # ... on DOU: there is none
+    app.session_state["mk_sources"] = ["dou"]
+    app.multiselect(key="mk_cats").select("QA").run()  # category QA on DOU: there is none
 
     assert not app.exception and "вакансій немає" in app.info[0].value
+
+
+def test_the_market_breakdown_follows_the_chosen_metric_and_cut(export: Path) -> None:
+    app = _run("market")
+
+    app.selectbox(key="mk_metric").select("Закриті").run()
+    app.selectbox(key="mk_split").select("Рівень").run()
+
+    assert not app.exception
 
 
 def test_the_market_table_lists_the_filtered_rows(export: Path) -> None:
     app = _run("market")
 
-    app.multiselect[0].select("djinni").run()
+    app.session_state["mk_sources"] = ["djinni"]
+    app.run()
 
     table = app.dataframe[-1].value
     assert set(table["Джерело"]) == {"djinni"} and len(table) == 2
@@ -325,7 +387,7 @@ def test_skills_are_required_together_or_one_of(with_catalog: Path) -> None:
 def test_direction_level_and_salary_filters_combine(with_catalog: Path) -> None:
     app = _run("catalog")
 
-    app.multiselect(key="cat_levels").set_value(["senior"]).run()
+    app.session_state["cat_levels"] = ["senior"]
     app.toggle(key="cat_remote").set_value(True).run()
     app.slider(key="cat_min_salary").set_value(5000).run()
 
@@ -370,14 +432,15 @@ def test_the_catalog_can_be_downloaded_as_a_table_of_what_is_shown(with_catalog:
     assert list(table["Посилання"]) == ["https://example.com/v1", "https://example.com/v2"]
 
 
-def test_home_lists_the_freshest_open_vacancies_when_there_is_a_catalog(
+def test_home_lists_the_freshest_open_vacancies_as_tiles_when_there_is_a_catalog(
     with_catalog: Path,
 ) -> None:
     app = _run("home")
 
-    assert "Свіжі вакансії" in _markdown(app)
-    fresh = next(d.value for d in app.dataframe if "Назва" in d.value.columns)
-    assert fresh["Назва"].iloc[0] == "DevOps Engineer" and len(fresh) == 5
+    html = _markdown(app)
+    assert "Свіжі вакансії" in html and html.count('class="dw-vac"') == 5
+    assert html.index("DevOps Engineer") < html.index("Senior Python Developer")  # newest first
+    assert len(app.get("link_button")) == 5
 
 
 def test_home_without_a_catalog_has_no_vacancy_list(export: Path) -> None:
@@ -442,3 +505,24 @@ def test_a_vacancy_card_is_escaped(tmp_path: Path) -> None:
     app = AppTest.from_function(script, args=(str(tmp_path),), default_timeout=60).run()
 
     assert "<script>" not in _markdown(app) and "<b>x</b>" not in _markdown(app)
+
+
+def test_the_catalog_names_its_active_filters(with_catalog: Path) -> None:
+    app = _run("catalog")
+    assert "Статус: відкриті" in _markdown(app)  # the default is itself a filter, so it is shown
+
+    app.text_input(key="cat_q").input("python").run()
+    app.toggle(key="cat_open").set_value(False).run()
+
+    html = _markdown(app)
+    assert "Пошук: python" in html and "Статус: відкриті" not in html
+
+
+def test_the_catalog_source_filter_is_a_set_of_pills(with_catalog: Path) -> None:
+    app = _run("catalog")
+
+    app.session_state["cat_sources"] = ["djinni"]
+    app.run()
+
+    assert _titles(app) == ["Middle Python Engineer"]  # v4 is djinni too but closed
+    assert "Джерело: djinni" in _markdown(app)

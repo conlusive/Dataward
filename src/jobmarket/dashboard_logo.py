@@ -1,8 +1,9 @@
-"""The pixel logo: DATAWARD spelled in a 5x7 pixel font, with a shadow and a blinking cursor.
+"""The pixel logo: three rising bars, DATAWARD in a 5x7 pixel font, and a full stop.
 
-Everything is drawn from the glyph table below, so the logo, the sidebar icon and the favicon are
+Everything is drawn from the tables below, so the logo, the sidebar icon and the favicon are
 generated, not hand-edited. ``python -m jobmarket.dashboard_logo`` rewrites the files in
 ``dashboard/static``; a test keeps the committed copies equal to what this module produces.
+The stop is static on purpose (the blinking cursor lives in the page titles only).
 """
 
 import io
@@ -20,19 +21,27 @@ GLYPHS = {
 }
 WIDTH, HEIGHT = 5, 7
 GAP = 2  # columns between letters: the one-pixel shadow must not close the gap
-CURSOR_WIDTH = 3
+BARS = (3, 5, 7)  # heights of the emblem's bars, one column each with a column between
+EMBLEM_WIDTH = len(BARS) * 2 - 1
+EMBLEM_GAP = 3  # columns between the emblem and the first letter
+DOT = 2  # the full stop is DOT x DOT pixels
 SHADOW = "#4B4986"  # a darker step of the accent, one pixel down and right
-CURSOR = t.SERIES[1]  # the terracotta of the second chart colour
+DOT_COLOUR = t.SERIES[1]  # the terracotta of the second chart colour
 STATIC = Path(__file__).resolve().parents[2] / "dashboard" / "static"
 
 
-def _pixels(text: str) -> list[tuple[int, int, int]]:
+def _emblem() -> list[tuple[int, int]]:
+    """The cells of the rising bars, standing on the bottom row."""
+    return [(i * 2, HEIGHT - 1 - row) for i, h in enumerate(BARS) for row in range(h)]
+
+
+def _letters(text: str, left: int) -> list[tuple[int, int, int]]:
     """(column, row, letter index) of every lit pixel; letters are ``GAP`` columns apart."""
     lit = []
     for index, letter in enumerate(text):
-        left = index * (WIDTH + GAP)
+        origin = left + index * (WIDTH + GAP)
         for row, line in enumerate(GLYPHS[letter]):
-            lit += [(left + col, row, index) for col, on in enumerate(line) if on == "1"]
+            lit += [(origin + col, row, index) for col, on in enumerate(line) if on == "1"]
     return lit
 
 
@@ -40,61 +49,65 @@ def _path(cells: list[tuple[int, int]], dx: int = 0, dy: int = 0) -> str:
     return "".join(f"M{x + dx} {y + dy}h1v1h-1z" for x, y in cells)
 
 
-def wordmark_svg(text: str = "DATAWARD", *, split: int = 4) -> str:
-    """The name in pixels: the first ``split`` letters in the accent, the rest in the ink colour."""
-    lit = _pixels(text)
-    first = [(x, y) for x, y, i in lit if i < split]
-    second = [(x, y) for x, y, i in lit if i >= split]
-    columns = len(text) * (WIDTH + GAP) - GAP
-    cursor_x = columns + 1
-    width, height = cursor_x + CURSOR_WIDTH + 1, HEIGHT + 1
+def _svg(width: int, height: int, body: str) -> str:
     return (
         f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {width} {height}" '
         f'width="{width * 4}" height="{height * 4}" shape-rendering="crispEdges" '
-        'role="img" aria-label="Dataward">'
-        f'<path fill="{SHADOW}" d="{_path(first + second, 1, 1)}"/>'
-        f'<path fill="{t.ACCENT}" d="{_path(first)}"/>'
-        f'<path fill="{t.INK}" d="{_path(second)}"/>'
-        f'<rect x="{cursor_x}" y="{HEIGHT - 2}" width="{CURSOR_WIDTH}" height="2" fill="{CURSOR}">'
-        '<animate attributeName="opacity" values="1;1;0;0" dur="1.1s" '
-        'repeatCount="indefinite" calcMode="discrete"/></rect></svg>\n'
+        f'role="img" aria-label="Dataward">{body}</svg>\n'
     )
+
+
+def _dot(x: int) -> str:
+    return f'<rect x="{x}" y="{HEIGHT - DOT}" width="{DOT}" height="{DOT}" fill="{DOT_COLOUR}"/>'
+
+
+def wordmark_svg(text: str = "DATAWARD", *, split: int = 4) -> str:
+    """The emblem, the name (the first ``split`` letters in the accent, the rest in ink), a stop."""
+    left = EMBLEM_WIDTH + EMBLEM_GAP
+    lit = _letters(text, left)
+    first = [(x, y) for x, y, i in lit if i < split]
+    second = [(x, y) for x, y, i in lit if i >= split]
+    emblem = _emblem()
+    end = left + len(text) * (WIDTH + GAP) - GAP
+    dot_x = end + 1
+    body = (
+        f'<path fill="{SHADOW}" d="{_path(emblem + first + second, 1, 1)}"/>'
+        f'<path fill="{t.ACCENT}" d="{_path(emblem + first)}"/>'
+        f'<path fill="{t.INK}" d="{_path(second)}"/>' + _dot(dot_x)
+    )
+    return _svg(dot_x + DOT + 1, HEIGHT + 1, body)
 
 
 def icon_svg() -> str:
-    """The first letter and the cursor: the sidebar icon when the panel is collapsed."""
-    lit = [(x, y) for x, y, _ in _pixels("D")]
-    cursor_x = WIDTH + 1
-    width, height = cursor_x + 2 + 1, HEIGHT + 1
-    return (
-        f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {width} {height}" '
-        f'width="{width * 4}" height="{height * 4}" shape-rendering="crispEdges" '
-        'role="img" aria-label="Dataward">'
-        f'<path fill="{SHADOW}" d="{_path(lit, 1, 1)}"/>'
-        f'<path fill="{t.ACCENT}" d="{_path(lit)}"/>'
-        f'<rect x="{cursor_x}" y="{HEIGHT - 2}" width="2" height="2" fill="{CURSOR}"/></svg>\n'
+    """The rising bars and the stop: the sidebar icon when the panel is collapsed."""
+    emblem = _emblem()
+    dot_x = EMBLEM_WIDTH + 1
+    body = (
+        f'<path fill="{SHADOW}" d="{_path(emblem, 1, 1)}"/>'
+        f'<path fill="{t.ACCENT}" d="{_path(emblem)}"/>' + _dot(dot_x)
     )
+    return _svg(dot_x + DOT + 1, HEIGHT + 1, body)
 
 
 def favicon_png(size: int = 64) -> bytes:
-    """A square tab icon: the pixel "D" and the cursor on the dashboard surface."""
+    """A square tab icon: the rising bars and the stop on the dashboard surface."""
     from PIL import Image, ImageDraw  # Pillow comes with Streamlit; only this function needs it
 
-    cell = size // 10
+    columns = EMBLEM_WIDTH + 1 + DOT
+    cell = size // (columns + 3)
     canvas = Image.new("RGB", (size, size), t.BG)
     draw = ImageDraw.Draw(canvas)
-    left = (size - (WIDTH + 3) * cell) // 2
+    left = (size - columns * cell) // 2
     top = (size - HEIGHT * cell) // 2
-    for x, y, _ in _pixels("D"):
-        draw.rectangle(
-            [left + x * cell, top + y * cell, left + (x + 1) * cell - 1, top + (y + 1) * cell - 1],
-            fill=t.ACCENT,
-        )
-    draw.rectangle(
-        [left + (WIDTH + 1) * cell, top + (HEIGHT - 2) * cell,
-         left + (WIDTH + 3) * cell - 1, top + HEIGHT * cell - 1],
-        fill=CURSOR,
-    )  # fmt: skip
+
+    def fill(x: int, y: int, wide: int, colour: str) -> None:
+        box = [left + x * cell, top + y * cell, left + (x + wide) * cell - 1]
+        draw.rectangle([*box, top + (y + 1) * cell - 1], fill=colour)
+
+    for x, y in _emblem():
+        fill(x, y, 1, t.ACCENT)
+    for row in range(DOT):
+        fill(EMBLEM_WIDTH + 1, HEIGHT - DOT + row, DOT, DOT_COLOUR)
     buffer = io.BytesIO()
     canvas.save(buffer, format="PNG")
     return buffer.getvalue()
