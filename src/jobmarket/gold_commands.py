@@ -72,12 +72,15 @@ def import_labels(
         logger.warning(
             "{} labelled vacancies are no longer in silver and are skipped", len(missing)
         )
-    write_gold(parsed.labels, candidates, gold_file, texts_file)
-    empty = sorted(vid for vid, skills in parsed.labels.items() if not skills and vid in candidates)
-    if empty:
+    if not parsed.labels:
+        logger.error("no vacancy is labelled yet: nothing to import")
+        return 2
+    if parsed.unlabelled:
         logger.warning(
-            "{} vacancies have no labels at all (is that right?): {}", len(empty), empty[:5]
+            "{} vacancies are not labelled yet and are left out (label them with `gold-label`)",
+            len(parsed.unlabelled),
         )
+    write_gold(parsed.labels, candidates, gold_file, texts_file)
     wanted = sum(len(v) for v in parsed.wanted.values())
     logger.info(
         "imported {} vacancies; {} skills the taxonomy lacks were requested",

@@ -102,10 +102,17 @@ The skill gold set (the hand-labelled truth that precision/recall are measured a
 
 ```bash
 uv run jobmarket gold-sample --n 150     # data/gold/_label_sheet.md, blind (no suggestions)
-# open the sheet, list the skill ids each vacancy asks for under "Labels:" (ids: data/gold/_skill_ids.md)
+uv run jobmarket gold-label              # label it in the terminal (run it in your own terminal)
 uv run jobmarket gold-import             # checks the ids, writes data/gold/skills_gold.yaml
 uv run jobmarket gold-eval               # precision / recall / F1 per method -> docs/metrics.md
 ```
+
+`gold-label` shows one vacancy at a time and takes skill ids, names or aliases separated by commas.
+`?text` searches the taxonomy, `0` means the vacancy asks for no technical skill, `+Name` records a skill
+the taxonomy lacks, `s` skips, `b` goes back, `q` quits. It suggests nothing (labelling is blind on
+purpose), saves after every vacancy, and the same command resumes where you stopped. You can also edit
+the sheet by hand: a vacancy with no label line is "not labelled yet" and `gold-import` leaves it out,
+so labelling part of the sheet is safe; write `= none` for "asks for no technical skill".
 
 The sheet and the vacancy texts stay local (gitignored); only the labels are committed. After the
 first `gold-eval`, put `regression_min_f1: <value>` in `skills_gold.yaml` and CI-style regression
