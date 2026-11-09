@@ -182,7 +182,7 @@ with list_tab:
     picked = event.selection.rows
     with st.container(border=True):
         if picked and picked[0] < len(ordered):
-            ui.vacancy_card(ordered.iloc[picked[0]])
+            ui.vacancy_card(ordered.iloc[picked[0]], profile=ui.profile())
         else:
             st.markdown(
                 '<div class="dw-muted">▸ Клікніть рядок у таблиці, щоб побачити вакансію '

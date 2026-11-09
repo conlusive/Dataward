@@ -4,6 +4,7 @@ data/export/
 data/export.tmp/
 data/export_public/
 data/export_public.tmp/
+data/profile/
 data/mlflow/
 .env
 *.duckdb

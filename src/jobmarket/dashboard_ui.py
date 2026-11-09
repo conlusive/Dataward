@@ -1,5 +1,6 @@
 """Streamlit helpers shared by the dashboard pages: cached loading and error handling."""
 
+from datetime import date
 from html import escape
 from pathlib import Path
 from typing import Any, Literal
@@ -8,6 +9,7 @@ import pandas as pd
 import streamlit as st
 
 from jobmarket import dashboard_data as dd
+from jobmarket import dashboard_profile as pr
 from jobmarket import dashboard_theme as theme
 
 CACHE_SECONDS = 300  # the data changes once a day; five minutes keeps a deploy's new files visible
@@ -145,12 +147,52 @@ def sidebar_label(text: str) -> None:
     st.sidebar.markdown(theme.side_label(text), unsafe_allow_html=True)
 
 
+def profile() -> pr.Profile:
+    """The saved profile (an empty one on a fresh machine)."""
+    return pr.load()
+
+
+def persist(profile: pr.Profile) -> bool:
+    """Write the profile; a failure is a message on the page, not a stack trace."""
+    try:
+        pr.save(profile)
+    except OSError as error:
+        st.error(f"Не вдалося зберегти профіль у {pr.default_path()}: {error}")
+        return False
+    return True
+
+
+def flash(message: str) -> None:
+    """A message for the next run of the page (a button reruns it, so say it afterwards)."""
+    st.session_state["_flash"] = message
+
+
+def show_flash() -> None:
+    message = st.session_state.pop("_flash", None)
+    if message:
+        st.success(message)
+
+
+def _save_vacancy(row: Any) -> None:
+    """A button callback: keep the vacancy in the profile."""
+    current = pr.load()
+    added = pr.save_vacancy(
+        current, str(row["vacancy_id"]), title=str(row["title"]), company=str(row["company"]),
+        url=str(row["url"]), today=date.today(),
+    )  # fmt: skip
+    if added and persist(current):
+        flash("Вакансію збережено в профілі: етап «збережено».")
+
+
 def _has(value: Any) -> bool:
     return bool(pd.notna(value))
 
 
-def vacancy_card(row: Any) -> None:
-    """One vacancy in full: title, facts, skills (required ones marked) and the links out."""
+def vacancy_card(row: Any, *, profile: pr.Profile | None = None) -> None:
+    """One vacancy in full: title, facts, skills (required ones marked) and the links out.
+
+    With a ``profile`` it also says how well the vacancy fits it and offers to save it.
+    """
     # a missing link arrives as NaN, which is truthy: test it explicitly
     other = str(row["url_other"]) if _has(row["url_other"]) and row["url_other"] else ""
     rows = [
@@ -178,3 +220,19 @@ def vacancy_card(row: Any) -> None:
     st.link_button("Відкрити оголошення ↗", row["url"])
     if other:
         st.link_button("Те саме оголошення на іншому сайті ↗", other)
+    if profile is None:
+        return
+    mine = profile.known()
+    if mine and len(row["skills"]):
+        score, _, missing = pr.match(list(row["skills"]), list(row["skills_required"]), mine)
+        lacking = ", ".join(missing[:5]) + (f" +{len(missing) - 5}" if len(missing) > 5 else "")
+        st.markdown(
+            f'<div class="dw-muted">Збіг із вашим профілем: <b>{(score or 0):.0%}</b>'
+            + (f"; бракує: {escape(lacking)}" if missing else "; бракує: нічого") + "</div>",
+            unsafe_allow_html=True,
+        )  # fmt: skip
+    saved = str(row["vacancy_id"]) in profile.saved
+    st.button(
+        "✓ У профілі" if saved else "★ Зберегти у профіль",
+        key=f"save_{row['vacancy_id']}", disabled=saved, on_click=_save_vacancy, args=(row,),
+    )  # fmt: skip

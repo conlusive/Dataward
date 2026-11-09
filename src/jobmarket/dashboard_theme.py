@@ -233,13 +233,20 @@ _BLOCKS = """
 [data-baseweb="tag"] span { color: #1B1B1D !important; }
 button[kind="pillsActive"] { background: var(--accent) !important; color: #1B1B1D !important;
   border-color: var(--accent) !important; }
-button[kind="pills"], button[kind="pillsActive"] { border-radius: 0 !important;
-  border-width: 2px !important; }
+button[kind="pills"], button[kind="pillsActive"],
+[data-testid="stBaseButton-pills"], [data-testid="stBaseButton-pillsActive"] {
+  border-radius: 0 !important; border-width: 2px !important; }
+[data-testid="stBaseButton-pillsActive"] { background: var(--accent) !important;
+  color: #1B1B1D !important; border-color: var(--accent) !important; }
+[data-testid="stBaseButton-pillsActive"] * { color: #1B1B1D !important; }
 .dw-active { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center;
   margin: 0.4rem 0 1rem; font-size: 0.78rem; }
 .dw-active .dw-tag { border: 2px solid var(--accent); color: var(--accent);
   padding: 0.1rem 0.6rem; background: rgba(170, 168, 255, 0.08); }
 .dw-active .dw-none { color: var(--ink-3); }
+.dw-answer { border-left: 4px solid var(--accent); background: var(--card); padding: 0.8rem 1rem;
+  margin: 0.6rem 0; color: var(--ink); font-size: 0.95rem; line-height: 1.55; }
+.dw-q-meta { color: var(--ink-3); font-size: 0.8rem; margin-bottom: 0.3rem; }
 .dw-fl { font-family: var(--display); font-size: 0.95rem; letter-spacing: 0.08em;
   text-transform: uppercase; color: var(--ink-2); margin-bottom: 0.3rem; }
 .dw-badge { display: inline-block; min-width: 1.3rem; padding: 0 0.35rem; margin-left: 0.5rem;

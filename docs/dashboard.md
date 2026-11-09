@@ -22,6 +22,7 @@ in view while the list scrolls.
 |---|---|---|---|
 | Головна | - | a header with the last pipeline runs as squares and a typed line; bracketed figures (open, new, closed, skills, sources); a "BREAKDOWN" panel (thin stacked bars per day, a metric and a cut chosen from two selectors); the biggest **directions** as tiles, each with a button that opens its vacancies (the catalog, or the market page without one); the top-10 skills and what changed since last month; the freshest vacancies as tiles (when there is a catalog) | `fct_market_daily`, `fct_skill_demand_monthly`, `dim_skill`, `status.json`, `last_update.json`, the catalog |
 | Каталог | Вакансії / Що вимагають / Компанії | **the vacancies themselves**: filters (search in the title and company, direction, level, skills with "all" or "any", only open, only with a salary, minimum salary, remote, when it appeared, source), four tiles describing the selection, a sortable table with links, a card of the vacancy you click (all skills, required ones marked, dates, both links when it is on both sites), what the selection asks for, which companies hire, a CSV download | `fct_vacancy_catalog` (local only) |
+| Профіль | Профіль / Вакансії для мене / Збережені / Що вчити / Практика | **your own space**: skills you know and learn, a target (direction, level, salary, remote); the vacancies that fit, ranked by how well your skills cover them, with what is missing; saved vacancies with a stage (збережено, відгукнувся, співбесіда, оффер, відмова) and a note; a learning plan ordered by what unlocks the most vacancies; an interview trainer | the catalog (for the three vacancy tabs), `dim_skill`, `fct_market_daily`, the profile file |
 | Ринок | Динаміка / Категорії / Рівні / Таблиця | the same tiles for the filtered slice (source, category, level), a line per source, new vs closed per day, ranked bars, and the rows as a table with a CSV download | `fct_market_daily` |
 | Навички | Рейтинг / Навичка / Стеки | a searchable, sortable ranking (share, how often a hard requirement, change against the previous month in percentage points, declared salary) with a CSV download; one skill with its trend, salary and related skills; the stack clusters and a graph of one of them | demand, `dim_skill`, `fct_skill_pairs`, `fct_salary_by_skill`, `skill_clusters` |
 | Зарплати | Калькулятор / Орієнтири DOU / За навичками / Тривалість вакансій | the model's p10-p50-p90 for a profile; the survey's median by year with its p25-p75 band; declared salaries by skill; how long a vacancy stays open | `salary_model_grid` (optional), `fct_salary_survey`, `fct_salary_by_skill`, `fct_vacancy_lifetime` |
@@ -47,6 +48,29 @@ make dashboard         # the Каталог page now lists the vacancies
 
 On an export without it (the CI artifact) the page says so instead of failing. Showing the catalog to other
 people is a separate decision about the sites' terms; nothing here publishes it.
+
+## The profile and the interview trainer
+
+The profile is one small JSON file on this machine, `data/profile/profile.json` (git-ignored; set
+`PROFILE_PATH` to move it). There is no account and no server-side storage: it is a single-user tool. The
+file is written atomically (a half-written file is never visible), readable by the owner only, every field
+is coerced when it is read (a hand-edited file cannot break the page) and a damaged file is set aside as
+`profile.json.damaged-<time>`. If it cannot be written (a read-only mount) the page says so. In the
+dashboard container mount a folder to keep it: `-v "$PWD/data/profile:/app/data/profile"`.
+
+- **Match**: a vacancy's skills that you know, weighted (a required skill counts twice), as a percentage.
+  Vacancies come from the catalog, narrowed by your target; a minimum salary hides only vacancies that state
+  a lower one (most state none). **Readiness** is the median match of your 20 best vacancies.
+- **Learning plan**: for the vacancies that fit your target, which skills you lack. "Відкриває" counts the
+  vacancies where a skill is the only required one still missing, so learning it completes the vacancy.
+- **Saved vacancies** keep a snapshot (title, company, link), so they outlive the catalog, which is rebuilt.
+- **Trainer** (`interview_questions.yaml`): 60 questions with short model answers for 12 skills (Python,
+  SQL, Git, Docker, REST, CI/CD, PostgreSQL, JavaScript, TypeScript, Linux, AWS, Kubernetes), at three
+  levels. A session draws from your skills, from the learning plan or from everything. You read the
+  question, reveal the answer and rate yourself: "Знаю" moves the question up a Leitner box (it comes back
+  after 2, 4, 8, 16 days), "Частково" keeps the box, "Не знаю" sends it back to box 1 (tomorrow). A question
+  in box 4 or higher counts as learned. A test checks that every question's skill is in the taxonomy. The
+  answers remind the idea; learn from them and say it in your own words.
 
 ## Filters you can tell apart
 
@@ -104,6 +128,8 @@ after the very first update to this version.
 - `src/jobmarket/dashboard_theme.py`: colour tokens, the stylesheet and small HTML pieces (header, status
   chip, section label, skill tags, fact list); text is escaped. No Streamlit import either.
 - `src/jobmarket/dashboard_logo.py`: the pixel logo, the sidebar icon and the favicon.
+- `src/jobmarket/dashboard_profile.py` and `dashboard_interview.py`: the profile file, matching, the
+  learning plan, and the question bank with its schedule. No Streamlit, so they are tested directly.
 - `src/jobmarket/dashboard_charts.py`: the charts, each taking a frame with fixed column names.
 - `src/jobmarket/dashboard_ui.py`: cached loading (`st.cache_data`, 5 minutes), one place that turns a
   missing file or column into a message instead of a stack trace, and the tile/card helpers.

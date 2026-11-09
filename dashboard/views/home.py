@@ -1,8 +1,12 @@
+from datetime import date
+
 import pandas as pd
 import streamlit as st
 
 from jobmarket import dashboard_charts as charts
 from jobmarket import dashboard_data as dd
+from jobmarket import dashboard_interview as iv
+from jobmarket import dashboard_profile as pr
 from jobmarket import dashboard_theme as theme
 from jobmarket import dashboard_ui as ui
 
@@ -50,6 +54,33 @@ if len(totals) < 2:
         "Це перший день спостереження: усі вакансії позначено «новими», бо раніше ми їх не бачили. "
         "Реальні нові й закриті з'являться з другого дня."
     )
+
+# ---- the profile at a glance -----------------------------------------------------------------
+mine = ui.profile()
+ui.section("Мій профіль")
+if mine.is_empty():
+    st.caption(
+        "Додайте свої навички: дашборд знайде вакансії, що вам підходять, складе план навчання "
+        "і дасть тренажер до співбесід."
+    )
+    st.page_link("views/profile.py", label="Створити профіль →")
+else:
+    fit = None
+    if vacancies is not None and mine.known():
+        fit = pr.readiness(pr.rank_vacancies(vacancies, mine))
+    due = iv.counts(iv.load_bank(), mine.practice, date.today())["due"]
+    ui.html(
+        theme.stats(
+            [
+                ("Знаю", str(len(mine.known()))),
+                ("Вчу", str(len(mine.learning()))),
+                ("Збережено", str(len(mine.saved))),
+                ("До повтору", str(due)),
+                ("Готовність", f"{fit:.0%}" if fit is not None else "—"),
+            ]
+        )
+    )
+    st.page_link("views/profile.py", label="Відкрити профіль →")
 
 # ---- the breakdown panel: a metric split by source, level or direction -----------------------
 ui.section("Динаміка")
