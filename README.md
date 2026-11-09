@@ -119,8 +119,10 @@ All from the first days of data, so these are snapshots, not trends.
 
 1. **Python is the most requested skill:** 18.9% of the vacancies published in October 2026 (822 of 4,350),
    ahead of CI/CD (16.2%), SQL (15.5%) and Git (13.5%). Three of the top twelve are not programming skills
-   (Leadership, CRM, Google Ads); I have not yet looked into whether the listings or the dictionary is the
-   cause.
+   (Leadership, CRM, Google Ads). The gold set says the dictionary overstates them: for Leadership it
+   made 7 false alarms against 9 right finds, for CRM 6 against 7, for Google Ads 2 against 1 (a small
+   sample). Read these three as an upper bound; the fix is stricter aliases (for example "team lead" in a
+   reporting line is not a leadership requirement).
 2. **Skills come in packages.** PyTorch and TensorFlow appear together 95 times more often than chance
    (lift 94.6, 41 vacancies), NumPy and Pandas 76 times, Android and iOS 20 times (184 vacancies). The
    graph of strong pairs splits into 9 stacks; the largest (78 skills) is built around Terraform: cloud
