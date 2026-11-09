@@ -1,0 +1,3055 @@
+# Labelled skills per vacancy (ids from the taxonomy). Texts are kept separately.
+labelled_by: Claude (an LLM), blind to the dictionary and to the LLM method; not a
+  human
+regression_min_f1: 0.78
+wanted:
+  djinni:654588:
+  - Core Data
+  - GCD
+  - Reactive Programming
+  - Realm
+  - URLSession
+  djinni:736623:
+  - Google Sheets
+  djinni:812381:
+  - API integration
+  - Postback tracking
+  - VPS
+  - Web hosting
+  djinni:815829:
+  - Gradle
+  djinni:816713:
+  - Apache
+  - Logstash
+  - Tomcat
+  - Zabbix
+  djinni:824349:
+  - LangGraph
+  - LangSmith
+  - Vector databases
+  djinni:832027:
+  - Sidekiq
+  djinni:840647:
+  - Cloud Functions
+  - Kedro
+  - SciPy
+  djinni:846701:
+  - Mantis
+  djinni:848590:
+  - Bitbucket Pipelines
+  - Flyway
+  - GitOps
+  - Gradle
+  - Keycloak
+  - Lombok
+  - MSK
+  - MapStruct
+  djinni:848994:
+  - Jasmine
+  - Karma
+  - Keycloak
+  - OIDC
+  djinni:849253:
+  - ArduPilot
+  - Kalman filters
+  - LiDAR
+  - MAVLink
+  - NVIDIA Jetson
+  - Point Cloud Library
+  - SLAM
+  - Sensor fusion
+  - UART
+  djinni:850041:
+  - AI automation
+  - ASO
+  - Apple Search Ads
+  - AppsFlyer
+  djinni:851289:
+  - VDI
+  - Windows Services
+  djinni:851814:
+  - Microsoft Graph API
+  - Microsoft Teams
+  - SIP
+  - SignalR
+  - VoIP
+  - WebRTC
+  djinni:851909:
+  - LAMP/LEMP stack
+  djinni:854135:
+  - AppLovin MAX
+  - Google AdMob
+  djinni:854570:
+  - Elucidat
+  - Genially
+  - Synthesia
+  - Typeform
+  djinni:854945:
+  - TCP/UDP
+  djinni:855110:
+  - Mobile analytics
+  - WKWebView
+  djinni:855588:
+  - Android TV
+  - Clean Architecture
+  - ExoPlayer
+  - Hilt
+  - Koin
+  - Kotlin Coroutines
+  - MVVM
+  djinni:855793:
+  - Bootloader
+  - OTA firmware updates
+  - SPI
+  - STM32
+  - UART
+  djinni:856041:
+  - AWS Secrets Manager
+  - SNS
+  djinni:856075:
+  - ArduPilot
+  - Betaflight
+  - ESP32
+  - PWM
+  - PX4
+  - RS-485
+  - SPI
+  - STM32
+  - UART
+  djinni:856246:
+  - Data Vault 2.0
+  - Snowpipe
+  - Streamlit
+  djinni:856266:
+  - Agent-to-Agent protocol
+  - Event sourcing
+  - Event-driven architecture
+  - Model Context Protocol
+  djinni:856312:
+  - Specs2
+  djinni:856381:
+  - Google Play Console
+  djinni:856464:
+  - AWS Bedrock
+  - AWS SES
+  - GDPR
+  - Labstack Echo
+  - MCP
+  - Microsoft Graph
+  - OpenSearch
+  - SCIM
+  - Vector search
+  - sqlx
+  djinni:856527:
+  - Crowdin
+  - HubL
+  - HubSpot CLI
+  - HubSpot CMS
+  djinni:856629:
+  - GIS
+  - GeoPandas
+  - QGIS
+  - Rasterio
+  djinni:856672:
+  - Firewall
+  - IPsec/IKEv2
+  - LACP
+  - MikroTik
+  - STP/RSTP
+  - VLAN
+  djinni:856786:
+  - GCP Secret Manager
+  - New Relic
+  - Security Command Center
+  djinni:856796:
+  - FpML
+  - Hazelcast
+  djinni:856828:
+  - Chai
+  djinni:856834:
+  - Data pipelines
+  - Fiber
+  djinni:856869:
+  - Aurora
+  - Crashlytics
+  - Fastlane
+  - Google Play Console
+  djinni:856889:
+  - Data wrangling
+  - GDPR
+  - HIPAA
+  - LangGraph
+  - SOC 2
+  - Workflow engines
+  djinni:856905:
+  - Azure AI Search
+  - Embeddings
+  - FAISS
+  - LangGraph
+  - LlamaIndex
+  djinni:856944:
+  - ClickUp
+  - Locust
+  - k6
+  djinni:857075:
+  - Bluetooth Low Energy testing
+  djinni:857099:
+  - AI tools
+  - ClickUp
+  - Google Sheets
+  djinni:857100:
+  - AI tools
+  - Google Sheets
+  - Looker Studio
+  djinni:857102:
+  - Chrome DevTools
+  djinni:857104:
+  - DHCP
+  - MikroTik
+  - NAT
+  - PHP-FPM
+  - RADIUS
+  - VLAN
+  dou:219108:
+  - Electron
+  dou:230319:
+  - MERN stack
+  dou:267574:
+  - Azure Application Service
+  - Azure Event Grid
+  - DDoS protection
+  - IIS
+  - Load testing
+  dou:291893:
+  - Hangfire
+  - SPA
+  - SignalR
+  - xUnit
+  dou:321996:
+  - Causal analysis
+  - Cloud Run
+  - Evidently
+  - Generative AI
+  dou:332846:
+  - AWS ElastiCache
+  - Clean Architecture
+  - Hexagonal Architecture
+  dou:333919:
+  - PixiJS
+  dou:341881:
+  - DMBOK
+  - IIoT
+  - MS Fabric
+  - MS Project
+  - MS Purview
+  - OnePlan
+  - SAP Data Services
+  dou:345224:
+  - NAT traversal
+  - Packet sniffers
+  dou:346809:
+  - Azure AI Foundry
+  - Cloudera CML
+  - H2O-3
+  - Neural machine translation
+  - OCR
+  - RAGAS
+  dou:351948:
+  - PCI DSS
+  dou:355152:
+  - Clean Architecture
+  - GRASP
+  - Jaeger
+  - Pyroscope
+  - Service-Oriented Architecture
+  dou:356228:
+  - ArduPilot
+  - ESP32
+  - GPIO
+  - GStreamer
+  - MAVLink
+  - MIPI CSI
+  - NVIDIA Jetson
+  - RTSP
+  - SPI
+  - STM32
+  - UART
+  - crontab
+  dou:359400:
+  - Diffusion models
+  - Generative AI
+  - Transformers
+  dou:363404:
+  - ArduPilot
+  - Betaflight
+  - ELRS
+  - Mission Planner
+  - OpenTX
+  dou:365309:
+  - Core Foundation
+  - File systems
+  - POSIX
+  - Protobuf
+  - Reverse engineering
+  - WinAPI
+  dou:365330:
+  - Dependency injection
+  - Kotlin Coroutines
+  - MVI
+  - MVVM
+  dou:365843:
+  - ARAS Innovator
+  - PLM/PDM systems
+  dou:366009:
+  - FFmpeg
+  - GPIO
+  - GStreamer
+  - MAVLink
+  - MSP
+  - RTSP
+  - SPI
+  - UART
+  dou:366993:
+  - CatBoost
+  - LightGBM
+  - Logistic regression
+  - Model validation (Gini, KS, PSI)
+  - Scorecards (WoE, IV)
+  dou:367896:
+  - Backup and recovery
+  - DBaaS
+  - PgBouncer
+  - ProxySQL
+  - Vector databases
+  dou:369813:
+  - Dimensional modeling (star/snowflake schema)
+  - OLTP
+  dou:370502:
+  - CatBoost
+  - LightGBM
+  - Logistic regression
+  - Model validation (Gini, KS, PSI)
+  - Scorecards (WoE, IV)
+  dou:370624:
+  - OSI model
+  - PyInstaller
+  - PyQt/PySide
+  - Python sockets
+  - WebRTC
+  dou:370866:
+  - AWR/ASH
+  - Oracle ASM
+  - Oracle Data Guard
+  - Oracle Net/TNS
+  - Oracle RAC
+  - RMAN
+  dou:371126:
+  - AWS CloudFront
+  - AWS SNS
+  - OpenSearch
+  - RBAC
+  - Ruff
+  dou:371284:
+  - Hilt
+  - Kotlin Coroutines
+  - Kotlin Flow
+  - Map engines
+  - SSDLC
+  dou:371752:
+  - Hardware testing
+  - RF testing
+  - SDR
+  - Spectrum analyzers
+  dou:372200:
+  - Disaster recovery
+  - Load balancers
+  - New Relic
+  - PKI/TLS
+  - SLI/SLO/SLA
+  - Zabbix
+  dou:372993:
+  - APIMan
+  - Keycloak
+  - Reactive programming
+  dou:373877:
+  - ArduPilot
+  - Betaflight
+  - INAV
+  dou:373938:
+  - Dependency injection
+  - NgRx
+  - Reactive Forms
+  - SignalR
+  dou:374260:
+  - HAProxy
+  - Server hardening
+  dou:374556:
+  - Combine
+  - Coordinator pattern
+  - Core Bluetooth
+  - GCD
+  - MVVM
+  - Swift Package Manager
+  dou:374764:
+  - Alibaba Cloud
+  - DDoS mitigation
+  - MetaTrader
+  dou:375215:
+  - Creatio
+  dou:375559:
+  - Buildroot
+  dou:376151:
+  - JVM tuning
+  dou:376179:
+  - Temporal
+  dou:376261:
+  - Clean Architecture
+  - Combine
+  - Fastlane
+  - Feature flags
+  - Instruments
+  - MVVM
+  - Swift Concurrency
+  - Swift Package Manager
+  - TestFlight
+  dou:376300:
+  - Backup and recovery
+  - Database administration
+  - Database replication
+  dou:376455:
+  - ADB
+  - Anti-detect automation
+  - Camoufox
+  - FFmpeg
+  - Frida
+  - Temporal
+  - uiautomator2
+  dou:377315:
+  - Confluence
+  - Product ownership
+  - User stories
+  dou:377791:
+  - Tabular data ML
+  dou:378005:
+  - Data pipelines
+  - Demand forecasting
+  dou:378060:
+  - GRASP
+  dou:378085:
+  - Data quality testing
+  - Dimensional modeling
+  - Star schema
+  dou:378111:
+  - ESLint
+  - Metro bundler
+  - Prettier
+  dou:378183:
+  - API Platform
+  - CSRF/XSS/CORS
+  - Guzzle
+  - Symfony Messenger
+  dou:378205:
+  - Chart.js
+  - Cloud Run
+  - Cloud SQL
+  - FRD writing
+  - Vue Router
+  - Vuex
+  dou:378246:
+  - AppKit/Cocoa
+  - Core Data
+  - GCD
+  - GoogleTest
+  - OCMock
+  - XCTest
+  dou:378250:
+  - Cloud Build
+  - Cloud Functions
+  - Cloud Run
+  - Cloud SQL
+  - Cloud Scheduler
+  - Cloud Tasks
+  - Data pipeline patterns
+  - FRD writing
+  - Webhooks
+  dou:378316:
+  - AWS Organizations
+  - ECS Fargate
+  - VPC
+  dou:378416:
+  - AWS Secrets Manager
+  - SNS
+  dou:378489:
+  - Event-driven architecture
+  dou:378563:
+  - DORA metrics
+  - JVM internals
+  - Trunk-based development
+  dou:378596:
+  - ArduPilot
+  - Digital twins
+  - Multi-agent coordination
+  - PX4
+  dou:378608:
+  - Idempotency
+  - Payments system design
+  dou:378646:
+  - Product analytics
+  - React Flow
+  - Server-sent events
+  - Temporal
+  dou:378665:
+  - API Gateway
+  - AWS Secrets Manager
+  - Checkov
+  - CloudFront
+  - New Relic
+  - Route 53
+  - VPC
+  dou:378687:
+  - Nuxt.js
+  - Pinia
+  - Vue Router
+  - Vuetify
+  - Vuex
+  dou:378697:
+  - Amplitude
+  - Google Tag Manager
+  - Optimizely
+  - Segment
+  - VWO
+  - Webflow
+  dou:378743:
+  - LLVM
+  - MLIR
+  - P4
+  - Software-defined networking
+  dou:378883:
+  - AOSP
+  - Binder/AIDL
+  - Doxygen
+  - Kotlin Coroutines
+  - Kotlin Flow
+  - SELinux
+  - pyserial
+  dou:378884:
+  - Database migrations
+  - Dependency injection
+  dou:378899:
+  - Checkmarx
+  - DevSecOps
+  - GitLab Duo
+  - GitLab administration
+  - SAST/DAST scanning
+  - Snyk
+  - Veracode
+  dou:378900:
+  - BPMN/low-code platforms
+  - Electronic signature
+  dou:378944:
+  - AWS Shield
+  - Calico
+  - Cilium
+  - Citus
+  - CloudFront
+  - Microsoft AD
+  - Nexus
+  - Okta
+  - RHEL/CentOS administration
+  - TimescaleDB
+  dou:378952:
+  - Electronic circuit design
+  - Qucs-S
+  - SPICE simulation
+  dou:378959:
+  - CloudFront
+  - Flux
+  - GitOps
+  - HLS/RTMP streaming
+  - Kustomize
+  - Platform engineering
+  - VPC
+  dou:378984:
+  - LLM evaluations
+  - MCP
+  - Voice AI agents
+  - n8n
+  dou:378993:
+  - AWS CDK
+  - AWS Fargate
+  - AWS Load Balancers
+  - Distributed tracing
+  dou:378994:
+  - Apache Tomcat
+  - Gradle
+  - IntelliJ IDEA
+  - jPOS
+  dou:379058:
+  - Exploit development
+  - Reverse engineering
+  - Windows API
+  - Windows internals
+  dou:379067:
+  - Conversion API integrations
+  - Snowplow
+  - Streaming data processing
+  dou:379083:
+  - Data quality testing
+  - Source-to-target reconciliation
+  dou:379089:
+  - CopilotKit
+  - MCP
+  - Mapbox GL
+  - React Hook Form
+  - Recharts
+  - TanStack Query
+  - Vitest
+  - Yup
+  - Zustand
+  dou:379125:
+  - Confluence
+  - Kanban
+  - XSLT
+  dou:379137:
+  - Anti-fraud
+  - iGaming platform (PAM, seamless wallet)
+  dou:379179:
+  - API Gateway
+  - AWS EventBridge
+  - AWS Step Functions
+  dou:379182:
+  - FastStream
+  - Server-sent events
+  dou:379191:
+  - DPDK/RDMA
+  - Kubernetes security policies
+  - Low-latency system tuning
+  - PTP
+  - VLAN
+  dou:379192:
+  - DPDK/RDMA
+  - Kubernetes security policies
+  - Low-latency system tuning
+  - perf/eBPF profiling
+  dou:379203:
+  - AWS Fargate
+  - Cats/Typelevel
+  - Event sourcing
+  - JVM internals
+vacancies:
+- id: djinni:525998
+  content_hash: d4e4c0d84a9e37209f5476ee634ae7a91198d32f
+  skills:
+  - nodejs
+  - react
+- id: djinni:562238
+  content_hash: b4410a91c1c1629f92584bb9b8e9f78962a3f6ad
+  skills:
+  - aws
+  - azure
+  - data-science
+  - deep-learning
+  - gcp
+  - machine-learning
+  - nlp
+  - openai
+  - python
+  - pytorch
+  - statistics
+  - tensorflow
+- id: djinni:654588
+  content_hash: 529ad40b638b7a1041548cb8b667296c0383e96e
+  skills:
+  - algorithms
+  - design-patterns
+  - functional-programming
+  - ios
+  - multithreading
+  - objective-c
+  - swift
+- id: djinni:736623
+  content_hash: 10c1fe33a8ba5d965c66886276f4ede0984e3cda
+  skills:
+  - excel
+- id: djinni:787644
+  content_hash: d4962f25e02aad7cd6652c58da59fd4563f9bd47
+  skills:
+  - css
+  - git
+  - html
+  - javascript
+  - react
+  - vue
+- id: djinni:812381
+  content_hash: dd8e5063ea621e3c4e5f2a28d4c931a4c9ea9f1c
+  skills:
+  - crm
+  - css
+  - html
+  - javascript
+  - php
+- id: djinni:815829
+  content_hash: d8baa0b3c096224ebfe004ec4879da8be1f28855
+  skills:
+  - code-review
+  - design-patterns
+  - docker
+  - git
+  - java
+  - kafka
+  - maven
+  - microservices
+  - mongodb
+  - nosql
+  - postgresql
+  - rabbitmq
+  - rdbms
+  - redis
+  - rest
+  - spring
+  - spring-boot
+- id: djinni:816713
+  content_hash: 85c51deb43b42092118738d7218b8599c3993543
+  skills:
+  - ai-coding-tools
+  - ansible
+  - aws
+  - azure
+  - bash
+  - ci-cd
+  - devops
+  - docker
+  - elasticsearch
+  - elk
+  - gitlab-ci
+  - grafana
+  - jenkins
+  - kafka
+  - kibana
+  - linux
+  - monitoring
+  - mssql
+  - nginx
+  - oracle-db
+  - postgresql
+  - powershell
+  - rabbitmq
+  - redis
+  - vmware
+  - windows-server
+- id: djinni:824349
+  content_hash: 3bd5a72d66f03d412a9d3fac05fb3348051c5277
+  skills:
+  - agile
+  - ai-agents
+  - ai-coding-tools
+  - aws
+  - ci-cd
+  - database-design
+  - devops
+  - distributed-systems
+  - ec2
+  - git
+  - java
+  - lambda
+  - langchain
+  - llm
+  - microservices
+  - monitoring
+  - postgresql
+  - prompt-engineering
+  - python
+  - rag
+  - rds
+  - rest
+  - s3
+  - spring-boot
+  - sql
+  - system-design
+- id: djinni:832027
+  content_hash: 5ffd3727a656f30a3e5169ca6f115419a005a70b
+  skills:
+  - ci-cd
+  - graphql
+  - nestjs
+  - nodejs
+  - nosql
+  - postgresql
+  - rabbitmq
+  - rails
+  - rdbms
+  - react
+  - redis
+  - ruby
+  - typescript
+- id: djinni:840647
+  content_hash: 8bea37bd8a4966caa2390726d41cbf154b116cd2
+  skills:
+  - bigquery
+  - data-analysis
+  - data-science
+  - gcp
+  - machine-learning
+  - mlops
+  - numpy
+  - pandas
+  - python
+  - pytorch
+  - scikit-learn
+  - sql
+  - statistics
+  - tensorflow
+  - time-series
+- id: djinni:841429
+  content_hash: 06be07d7cd3dd3d8d53256f917ff048284be803a
+  skills:
+  - blockchain
+  - ci-cd
+  - code-review
+  - git
+  - ios
+  - rest
+  - swift
+  - swiftui
+  - uikit
+  - websockets
+- id: djinni:846701
+  content_hash: 7ee85b90120d2c6bb1cfbe0daf09f563043f2c70
+  skills:
+  - ai-coding-tools
+  - ci-cd
+  - cypress
+  - git
+  - github-actions
+  - gitlab-ci
+  - java
+  - javascript
+  - jenkins
+  - jira
+  - playwright
+  - qa-process
+  - test-automation
+  - testrail
+- id: djinni:848590
+  content_hash: 03ecb8d307475d4ab3dd4918f413284ec2b37df4
+  skills:
+  - agile
+  - aws
+  - ci-cd
+  - docker
+  - eks
+  - git
+  - java
+  - jenkins
+  - kafka
+  - kubernetes
+  - message-queues
+  - micronaut
+  - microservices
+  - mysql
+  - oauth
+  - postgresql
+  - pubsub
+  - quarkus
+  - rdbms
+  - rds
+  - spring
+  - sqs
+  - tdd
+  - xml
+- id: djinni:848994
+  content_hash: e816621e2fc86020cfb604867955a5ef55263078
+  skills:
+  - ai-coding-tools
+  - algorithms
+  - angular
+  - ci-cd
+  - clickhouse
+  - code-review
+  - devops
+  - docker
+  - fastapi
+  - git
+  - jwt
+  - kafka
+  - kubernetes
+  - leadership
+  - microservices
+  - multithreading
+  - nats
+  - olap
+  - oop
+  - opentelemetry
+  - playwright
+  - pytest
+  - python
+  - rabbitmq
+  - rest
+  - solid
+  - sql
+  - typescript
+- id: djinni:849253
+  content_hash: f516915aa1a1f039a15c8effddd81c31f242ca17
+  skills:
+  - can
+  - cpp
+  - python
+  - ros
+- id: djinni:850041
+  content_hash: 4aa9b44d493745621225f225c17e41734ac10321
+  skills: []
+- id: djinni:851289
+  content_hash: d7fbcb8e046c78d87d7c9ac02d25aad92e91deea
+  skills:
+  - ai-coding-tools
+  - cpp
+  - csharp
+  - dotnet
+- id: djinni:851326
+  content_hash: f9ca9ea6c02c6425a6d81584899cfda666febbeb
+  skills:
+  - blazor
+  - csharp
+  - docker
+  - dotnet
+  - javascript
+  - kubernetes
+  - solid
+- id: djinni:851814
+  content_hash: 92a4a4fa21e2f8124f65f9b7f1a61022f31a886a
+  skills:
+  - aks
+  - asp-net
+  - azure
+  - csharp
+  - dotnet
+  - entra
+  - rdbms
+  - rest
+  - rtp
+  - sql
+  - websockets
+- id: djinni:851909
+  content_hash: 805db55470767ffe256983cfcc7ea5d63473b013
+  skills:
+  - aks
+  - ansible
+  - aws
+  - azure
+  - bash
+  - ci-cd
+  - devops
+  - docker
+  - elk
+  - gcp
+  - github-actions
+  - gitlab-ci
+  - grafana
+  - iac
+  - jenkins
+  - kubernetes
+  - linux
+  - mongodb
+  - monitoring
+  - networking
+  - postgresql
+  - prometheus
+  - puppet
+  - python
+  - saltstack
+  - terraform
+- id: djinni:853857
+  content_hash: 7b53f79a4ed006185965c0920b4d4d1d2e91956b
+  skills:
+  - caching
+  - database-design
+  - design-patterns
+  - laravel
+  - message-queues
+  - mysql
+  - oop
+  - php
+  - postgresql
+  - python
+  - rest
+  - solid
+  - sql
+- id: djinni:854135
+  content_hash: 9b5038d76e81ea3b1d8b30f73a293f3a5815a7a9
+  skills:
+  - android
+  - java
+  - kotlin
+- id: djinni:854425
+  content_hash: 39a6822eda54c6640385da5e263c6b56c87c8334
+  skills:
+  - ai-coding-tools
+  - crm
+  - devops
+  - git
+  - javascript
+  - mongodb
+  - nodejs
+  - openai
+  - postgresql
+  - react
+  - rest
+- id: djinni:854570
+  content_hash: f5625e0c6148752d74c0eefce29e9b8f126c934b
+  skills:
+  - cms
+  - contentful
+  - css
+  - figma
+  - html
+  - photoshop
+- id: djinni:854945
+  content_hash: 25eed3cd408ad7dfba6fd57dce62104b9d2259aa
+  skills:
+  - bash
+  - cloudflare
+  - css
+  - devops
+  - docker
+  - html
+  - linux
+  - monitoring
+  - nginx
+  - nodejs
+  - systemd
+  - websockets
+- id: djinni:855110
+  content_hash: 06ff6c70d50ac3022f33ab2bb925d9f2abdf7e34
+  skills:
+  - ab-testing
+  - code-review
+  - ios
+  - swift
+  - swiftui
+  - uikit
+- id: djinni:855588
+  content_hash: 1f5748f28936e77ce9dd77070127f99aeaf4b14a
+  skills:
+  - ai-coding-tools
+  - android
+  - dagger
+  - design-patterns
+  - firebase
+  - git
+  - jetpack-compose
+  - kotlin
+  - oop
+  - rest
+  - retrofit
+  - room
+  - solid
+- id: djinni:855793
+  content_hash: 82f9aeb0a443dc5ecdf55e2d896513be6e02db49
+  skills:
+  - arm
+  - c
+  - computer-vision
+  - cpp
+  - dns
+  - embedded
+  - i2c
+  - mqtt
+  - networking
+  - rtos
+- id: djinni:856041
+  content_hash: f1ae276e0683e1540061d0b75ce46c5bc7c9971a
+  skills:
+  - aws
+  - ci-cd
+  - cloudwatch
+  - docker
+  - ec2
+  - eks
+  - elk
+  - grafana
+  - iac
+  - iam
+  - java
+  - kubernetes
+  - linux
+  - microservices
+  - monitoring
+  - multithreading
+  - postgresql
+  - prometheus
+  - rds
+  - rest
+  - s3
+  - spring
+  - spring-boot
+  - sql
+  - sqs
+  - system-design
+  - terraform
+- id: djinni:856075
+  content_hash: d082a1d7081d133e39f17729c345f6e48cf594e0
+  skills:
+  - c
+  - can
+  - cpp
+  - embedded
+  - git
+  - i2c
+  - linux
+  - python
+  - rtos
+- id: djinni:856246
+  content_hash: c3120b515f3df5f2ea4a41ab584834621ca18fb1
+  skills:
+  - aws
+  - azure-devops
+  - ci-cd
+  - data-modeling
+  - data-warehouse
+  - dbt
+  - etl
+  - olap
+  - python
+  - snowflake
+  - sql
+- id: djinni:856266
+  content_hash: b75ae1b81c0701d98dcca41d48d3d205f865560e
+  skills:
+  - ai-agents
+  - ai-coding-tools
+  - aws
+  - ci-cd
+  - code-review
+  - distributed-systems
+  - go
+  - llm
+  - monitoring
+  - python
+- id: djinni:856312
+  content_hash: 11c70b159f0c77e8421980f3a099b62fec73bf0a
+  skills:
+  - algorithms
+  - aws
+  - azure
+  - ci-cd
+  - code-review
+  - databricks
+  - design-patterns
+  - gcp
+  - scala
+  - spark
+- id: djinni:856381
+  content_hash: 9249a0cceeaa6fe32da477da8e2e383bf618e026
+  skills: []
+- id: djinni:856464
+  content_hash: 702710cb0e2da7c5ba8708e4bc3a3e60a13efe64
+  skills:
+  - ai-agents
+  - ai-coding-tools
+  - aws
+  - caching
+  - cryptography
+  - database-design
+  - ec2
+  - entra
+  - github-actions
+  - go
+  - i18n
+  - kafka
+  - llm
+  - message-queues
+  - monitoring
+  - multitenancy
+  - multithreading
+  - oauth
+  - openapi
+  - owasp
+  - postgresql
+  - rabbitmq
+  - rag
+  - rest
+  - s3
+  - sql
+  - sso
+- id: djinni:856527
+  content_hash: 107f3e26133928a11192558c0d3c30176bf6c767
+  skills:
+  - accessibility
+  - ai-coding-tools
+  - cms
+  - css
+  - git
+  - html
+  - i18n
+  - javascript
+  - react
+  - responsive-design
+  - sass
+  - seo
+  - typescript
+- id: djinni:856629
+  content_hash: 8f523c5986bfce276529677c15484fd9b36aa176
+  skills:
+  - azure
+  - data-analysis
+  - data-science
+  - git
+  - machine-learning
+  - numpy
+  - pandas
+  - python
+  - scikit-learn
+  - sql
+  - statistics
+- id: djinni:856672
+  content_hash: 0af89ebcf8bf9f9b74af10f1ba4313ed58446c9a
+  skills:
+  - cisco
+  - monitoring
+  - networking
+  - vpn
+- id: djinni:856786
+  content_hash: 7072b95bdffb060c6cba2462e4290efb3a9cc2d2
+  skills:
+  - agile
+  - bash
+  - ci-cd
+  - code-review
+  - devops
+  - docker
+  - gcp
+  - github-actions
+  - go
+  - grafana
+  - helm
+  - iac
+  - iam
+  - istio
+  - java
+  - kubernetes
+  - leadership
+  - monitoring
+  - prometheus
+  - python
+  - terraform
+- id: djinni:856796
+  content_hash: fabfe8f2c21a4910e4ecaa6b4562799f1d4fb893
+  skills:
+  - agile
+  - ansible
+  - caching
+  - ci-cd
+  - distributed-systems
+  - gitlab-ci
+  - java
+  - jenkins
+  - linux
+  - microservices
+  - oracle-db
+  - spring-boot
+  - sql
+  - xml
+- id: djinni:856828
+  content_hash: 8c8470d070eef7e43504469daabd1814ca67222c
+  skills:
+  - ci-cd
+  - cypress
+  - git
+  - http
+  - javascript
+  - manual-testing
+  - mocha
+  - nosql
+  - rest
+  - sql
+  - test-automation
+  - typescript
+- id: djinni:856834
+  content_hash: 7510a22e15c96cb08ff421cd0ee94dd504080338
+  skills:
+  - database-design
+  - docker
+  - go
+  - linux
+  - monitoring
+  - postgresql
+  - recsys
+  - rest
+- id: djinni:856869
+  content_hash: 5c99cd538149904caa3c020636975f57faff55a7
+  skills:
+  - android
+  - aws
+  - ci-cd
+  - crm
+  - dart
+  - docker
+  - ec2
+  - firebase
+  - flutter
+  - github-actions
+  - grafana
+  - ios
+  - kotlin
+  - loki
+  - monitoring
+  - nginx
+  - nodejs
+  - orm
+  - php
+  - postgresql
+  - rest
+  - s3
+  - swift
+  - symfony
+  - typescript
+- id: djinni:856889
+  content_hash: 6a32639f852d251f00e901ae56c3052bc8dfd91f
+  skills:
+  - ai-agents
+  - ai-coding-tools
+  - aws
+  - azure
+  - code-review
+  - langchain
+  - llm
+  - machine-learning
+  - mlops
+  - nlp
+  - pandas
+  - python
+  - rag
+  - sql
+- id: djinni:856905
+  content_hash: 9da938fe64a4dd104e48163d45a55edf9c6135cf
+  skills:
+  - ai-agents
+  - algorithms
+  - api-design
+  - asyncio
+  - aws
+  - azure
+  - caching
+  - ci-cd
+  - distributed-systems
+  - docker
+  - fastapi
+  - gcp
+  - grpc
+  - iac
+  - kafka
+  - kubernetes
+  - langchain
+  - llm
+  - message-queues
+  - microservices
+  - mongodb
+  - multithreading
+  - nosql
+  - openai
+  - postgresql
+  - prompt-engineering
+  - pytest
+  - python
+  - rag
+  - rdbms
+  - redis
+  - rest
+- id: djinni:856944
+  content_hash: b6e3c3156b6ee6711ee54d29934d61b857e9193f
+  skills:
+  - ci-cd
+  - crm
+  - cypress
+  - ecommerce
+  - git
+  - google-ads
+  - google-analytics
+  - jmeter
+  - manual-testing
+  - payment-gateways
+  - playwright
+  - postman
+  - qa-process
+  - selenium
+  - sql
+  - test-automation
+- id: djinni:857047
+  content_hash: 328db290bf1447fb57ef39225f34f3d705afe6d8
+  skills:
+  - agile
+  - asp-net
+  - aws
+  - ci-cd
+  - code-review
+  - crm
+  - csharp
+  - css
+  - distributed-systems
+  - dotnet
+  - ecommerce
+  - entity-framework
+  - erp
+  - git
+  - html
+  - javascript
+  - jwt
+  - microservices
+  - mssql
+  - oauth
+  - orm
+  - payment-gateways
+  - postgresql
+  - responsive-design
+  - rest
+  - sql
+  - typescript
+  - vue
+- id: djinni:857075
+  content_hash: 63b5a845c5fb3ff1c0a13b061f2795a399f21a5e
+  skills:
+  - android
+  - aws
+  - ci-cd
+  - ios
+  - java
+  - kotlin
+  - manual-testing
+  - qa-process
+  - swift
+  - test-automation
+- id: djinni:857088
+  content_hash: e31500541f0990d48419bad0e283c3b95ebe656e
+  skills: []
+- id: djinni:857099
+  content_hash: 221baca380b3f8cce5996a2776eb7cc7e31b518d
+  skills:
+  - excel
+  - jira
+- id: djinni:857100
+  content_hash: baffd59c4dce3140131078d102fceeb3ffb09326
+  skills:
+  - excel
+  - power-bi
+  - sql
+- id: djinni:857102
+  content_hash: 1f80ba4227a7e487782e3bb5810e0aa136f4c68a
+  skills:
+  - git
+  - jira
+  - manual-testing
+  - monitoring
+  - payment-gateways
+  - qa-process
+  - sql
+  - test-automation
+- id: djinni:857104
+  content_hash: f6d4445d06f4ebef7068f1e91715d3ec2ebf1ecb
+  skills:
+  - cisco
+  - dns
+  - linux
+  - mariadb
+  - mysql
+  - networking
+  - nginx
+  - postman
+  - rest
+  - sql
+  - systemd
+- id: dou:219108
+  content_hash: 96756b4b45d07ebd721e7448fdff543333f145f4
+  skills:
+  - algorithms
+  - css
+  - graphql
+  - javascript
+  - nodejs
+  - react
+  - react-native
+  - redux
+  - storybook
+  - typescript
+  - uml
+- id: dou:230319
+  content_hash: 51d51c416ef87ba20893b8a8c3695e81403fd401
+  skills:
+  - ci-cd
+  - express
+  - git
+  - javascript
+  - nestjs
+  - nextjs
+  - nodejs
+  - nosql
+  - openapi
+  - pl-sql
+  - rdbms
+  - rest
+  - sql
+  - typescript
+- id: dou:267574
+  content_hash: d83599123201a65e75954764e3616ab6e0d31cdc
+  skills:
+  - azure
+  - azure-devops
+  - ci-cd
+  - devops
+  - dns
+  - docker
+  - dotnet
+  - dotnet-core
+  - entra
+  - git
+  - http
+  - javascript
+  - kubernetes
+  - linux
+  - microservices
+  - monitoring
+  - mssql
+  - networking
+  - nodejs
+  - security-testing
+  - service-bus
+  - sql
+  - windows-server
+  - xml
+- id: dou:291893
+  content_hash: 25cc22a099eb371d93495bc2c538397f3c26ed3a
+  skills:
+  - asp-net
+  - azure
+  - csharp
+  - css
+  - docker
+  - dotnet
+  - dotnet-core
+  - html
+  - javascript
+  - jest
+  - material-ui
+  - micro-frontends
+  - microservices
+  - mobx
+  - mssql
+  - rabbitmq
+  - react
+  - redis
+  - rest
+  - typescript
+- id: dou:297674
+  content_hash: c148872411fcd80b09b5d548259e1a8bdfc33a11
+  skills:
+  - ai-coding-tools
+  - aws
+  - ci-cd
+  - code-review
+  - design-patterns
+  - distributed-systems
+  - docker
+  - elasticsearch
+  - fintech
+  - git
+  - laravel
+  - leadership
+  - microservices
+  - mysql
+  - oop
+  - payment-gateways
+  - php
+  - postgresql
+  - rabbitmq
+  - redis
+  - rest
+  - solid
+  - sql
+  - symfony
+  - system-design
+- id: dou:320092
+  content_hash: 16834681d60e903eacbf57d8caf04bc078834d49
+  skills:
+  - agile
+  - algorithms
+  - code-review
+  - css
+  - design-patterns
+  - fintech
+  - graphql
+  - html
+  - javascript
+  - kyc-aml
+  - mysql
+  - payment-gateways
+  - postgresql
+  - rabbitmq
+  - rails
+  - redis
+  - ruby
+- id: dou:321996
+  content_hash: ae45503715c3e26c9549af58ff5a858a9b7e9b78
+  skills:
+  - ab-testing
+  - airflow
+  - aws
+  - azure
+  - data-science
+  - gcp
+  - leadership
+  - machine-learning
+  - microservices
+  - mlflow
+  - mlops
+  - nlp
+  - numpy
+  - pandas
+  - prefect
+  - prometheus
+  - python
+  - pytorch
+  - scikit-learn
+  - spark
+  - sql
+  - statistics
+  - tensorflow
+  - xgboost
+- id: dou:332846
+  content_hash: b7508701247d7bf40c6c7c63a778997b870d2af8
+  skills:
+  - ai-coding-tools
+  - aws
+  - caching
+  - ci-cd
+  - code-review
+  - ddd
+  - distributed-systems
+  - docker
+  - go
+  - helm
+  - istio
+  - kafka
+  - kubernetes
+  - laravel
+  - linux
+  - microservices
+  - monitoring
+  - mysql
+  - php
+  - postgresql
+  - rabbitmq
+  - redis
+  - rest
+  - sqs
+  - symfony
+- id: dou:333919
+  content_hash: 91eef8dbc6224bdae30d1b502325634a97ea296f
+  skills:
+  - gamedev
+  - git
+  - javascript
+  - oop
+  - typescript
+- id: dou:341881
+  content_hash: 0b35d197dd9383d89311e5db2ae08d2309e45c96
+  skills:
+  - aws
+  - azure
+  - azure-devops
+  - bi
+  - big-data
+  - crm
+  - data-governance
+  - data-lake
+  - data-science
+  - data-warehouse
+  - erp
+  - hadoop
+  - jira
+  - leadership
+  - machine-learning
+  - power-bi
+  - project-management
+  - python
+  - sap
+  - sap-hana
+  - spark
+  - sql
+- id: dou:345224
+  content_hash: 6b85782027be5b646362577b3c835d88bd61f2c5
+  skills:
+  - cisco
+  - linux
+  - networking
+  - qa-process
+- id: dou:346809
+  content_hash: b6d15b865610e3bebee73fe7c0af6d2ba75de051
+  skills:
+  - ab-testing
+  - data-science
+  - feature-engineering
+  - hadoop
+  - hive
+  - llm
+  - machine-learning
+  - prompt-engineering
+  - python
+  - rag
+  - scala
+  - spark
+  - speech
+  - sql
+  - time-series
+- id: dou:351948
+  content_hash: be3ca49da82869bc615c412e1f501ddc4ccb73cf
+  skills:
+  - ci-cd
+  - code-review
+  - design-patterns
+  - docker
+  - fintech
+  - git
+  - laravel
+  - monitoring
+  - mysql
+  - oop
+  - payment-gateways
+  - php
+  - react
+  - rest
+  - solid
+- id: dou:355152
+  content_hash: cccb42f55733a7be88ee9075f64e7b23d88aa93d
+  skills:
+  - distributed-systems
+  - go
+  - grafana
+  - kubernetes
+  - message-queues
+  - microservices
+  - mongodb
+  - monitoring
+  - opentelemetry
+  - postgresql
+  - prometheus
+  - rabbitmq
+  - rest
+  - solid
+- id: dou:356228
+  content_hash: 31085261b9ca4388c5d76ec2209cb34423fef2c8
+  skills:
+  - can
+  - code-review
+  - computer-vision
+  - cpp
+  - cuda
+  - docker
+  - embedded
+  - git
+  - i2c
+  - jira
+  - linux
+  - networking
+  - opencv
+  - rtp
+  - systemd
+- id: dou:359400
+  content_hash: 640f23fc860c4b5a303cfd906b801c9f282b279f
+  skills:
+  - data-science
+  - deep-learning
+  - llm
+  - llm-fine-tuning
+  - machine-learning
+  - mlops
+  - nlp
+  - python
+  - pytorch
+  - tensorflow
+- id: dou:363384
+  content_hash: eb50d4de58b75745d7fb5432968b41ace410f4d3
+  skills:
+  - ai-coding-tools
+  - asp-net
+  - ci-cd
+  - code-review
+  - csharp
+  - dotnet
+  - dotnet-core
+  - entity-framework
+  - mssql
+- id: dou:363404
+  content_hash: 23b5f297195149a41d636f0a7f6642b071093cf1
+  skills: []
+- id: dou:365309
+  content_hash: 5168cfeeceb6b5cab0bd1be96aed4b1a6504c023
+  skills:
+  - cpp
+  - csharp
+  - git
+  - objective-c
+  - sqlite
+  - swift
+  - xml
+- id: dou:365330
+  content_hash: 0de496f7e61c548b1604326b56541fcbd215d23b
+  skills:
+  - ai-coding-tools
+  - android
+  - ci-cd
+  - git
+  - jetpack-compose
+  - kmp
+  - kotlin
+  - prompt-engineering
+  - rest
+  - room
+- id: dou:365843
+  content_hash: a90457fbbe61f63c9e96717cf286b3f187a22ede
+  skills:
+  - csharp
+  - erp
+  - javascript
+  - visual-basic
+- id: dou:366009
+  content_hash: 1150634c788016ae246853bf674649bf24c63f6a
+  skills:
+  - arm
+  - computer-vision
+  - cpp
+  - embedded
+  - git
+  - github-actions
+  - i2c
+  - linux
+  - python
+  - rtp
+  - yocto
+- id: dou:366993
+  content_hash: 693b2a89878f5997a94c7a1243fa9526c8ab4c5c
+  skills:
+  - credit-scoring
+  - data-science
+  - feature-engineering
+  - machine-learning
+  - pandas
+  - python
+  - scikit-learn
+  - sql
+  - xgboost
+- id: dou:367896
+  content_hash: df8e9fd38dcd20e6042ca7d6c52ff8cff13e1dfd
+  skills:
+  - kubernetes
+  - message-queues
+  - mongodb
+  - monitoring
+  - multitenancy
+  - postgresql
+  - redis
+- id: dou:369813
+  content_hash: e8086bcb90367cf7233620aee4c4820b7dd7ae54
+  skills:
+  - airflow
+  - aws
+  - azure
+  - ci-cd
+  - code-review
+  - data-lake
+  - data-modeling
+  - data-warehouse
+  - dbt
+  - docker
+  - etl
+  - excel
+  - gcp
+  - git
+  - llm
+  - machine-learning
+  - monitoring
+  - nosql
+  - olap
+  - oop
+  - pandas
+  - parquet
+  - postgresql
+  - python
+  - rest
+  - sql
+- id: dou:370502
+  content_hash: 76ab28b4eaba232be9f6e6021f9878d61847b39c
+  skills:
+  - credit-scoring
+  - data-science
+  - feature-engineering
+  - machine-learning
+  - pandas
+  - python
+  - scikit-learn
+  - sql
+  - xgboost
+- id: dou:370624
+  content_hash: 5a7a3faedd7919d2f27c611f3ff61fab38fa463d
+  skills:
+  - aws
+  - ci-cd
+  - django
+  - docker
+  - flask
+  - git
+  - grpc
+  - http
+  - jenkins
+  - linux
+  - multithreading
+  - networking
+  - nosql
+  - oop
+  - python
+- id: dou:370866
+  content_hash: e387eb7d4bf31058add2eea23f8baf917cf448b8
+  skills:
+  - bash
+  - linux
+  - monitoring
+  - oracle-db
+  - sql
+- id: dou:371126
+  content_hash: b8438b93961c4e8de3a729e3408e218c093537ec
+  skills:
+  - agile
+  - aws
+  - celery
+  - ci-cd
+  - code-review
+  - design-patterns
+  - distributed-systems
+  - django
+  - django-rest-framework
+  - docker
+  - ecs
+  - elasticsearch
+  - git
+  - kubernetes
+  - lambda
+  - multitenancy
+  - postgresql
+  - pytest
+  - python
+  - rds
+  - redis
+  - rest
+  - s3
+  - sqs
+  - system-design
+  - terraform
+- id: dou:371284
+  content_hash: 0e0a3357a41fffa054d0c75358ea1012a49c3ac4
+  skills:
+  - android
+  - design-patterns
+  - jetpack-compose
+  - kotlin
+  - rust
+- id: dou:371752
+  content_hash: ac198c5c4d94771a24f7325117981fc327f229de
+  skills:
+  - manual-testing
+  - networking
+  - qa-process
+- id: dou:372200
+  content_hash: d793fb8b6a1e75a971a73124ac8a9f1c651636eb
+  skills:
+  - aws
+  - azure
+  - bigquery
+  - ci-cd
+  - cloudwatch
+  - data-warehouse
+  - dns
+  - docker
+  - elk
+  - etl
+  - gcp
+  - git
+  - go
+  - grafana
+  - hadoop
+  - http
+  - iac
+  - java
+  - jenkins
+  - kafka
+  - kubernetes
+  - linux
+  - monitoring
+  - networking
+  - prometheus
+  - python
+  - redshift
+  - rest
+  - snowflake
+  - spark
+  - sql
+  - sre
+  - terraform
+  - vmware
+  - windows-server
+- id: dou:372447
+  content_hash: 29d8a0326e0da8eccbf198c561939a967f251c4a
+  skills: []
+- id: dou:372993
+  content_hash: a07b9317a51bc04f273eb9682fd69e9bc02ef145
+  skills:
+  - agile
+  - angular
+  - ci-cd
+  - css
+  - docker
+  - git
+  - gitlab-ci
+  - html
+  - java
+  - javascript
+  - jenkins
+  - jira
+  - kubernetes
+  - material-ui
+  - microservices
+  - rest
+  - rxjs
+  - typescript
+  - websockets
+- id: dou:373877
+  content_hash: dc1df68471f8637c0934eff6840ef12c04a9d517
+  skills: []
+- id: dou:373938
+  content_hash: 278a8e2a38d85e5b30d31427f8ca2f996a9b6a0f
+  skills:
+  - angular
+  - asp-net
+  - css
+  - dotnet
+  - dotnet-core
+  - entity-framework
+  - html
+  - jwt
+  - kafka
+  - rest
+  - rxjs
+  - solid
+- id: dou:374260
+  content_hash: bd36cacab88d69a4294450c7cabdac6dca6216a3
+  skills:
+  - bash
+  - ci-cd
+  - devops
+  - docker
+  - git
+  - kubernetes
+  - linux
+  - mariadb
+  - mysql
+  - nginx
+  - nosql
+  - postgresql
+  - rdbms
+- id: dou:374556
+  content_hash: e2e3cd91b7689021a42bf4309637aef4fd4b77cd
+  skills:
+  - agile
+  - ai-coding-tools
+  - ci-cd
+  - cocoapods
+  - code-review
+  - design-patterns
+  - git
+  - ios
+  - multithreading
+  - oop
+  - rest
+  - swift
+  - swiftui
+  - uikit
+  - xcode
+- id: dou:374764
+  content_hash: 95a1fae34204dac53504b93869cdd7dfe0b6fb2c
+  skills:
+  - ansible
+  - aws
+  - azure
+  - bgp
+  - ci-cd
+  - datadog
+  - devops
+  - docker
+  - finops
+  - grafana
+  - iac
+  - kubernetes
+  - leadership
+  - linux
+  - monitoring
+  - mysql
+  - networking
+  - postgresql
+  - powershell
+  - prometheus
+  - sre
+  - terraform
+  - windows-server
+- id: dou:375215
+  content_hash: 787ae57f3416761f4155acc49439a4c57841caa1
+  skills:
+  - crm
+  - csharp
+  - design-patterns
+  - docker
+  - dotnet
+  - dotnet-core
+  - git
+  - javascript
+  - mssql
+  - oop
+  - postgresql
+  - rest
+  - sql
+- id: dou:375559
+  content_hash: 038ce0da0476b63dbc528adfbb189eae349f2c9d
+  skills:
+  - aws
+  - ci-cd
+  - docker
+  - github-actions
+  - go
+  - linux
+  - monitoring
+  - python
+  - terraform
+  - yocto
+- id: dou:376151
+  content_hash: 9fdf41680a1f73d5f4aae2c4d74f9a7f4c8c72ce
+  skills:
+  - agile
+  - algorithms
+  - aws
+  - code-review
+  - fintech
+  - functional-programming
+  - heroku
+  - java
+  - kafka
+  - leadership
+  - message-queues
+  - microservices
+  - multithreading
+  - postgresql
+  - python
+  - rabbitmq
+  - rdbms
+  - scala
+- id: dou:376179
+  content_hash: 00f05556f6b3c3d8bdadbd52d30e5e74aea99376
+  skills:
+  - csharp
+  - distributed-systems
+  - fintech
+  - go
+  - grpc
+  - java
+  - kafka
+  - postgresql
+  - redis
+  - rest
+  - rust
+- id: dou:376261
+  content_hash: 452e8edb7cf82515df4dfd5bb58bccd0558b0f90
+  skills:
+  - ab-testing
+  - ai-coding-tools
+  - ci-cd
+  - cocoapods
+  - code-review
+  - graphql
+  - ios
+  - kmp
+  - multithreading
+  - rest
+  - swift
+  - swiftui
+  - uikit
+  - xcode
+- id: dou:376300
+  content_hash: c880968010aba13a7f27105815516c81093e1773
+  skills:
+  - bash
+  - ci-cd
+  - devops
+  - docker
+  - github-actions
+  - jenkins
+  - kafka
+  - kubernetes
+  - linux
+  - monitoring
+  - nosql
+  - python
+  - terraform
+- id: dou:376416
+  content_hash: 5cbb0445881d05789914c3d38cc4191f0778f730
+  skills:
+  - android
+  - appium
+  - manual-testing
+  - python
+  - test-automation
+- id: dou:376455
+  content_hash: 1f052a99dcd9bc84d062046bbd21a0273410b04a
+  skills:
+  - ai-coding-tools
+  - alembic
+  - android
+  - appium
+  - asyncio
+  - celery
+  - dns
+  - docker
+  - fastapi
+  - gitlab-ci
+  - grafana
+  - graphql
+  - playwright
+  - postgresql
+  - pydantic
+  - python
+  - sqlalchemy
+  - vpn
+- id: dou:377067
+  content_hash: 736e5b3d497ccd762e58ca99320bde97873bcebf
+  skills:
+  - algorithms
+  - elasticsearch
+  - graphql
+  - java
+  - kafka
+  - mongodb
+  - rabbitmq
+  - rest
+  - scala
+  - system-design
+  - typescript
+  - websockets
+- id: dou:377315
+  content_hash: c3fb76e57960475d45619fe31de4fca178a08a7e
+  skills:
+  - business-analysis
+  - jira
+  - manual-testing
+  - openapi
+  - postman
+  - sql
+- id: dou:377791
+  content_hash: 90346156c17d1ecfeb4f58ddd1e58ab90cf546b6
+  skills:
+  - airflow
+  - algorithms
+  - computer-vision
+  - data-science
+  - deep-learning
+  - docker
+  - feature-engineering
+  - git
+  - keras
+  - machine-learning
+  - multithreading
+  - nlp
+  - nosql
+  - oop
+  - python
+  - pytorch
+  - sql
+  - tensorflow
+- id: dou:378005
+  content_hash: 4f9842b466fd7b0172df5f0284048c6dbf497a6e
+  skills:
+  - ai-coding-tools
+  - bigquery
+  - data-lake
+  - data-science
+  - data-warehouse
+  - databricks
+  - dbt
+  - machine-learning
+  - python
+  - pytorch
+  - redshift
+  - scikit-learn
+  - snowflake
+  - sql
+  - statistics
+- id: dou:378060
+  content_hash: e37495d505f25a35c41f660729feb42c220388bc
+  skills:
+  - ai-coding-tools
+  - code-review
+  - database-design
+  - design-patterns
+  - go
+  - postgresql
+  - solid
+- id: dou:378085
+  content_hash: 06709351718e69d3a18af0a27ab16b03d92e060b
+  skills:
+  - bi
+  - code-review
+  - data-governance
+  - data-modeling
+  - data-warehouse
+  - dbt
+  - git
+  - power-bi
+  - python
+  - sql
+- id: dou:378111
+  content_hash: 40c4a332bf119bd270368a2623af903600cc7dec
+  skills:
+  - aws
+  - azure
+  - babel
+  - distributed-systems
+  - dynamodb
+  - gcp
+  - go
+  - grpc
+  - javascript
+  - kinesis
+  - lambda
+  - microservices
+  - mongodb
+  - multithreading
+  - mysql
+  - nosql
+  - postgresql
+  - rdbms
+  - react
+  - react-native
+  - redis
+  - rest
+  - typescript
+  - webpack
+- id: dou:378183
+  content_hash: 196184014f77027605e7d466d701925b26abfb69
+  skills:
+  - ai-coding-tools
+  - ci-cd
+  - code-review
+  - composer
+  - docker
+  - elasticsearch
+  - git
+  - github-actions
+  - gitlab-ci
+  - jenkins
+  - jwt
+  - message-queues
+  - mysql
+  - oauth
+  - oop
+  - orm
+  - php
+  - phpunit
+  - postgresql
+  - rabbitmq
+  - redis
+  - rest
+  - solid
+  - sql
+  - symfony
+  - websockets
+- id: dou:378205
+  content_hash: bcae70d1cec8ce0e0f65b1cff3bb6809d1bda5e1
+  skills:
+  - api-design
+  - bigquery
+  - bootstrap
+  - ci-cd
+  - clickhouse
+  - code-review
+  - cypress
+  - docker
+  - druid
+  - gcp
+  - github-actions
+  - laravel
+  - leadership
+  - php
+  - phpunit
+  - postgresql
+  - redis
+  - snowflake
+  - sql
+  - vite
+  - vue
+- id: dou:378246
+  content_hash: c86722803253fa7462b3e675d2e349e28b78cd57
+  skills:
+  - ai-coding-tools
+  - ci-cd
+  - code-review
+  - cpp
+  - multithreading
+  - objective-c
+  - swift
+  - xcode
+- id: dou:378250
+  content_hash: a040628c891396bc05123804088238d97267c298
+  skills:
+  - ai-coding-tools
+  - bigquery
+  - ci-cd
+  - clickhouse
+  - code-review
+  - docker
+  - gcp
+  - grafana
+  - iac
+  - leadership
+  - monitoring
+  - oauth
+  - postgresql
+  - pulumi
+  - python
+  - sql
+  - terraform
+- id: dou:378316
+  content_hash: d450fc24595837fe2bd5f3ca2e743cde631ce74d
+  skills:
+  - aws
+  - ci-cd
+  - devops
+  - ec2
+  - ecs
+  - eks
+  - github-actions
+  - gitlab-ci
+  - iam
+  - kubernetes
+  - monitoring
+  - networking
+- id: dou:378363
+  content_hash: b8e39d2b715a588e9e35aa37f67b5b0168af72a5
+  skills:
+  - aws
+  - azure
+  - ci-cd
+  - code-review
+  - distributed-systems
+  - gcp
+  - go
+  - java
+  - kafka
+  - message-queues
+  - microservices
+  - python
+  - rabbitmq
+  - system-design
+- id: dou:378416
+  content_hash: d91518f311cb9bd15ce1bb16bbcb68b5eef5710d
+  skills:
+  - aws
+  - ci-cd
+  - cloudwatch
+  - docker
+  - ec2
+  - eks
+  - elk
+  - grafana
+  - iac
+  - iam
+  - java
+  - kubernetes
+  - linux
+  - microservices
+  - monitoring
+  - multithreading
+  - postgresql
+  - prometheus
+  - rds
+  - rest
+  - s3
+  - spring
+  - spring-boot
+  - sql
+  - sqs
+  - system-design
+  - terraform
+- id: dou:378489
+  content_hash: 57def225b0de151e540ac7298356a95a6a6d61ca
+  skills:
+  - ai-coding-tools
+  - aws
+  - ci-cd
+  - code-review
+  - distributed-systems
+  - express
+  - gcp
+  - javascript
+  - kafka
+  - kinesis
+  - microservices
+  - mongodb
+  - monitoring
+  - nestjs
+  - nodejs
+  - nosql
+  - postgresql
+  - python
+  - react
+  - rest
+  - sqs
+  - typescript
+- id: dou:378563
+  content_hash: 47c24d8140ec8b8c838c9b60f9384e72f445c881
+  skills:
+  - aws
+  - cloudwatch
+  - java
+  - kibana
+  - kubernetes
+  - microservices
+  - monitoring
+  - nosql
+  - opentelemetry
+  - prometheus
+  - spring
+  - sql
+  - sre
+  - terraform
+- id: dou:378596
+  content_hash: db4438858390b3cddbf72ca0e2351531e6238bd7
+  skills:
+  - cpp
+  - distributed-systems
+  - embedded
+  - linux
+  - python
+- id: dou:378608
+  content_hash: 31d07791f4d2de99dda2ea8dd653386bdeab3727
+  skills:
+  - ai-coding-tools
+  - database-design
+  - rdbms
+- id: dou:378646
+  content_hash: 39d0d0b8603999d09e2aba9a3d384550231091fc
+  skills:
+  - ab-testing
+  - ai-agents
+  - ai-coding-tools
+  - aws
+  - ci-cd
+  - code-review
+  - fastapi
+  - grafana
+  - kubernetes
+  - leadership
+  - llm
+  - nextjs
+  - postgresql
+  - python
+  - react
+  - sentry
+  - typescript
+- id: dou:378665
+  content_hash: 97a8e3746d4bfc2514e3b595cc61ecb38f27b147
+  skills:
+  - ansible
+  - aws
+  - azure
+  - bash
+  - ci-cd
+  - cloudwatch
+  - devops
+  - docker
+  - dynamodb
+  - ecs
+  - eks
+  - elk
+  - finops
+  - gcp
+  - github-actions
+  - iac
+  - iam
+  - lambda
+  - linux
+  - monitoring
+  - nosql
+  - python
+  - rdbms
+  - rds
+  - sqs
+  - terraform
+  - vault
+- id: dou:378687
+  content_hash: f2dc9526d68dc3e3a44cbd55ea80e137c6481aea
+  skills:
+  - accessibility
+  - agile
+  - bootstrap
+  - ci-cd
+  - css
+  - git
+  - html
+  - javascript
+  - jira
+  - jquery
+  - responsive-design
+  - rest
+  - sass
+  - tailwind
+  - typescript
+  - vue
+- id: dou:378690
+  content_hash: a0e54812c75fecca7ffd56d876033a34ffc4a171
+  skills:
+  - dotnet
+  - nodejs
+  - python
+  - react
+- id: dou:378697
+  content_hash: 1a0191ed23f49a98152b38ffac837660dc501918
+  skills:
+  - ab-testing
+  - accessibility
+  - code-review
+  - css
+  - figma
+  - google-analytics
+  - html
+  - javascript
+  - leadership
+  - react
+  - react-native
+  - responsive-design
+  - rest
+  - seo
+  - wordpress
+- id: dou:378743
+  content_hash: 9a63531fc8bb05ec2b6c1a64e02b4a2a1a702e4f
+  skills:
+  - ai-coding-tools
+  - assembly
+  - compilers
+  - cpp
+  - networking
+  - python
+- id: dou:378816
+  content_hash: 9326f03102b590550d7ee8bf832b465b30507a63
+  skills:
+  - airflow
+  - bigquery
+  - database-design
+  - gcp
+  - pubsub
+  - python
+  - sql
+  - typescript
+- id: dou:378883
+  content_hash: 361a3661d4ce39632319a032fd06c15a1e29fcf6
+  skills:
+  - android
+  - c
+  - cpp
+  - embedded
+  - git
+  - java
+  - jira
+  - kotlin
+  - pytest
+- id: dou:378884
+  content_hash: 88f35815e769d68a0723cdcfffdc1543601da343
+  skills:
+  - ai-coding-tools
+  - api-design
+  - aws
+  - code-review
+  - csharp
+  - docker
+  - dotnet
+  - ecs
+  - lambda
+  - multitenancy
+- id: dou:378899
+  content_hash: bda781b2a12fa134570faab4385c5b1edc0c0e0b
+  skills:
+  - ai-coding-tools
+  - ansible
+  - aws
+  - azure
+  - ci-cd
+  - devops
+  - docker
+  - gcp
+  - gitlab-ci
+  - iac
+  - kubernetes
+  - leadership
+  - sonarqube
+  - terraform
+- id: dou:378900
+  content_hash: c3057636c8856765727952f7c758badf92c04ca7
+  skills:
+  - cryptography
+  - docker
+  - http
+  - javascript
+  - jwt
+  - kubernetes
+  - message-queues
+  - microservices
+  - nodejs
+  - oauth
+  - openapi
+  - rabbitmq
+  - rdbms
+  - rest
+  - sql
+  - typescript
+- id: dou:378943
+  content_hash: 51a7b14e273451651c219c38cb5558a4fb03cce3
+  skills:
+  - ai-coding-tools
+  - ci-cd
+  - code-review
+  - css
+  - git
+  - html
+  - javascript
+  - nextjs
+  - react
+  - rest
+  - typescript
+- id: dou:378944
+  content_hash: a0ff564fa15515f34457da42941d73f6cdde50b4
+  skills:
+  - aws
+  - cassandra
+  - cloudflare
+  - devops
+  - docker
+  - dynamodb
+  - ecs
+  - eks
+  - elasticsearch
+  - gitlab-ci
+  - iac
+  - itil
+  - java
+  - jenkins
+  - kafka
+  - kubernetes
+  - lambda
+  - linux
+  - networking
+  - postgresql
+  - rabbitmq
+  - redis
+- id: dou:378952
+  content_hash: d3047c43c35665bef59daa0def5cf96456faa6ed
+  skills: []
+- id: dou:378959
+  content_hash: 016546e186afe63b71c46f95fae1c7e51d456695
+  skills:
+  - ai-coding-tools
+  - argocd
+  - aws
+  - ci-cd
+  - devops
+  - ec2
+  - eks
+  - finops
+  - gcp
+  - gke
+  - go
+  - helm
+  - iam
+  - istio
+  - kubernetes
+  - leadership
+  - nodejs
+  - python
+  - rds
+  - s3
+- id: dou:378984
+  content_hash: 20778c2c093dcde52db964b96152cfc76a494316
+  skills:
+  - ai-agents
+  - ai-coding-tools
+  - llm
+  - python
+  - rag
+  - typescript
+- id: dou:378993
+  content_hash: 57a603679f13440b9be3e9cad88ed9af9635335a
+  skills:
+  - ai-coding-tools
+  - aws
+  - ci-cd
+  - dns
+  - docker
+  - ecs
+  - iac
+  - iam
+  - message-queues
+  - monitoring
+  - networking
+  - nodejs
+  - opentelemetry
+  - terraform
+  - typescript
+- id: dou:378994
+  content_hash: 4c98cd9d760b2c659b88cffd7a8830d3c34823d6
+  skills:
+  - ci-cd
+  - code-review
+  - css
+  - docker
+  - fintech
+  - git
+  - hibernate
+  - html
+  - java
+  - javascript
+  - jdbc
+  - jpa
+  - jquery
+  - linux
+  - maven
+  - microservices
+  - oracle-db
+  - postgresql
+  - rest
+  - spring
+  - sql
+  - vue
+- id: dou:379017
+  content_hash: 13d600d70a5c2182e36f41bb2987ffd9e4ad859f
+  skills:
+  - git
+  - http
+  - jira
+  - manual-testing
+  - mysql
+  - networking
+  - qa-process
+  - rest
+- id: dou:379057
+  content_hash: 08045d585b7a70e55eef02027586a7e4728d1077
+  skills:
+  - code-review
+  - database-design
+  - django
+  - etl
+  - kafka
+  - postgresql
+  - python
+  - sql
+- id: dou:379058
+  content_hash: a71fbb6c62ff458356ce450e4c7b06d8309874c7
+  skills:
+  - ai-agents
+  - ai-coding-tools
+  - cpp
+  - csharp
+  - dotnet
+  - llm
+  - malware
+  - multithreading
+- id: dou:379067
+  content_hash: fd2692819ce47c940c8402fcbed954701d2434ef
+  skills:
+  - airflow
+  - bigquery
+  - gcp
+  - message-queues
+  - pubsub
+  - python
+  - sql
+- id: dou:379083
+  content_hash: ea6e0271632d94576569a568036818a0c7f8fa66
+  skills:
+  - 1c
+  - data-governance
+  - data-warehouse
+  - databricks
+  - etl
+  - python
+  - qa-process
+  - sap
+  - sql
+- id: dou:379089
+  content_hash: 65f90f43555c8a4daa311fca897faf38e5fc750e
+  skills:
+  - accessibility
+  - ai-coding-tools
+  - code-review
+  - d3
+  - fastapi
+  - material-ui
+  - mobx
+  - nextjs
+  - playwright
+  - python
+  - react
+  - redux
+  - storybook
+  - typescript
+- id: dou:379125
+  content_hash: bafa51456ff3813e978ccc1a2a21d255c40a5345
+  skills:
+  - agile
+  - aws
+  - bi
+  - bigquery
+  - cassandra
+  - data-analysis
+  - etl
+  - html
+  - http
+  - informatica
+  - javascript
+  - jira
+  - mariadb
+  - nosql
+  - oracle-db
+  - pl-sql
+  - power-bi
+  - python
+  - rdbms
+  - rest
+  - soap
+  - sql
+  - xml
+- id: dou:379137
+  content_hash: 37e5f9cbb391c564b2ec548698d5dde3e049a27e
+  skills:
+  - ai-coding-tools
+  - aws
+  - bi
+  - ci-cd
+  - clickhouse
+  - docker
+  - kubernetes
+  - kyc-aml
+  - leadership
+  - message-queues
+  - monitoring
+  - nestjs
+  - nodejs
+  - postgresql
+  - rabbitmq
+  - redis
+  - typescript
+- id: dou:379179
+  content_hash: 07ef9d41dec154b6cfdc4cd727f1295eeb30d608
+  skills:
+  - aws
+  - azure
+  - ci-cd
+  - cloudformation
+  - distributed-systems
+  - docker
+  - gcp
+  - git
+  - graphql
+  - iac
+  - lambda
+  - monitoring
+  - pytest
+  - python
+  - rest
+  - sqs
+  - terraform
+- id: dou:379182
+  content_hash: 3cccc0cedd41f34cf98dceaa10a3ac3f9faaeb98
+  skills:
+  - angular
+  - asyncio
+  - celery
+  - ci-cd
+  - database-design
+  - django
+  - django-rest-framework
+  - docker
+  - elasticsearch
+  - fastapi
+  - message-queues
+  - monitoring
+  - nginx
+  - postgresql
+  - pytest
+  - python
+  - rabbitmq
+  - redis
+  - websockets
+- id: dou:379191
+  content_hash: 9e9e5bbe0353151adda71b26cc61ecb89bb2fb3c
+  skills:
+  - ansible
+  - bash
+  - ci-cd
+  - devops
+  - docker
+  - go
+  - grafana
+  - helm
+  - iac
+  - kubernetes
+  - linux
+  - monitoring
+  - networking
+  - nosql
+  - prometheus
+  - python
+  - sql
+  - sre
+  - terraform
+  - vault
+- id: dou:379192
+  content_hash: 2e4e60a4a76bcafdea8a92525517d9629a88d68f
+  skills:
+  - ansible
+  - bash
+  - ci-cd
+  - devops
+  - docker
+  - go
+  - grafana
+  - helm
+  - iac
+  - kubernetes
+  - linux
+  - monitoring
+  - networking
+  - prometheus
+  - python
+  - sre
+  - terraform
+  - vault
+  - vpn
+- id: dou:379203
+  content_hash: d484fb3f34e8abb2b5039ad1f5b47b4f688291a1
+  skills:
+  - akka
+  - aws
+  - cassandra
+  - circleci
+  - code-review
+  - cqrs
+  - datadog
+  - distributed-systems
+  - elasticsearch
+  - fintech
+  - functional-programming
+  - kafka
+  - redis
+  - scala
+  - terraform

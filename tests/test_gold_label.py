@@ -245,7 +245,9 @@ def test_importing_a_partly_labelled_sheet_keeps_only_the_labelled_vacancies(
     _run(sheet, "python", "s", "0")  # dou:2 is skipped
     gold = tmp_path / "gold.yaml"
 
-    code = import_labels(silver, sheet=sheet, gold_file=gold, texts_file=tmp_path / "texts.yaml")
+    code = import_labels(
+        silver, labelled_by="test", sheet=sheet, gold_file=gold, texts_file=tmp_path / "texts.yaml"
+    )
 
     text = gold.read_text(encoding="utf-8")
     assert code == 0 and "dou:1" in text and "dou:3" in text and "dou:2" not in text
@@ -255,7 +257,11 @@ def test_a_sheet_with_nothing_labelled_is_not_imported(tmp_path: Path, sheet: Pa
     silver = SilverStore(tmp_path / "t.duckdb")
 
     code = import_labels(
-        silver, sheet=sheet, gold_file=tmp_path / "g.yaml", texts_file=tmp_path / "t.yaml"
+        silver,
+        labelled_by="test",
+        sheet=sheet,
+        gold_file=tmp_path / "g.yaml",
+        texts_file=tmp_path / "t.yaml",
     )
 
     assert code == 2 and not (tmp_path / "g.yaml").exists()

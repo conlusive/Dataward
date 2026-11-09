@@ -1,5 +1,16 @@
 # Changelog
 
+## Unreleased
+
+### Added
+- **Gold set**: `gold-label` (blind terminal labelling), `--labelled-by` provenance recorded in the gold
+  file and on the metrics page, taxonomy gaps (`+ Name`) kept as `wanted`, `regression_min_f1` kept on
+  re-import. First measurement on 150 vacancies: dictionary F1 0.81, LLM F1 0.80 (labels by an LLM).
+- LLM client: `--rpm` limiter, patient 429 handling, `--sheet`; verified Gemini prices.
+
+### Fixed
+- Evaluation counted a method that ran and found nothing as "not run", leaving its misses out of the score.
+
 ## 0.2.0: the pipeline, its checks, and what sits on top
 
 The first release that is more than ingestion. Everything below was built between 2026-11-06 and

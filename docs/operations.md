@@ -136,9 +136,10 @@ purpose), saves after every vacancy, and the same command resumes where you stop
 the sheet by hand: a vacancy with no label line is "not labelled yet" and `gold-import` leaves it out,
 so labelling part of the sheet is safe; write `= none` for "asks for no technical skill".
 
-The sheet and the vacancy texts stay local (gitignored); only the labels are committed. After the
-first `gold-eval`, put `regression_min_f1: <value>` in `skills_gold.yaml` and CI-style regression
-checks of the dictionary method start working (`tests/test_gold_regression.py`).
+The sheet and the vacancy texts stay local (gitignored); only the labels are committed. The floor
+`regression_min_f1` in `skills_gold.yaml` (0.78, the first measured F1 was 0.81) makes
+`tests/test_gold_regression.py` fail when the dictionary gets worse; it runs only where the vacancy
+texts are present (locally), and a re-import keeps the value.
 
 DOU salary surveys (34 waves since 2010) are loaded separately:
 

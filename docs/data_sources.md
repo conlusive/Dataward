@@ -41,7 +41,7 @@ never changed; silver and gold can be rebuilt from it without the network.
 - **The survey is self-reported** by people who answer surveys. It shows what people earn, not what an
   employer will offer.
 - **Skills are found by a dictionary** (and, when switched on, by an LLM). The precision and recall of
-  both are measured against a hand-labelled set, which is still being labelled; until then the
-  numbers say what was found, not how accurate it is.
+  both are measured against a gold set of 150 vacancies (F1 0.81 and 0.80, see `docs/metrics.md`).
+  The gold labels were made by an LLM, not by a person, so treat the accuracy as approximate.
 - Salaries are converted to USD at the National Bank rate on the publication date; nominal, not
   adjusted for inflation.
