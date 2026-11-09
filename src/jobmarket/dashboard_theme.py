@@ -1,7 +1,7 @@
 """The dashboard's look: colour tokens, one stylesheet and small HTML pieces.
 
 No Streamlit import here, so the pieces are tested directly. The surface and the accent are the
-"smoky lilac" pair (#303032, #AAA8FF). The style is pixel and terminal: Tiny5 for headings
+"smoky lilac" pair (#303032, #AAA8FF). The style is pixel and terminal: Tektur for headings
 and figures, JetBrains Mono for text, stepped corners and a prompt before each title. The two chart
 colours were checked with the dataviz palette validator on that surface (dark lightness band,
 colour-blind separation, contrast); the accent itself is lighter than the chart band allows for
@@ -29,7 +29,7 @@ MARK = SERIES[0]  # one-series bars and lines
 MUTED_MARK = "#7A7A82"  # context marks next to an emphasised one (3:1 on the card)
 
 FONT_BODY = "'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace"
-FONT_DISPLAY = "'Tiny5', 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace"
+FONT_DISPLAY = "'Tektur', 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace"
 
 # State is never colour alone: every tone carries an icon and a word.
 TONES = {
@@ -58,19 +58,19 @@ h1, h2, h3, h4 { font-family: var(--display) !important; }
 
 /* sidebar */
 [data-testid="stSidebar"] { background: var(--card); border-right: 2px solid var(--line); }
-[data-testid="stSidebarNavLink"] { border-radius: 0; font-size: 0.85rem;
+[data-testid="stSidebarNavLink"] { border-radius: 0; font-size: var(--fs-sm);
   border-left: 4px solid transparent; }
 [data-testid="stSidebarNavLink"]:hover { border-left-color: var(--line); }
 [data-testid="stSidebarNavLink"][aria-current="page"] {
   background: rgba(170, 168, 255, 0.12); color: var(--accent); border-left-color: var(--accent);
 }
 [data-testid="stSidebarNavSeparator"], [data-testid="stSidebarNav"] span[class*="Header"] {
-  font-family: var(--display); font-size: 0.95rem; letter-spacing: 0.1em;
+  font-family: var(--display); font-size: var(--fs-md); letter-spacing: 0.1em;
   text-transform: uppercase; color: var(--ink-3);
 }
 [data-testid="stSidebarHeader"] { padding-bottom: 0.4rem; }
 [data-testid="stSidebar"] [data-testid="stSidebarUserContent"] { padding-top: 0.5rem; }
-.dw-side-label { font-family: var(--display); font-size: 0.95rem; letter-spacing: 0.1em;
+.dw-side-label { font-family: var(--display); font-size: var(--fs-md); letter-spacing: 0.1em;
   text-transform: uppercase; color: var(--ink-3); margin: 1.1rem 0 0.35rem;
   border-top: 2px solid var(--line); padding-top: 0.7rem; }
 .dw-side-label::before { content: "// "; color: var(--accent); font-family: var(--body); }
@@ -78,43 +78,51 @@ h1, h2, h3, h4 { font-family: var(--display) !important; }
 /* the page header: a prompt, the title and a blinking cursor */
 .dw-hero { display: flex; justify-content: space-between; align-items: flex-end;
   gap: 1.5rem; flex-wrap: wrap; margin: 0 0 1.4rem; }
-.dw-eyebrow { font-size: 0.74rem; letter-spacing: 0.06em; color: var(--accent);
+.dw-eyebrow { font-size: var(--fs-xs); letter-spacing: 0.06em; color: var(--accent);
   margin-bottom: 0.6rem; }
 .dw-eyebrow::before { content: "$ "; color: var(--ink-3); }
-.dw-title { font-family: var(--display); font-weight: 400; font-size: 3rem; line-height: 1.1;
+.dw-title { font-family: var(--display); font-weight: 600; font-size: var(--fs-2xl);
+  line-height: 1.1;
   letter-spacing: 0.02em; color: var(--ink); margin: 0; }
 .dw-title::after { content: "_"; color: var(--cursor); margin-left: 0.12em;
   animation: dw-blink 1.1s steps(1) infinite; }
 @keyframes dw-blink { 0%, 49% { opacity: 1; } 50%, 100% { opacity: 0; } }
 @media (prefers-reduced-motion: reduce) { .dw-title::after { animation: none; } }
-.dw-sub { color: var(--ink-3); font-size: 0.88rem; margin-top: 0.6rem; max-width: 48rem; }
+.dw-sub { color: var(--ink-3); font-size: var(--fs-sm); margin-top: 0.6rem; max-width: 48rem; }
 .dw-pills { display: flex; gap: 0.5rem; flex-wrap: wrap; }
 .dw-pill { display: inline-flex; align-items: center; gap: 0.5rem; background: var(--card);
-  border: 2px solid var(--line); padding: 0.28rem 0.8rem; font-size: 0.72rem;
+  border: 2px solid var(--line); padding: 0.28rem 0.8rem; font-size: var(--fs-xs);
   color: var(--ink-2); white-space: nowrap; }
 .dw-pill i { font-style: normal; }
 
 /* section labels: "// 01 DYNAMICS" */
-.dw-section { font-family: var(--display); font-size: 1rem; letter-spacing: 0.12em;
-  text-transform: uppercase; color: var(--ink-3); margin: 1.8rem 0 0.7rem; }
+.dw-section { font-family: var(--display); font-size: var(--fs-md); letter-spacing: 0.12em;
+  text-transform: uppercase; color: var(--ink-3); margin: var(--s6) 0 var(--s3); }
 .dw-section::before { content: "// "; color: var(--accent); font-family: var(--body); }
 .dw-section b { color: var(--accent); font-weight: 500; margin-right: 0.7rem; }
 
 /* cards: metrics and bordered containers */
 [data-testid="stMetric"] { background: var(--card); border: 2px solid var(--line);
-  padding: 1rem 1.15rem; min-height: 7.4rem; }
-[data-testid="stMetricLabel"] * { font-family: var(--display); font-size: 0.95rem !important;
+  padding: var(--s4); min-height: 8rem; height: 100%; box-sizing: border-box; }
+[data-testid="stHorizontalBlock"] { align-items: stretch; }
+[data-testid="stColumn"] > [data-testid="stVerticalBlock"] { height: 100%; }
+[data-testid="stColumn"] > [data-testid="stVerticalBlock"] > :only-child { height: 100%; }
+[data-testid="stColumn"] > [data-testid="stVerticalBlock"] > :only-child >
+  [data-testid="stVerticalBlockBorderWrapper"] { height: 100%; }
+[data-testid="stColumn"] > [data-testid="stVerticalBlock"] >
+  [data-testid="stElementContainer"]:has(> [data-testid="stMetric"]) { height: 100%; }
+[data-testid="stMetricLabel"] * { font-family: var(--display); font-size: var(--fs-sm) !important;
   letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-3); }
-[data-testid="stMetricValue"] { font-family: var(--display); font-weight: 400;
-  font-size: 2.6rem; }
-.dw-card-title { font-family: var(--display); font-size: 1rem; letter-spacing: 0.08em;
+[data-testid="stMetricValue"] { font-family: var(--display); font-weight: 600;
+  font-size: var(--fs-xl); }
+.dw-card-title { font-family: var(--display); font-size: var(--fs-md); letter-spacing: 0.08em;
   text-transform: uppercase; color: var(--ink-2); margin: 0 0 0.2rem; }
 .dw-card-title::before { content: "▪ "; color: var(--accent); }
-.dw-card-note { color: var(--ink-3); font-size: 0.78rem; margin: 0 0 0.6rem; }
+.dw-card-note { color: var(--ink-3); font-size: var(--fs-xs); margin: 0 0 0.6rem; }
 
 /* tabs: the open one gets a prompt arrow */
 [data-baseweb="tab-list"] { gap: 0.3rem; border-bottom: 2px solid var(--line); }
-button[data-baseweb="tab"] { font-family: var(--display); font-size: 1rem;
+button[data-baseweb="tab"] { font-family: var(--display); font-size: var(--fs-md);
   letter-spacing: 0.06em; text-transform: uppercase; padding: 0.7rem 0.9rem; }
 button[data-baseweb="tab"][aria-selected="true"]::before { content: "▸ "; color: var(--accent); }
 [data-baseweb="tab-highlight"] { background-color: var(--accent) !important; height: 4px; }
@@ -133,22 +141,23 @@ button[kind], [data-testid="stDownloadButton"] button, [data-testid="stLinkButto
 
 /* skill tags and fact lists (the vacancy card) */
 .dw-chips { display: flex; flex-wrap: wrap; gap: 0.4rem; margin: 0.3rem 0 0.8rem; }
-.dw-chip { border: 2px solid var(--line); padding: 0.12rem 0.55rem; font-size: 0.76rem;
+.dw-chip { border: 2px solid var(--line); padding: 0.12rem 0.55rem; font-size: var(--fs-xs);
   color: var(--ink-2); }
 .dw-chip.req { border-color: var(--accent); color: var(--accent);
   background: rgba(170, 168, 255, 0.1); }
-.dw-chip.req::before { content: "■ "; font-size: 0.6rem; vertical-align: 0.1em; }
+.dw-chip.req::before { content: "■ "; font-size: 0.8em; vertical-align: 0.1em; }
 .dw-facts { display: grid; grid-template-columns: max-content 1fr; gap: 0.35rem 1.2rem;
-  margin: 0.4rem 0 0.9rem; font-size: 0.84rem; }
+  margin: 0.4rem 0 0.9rem; font-size: var(--fs-sm); }
 .dw-facts dt { color: var(--ink-3); }
 .dw-facts dd { margin: 0; color: var(--ink); }
-.dw-lead { font-family: var(--display); font-size: 1.9rem; line-height: 1.2; color: var(--ink);
+.dw-lead { font-family: var(--display); font-size: var(--fs-xl); line-height: 1.2;
+  color: var(--ink);
   margin: 0.1rem 0 0.2rem; }
-.dw-muted { color: var(--ink-3); font-size: 0.84rem; }
+.dw-muted { color: var(--ink-3); font-size: var(--fs-sm); }
 
 /* a small screen: one column, a smaller title */
 @media (max-width: 720px) {
-  .dw-title { font-size: 2rem; }
+  .dw-title { font-size: var(--fs-xl); }
   .block-container { padding-left: 1rem; padding-right: 1rem; }
 }
 """
@@ -190,26 +199,32 @@ _MOTION = """
 _BLOCKS = """
 /* bracket statistics: [ ВІДКРИТО: 6 710 ] */
 .dw-stats { display: flex; flex-wrap: wrap; gap: 0.5rem 1.6rem; margin: 0.2rem 0 1rem; }
-.dw-stat { display: inline-flex; align-items: baseline; gap: 0.55rem; font-size: 0.82rem;
+.dw-stat { display: inline-flex; align-items: baseline; gap: 0.55rem; font-size: var(--fs-sm);
   color: var(--ink-3); letter-spacing: 0.04em; text-transform: uppercase; }
-.dw-stat i { font-style: normal; color: var(--accent); font-size: 1.5rem; line-height: 1; }
-.dw-stat b { font-family: var(--display); font-weight: 400; color: var(--ink); font-size: 1.9rem;
+.dw-stat i { font-style: normal; color: var(--accent); font-size: var(--fs-lg); line-height: 1; }
+.dw-stat b { font-family: var(--display); font-weight: 400; color: var(--ink);
+  font-size: var(--fs-lg);
   letter-spacing: 0.02em; }
 .dw-stat em { font-style: normal; }
 
 /* the frog card in the sidebar and the profile */
 .dw-pet { display: flex; gap: 0.8rem; align-items: center; padding: 0.6rem 0.4rem 0.2rem; }
-.dw-pet-text { min-width: 0; flex: 1; font-size: 0.78rem; color: var(--ink-3); line-height: 1.5; }
-.dw-pet-name { font-family: var(--display); font-size: 1.05rem; color: var(--ink); }
+.dw-pet-text { min-width: 0; flex: 1; font-size: var(--fs-xs); color: var(--ink-3);
+  line-height: 1.5; }
+.dw-pet-name { font-family: var(--display); font-size: var(--fs-sm); color: var(--ink); }
 .dw-pet-name b { color: var(--accent); font-weight: 400; }
 .dw-xp { height: 8px; background: var(--line); margin: 0.35rem 0 0.25rem; }
 .dw-xp span { display: block; height: 100%; background: var(--accent); }
 .dw-medal { display: inline-block; border: 2px solid var(--line); color: var(--ink-3);
-  padding: 0.15rem 0.55rem; margin: 0 0.4rem 0.4rem 0; font-size: 0.78rem; }
+  padding: 0.15rem 0.55rem; margin: 0 0.4rem 0.4rem 0; font-size: var(--fs-xs); }
 .dw-medal.on { border-color: var(--accent); color: var(--accent);
   background: rgba(170, 168, 255, 0.1); }
 .dw-medal.on::before { content: "★ "; }
-.dw-resource { font-size: 0.85rem; }
+.dw-resource { font-size: var(--fs-sm); }
+
+/* the menu sections are headings, not folders: no chevron, no click */
+[data-testid="stNavSectionHeader"] { pointer-events: none; cursor: default; }
+[data-testid="stNavSectionHeader"] [data-testid="stIconMaterial"] { display: none; }
 
 /* the sidebar is part of the layout, not a drawer: it cannot be collapsed */
 [data-testid="stSidebarCollapseButton"], [data-testid="stSidebarCollapsedControl"],
@@ -228,31 +243,31 @@ _BLOCKS = """
 
 /* a legend of bracketed entries: [ ■ dou ] */
 .dw-legend { display: flex; flex-wrap: wrap; gap: 0.4rem 1.4rem; margin: 0.2rem 0 0.6rem;
-  font-size: 0.8rem; color: var(--ink-2); }
+  font-size: var(--fs-sm); color: var(--ink-2); }
 .dw-leg i { font-style: normal; color: var(--accent); }
 .dw-leg b { display: inline-block; width: 0.7rem; height: 0.7rem; margin: 0 0.45rem 0 0.4rem; }
 
 /* tiles: a direction, a vacancy */
-.dw-dir, .dw-vac { background: var(--card); border: 2px solid var(--line); padding: 0.9rem 1rem;
+.dw-dir, .dw-vac { background: var(--card); border: 2px solid var(--line); padding: var(--s4);
   margin-bottom: 0.4rem; box-sizing: border-box;
   clip-path: polygon(0 4px, 4px 4px, 4px 0, calc(100% - 4px) 0,
   calc(100% - 4px) 4px, 100% 4px, 100% calc(100% - 4px), calc(100% - 4px) calc(100% - 4px),
   calc(100% - 4px) 100%, 4px 100%, 4px calc(100% - 4px), 0 calc(100% - 4px)); }
-.dw-dir-name { font-family: var(--display); font-size: 1.15rem; color: var(--ink);
+.dw-dir-name { font-family: var(--display); font-size: var(--fs-lg); color: var(--ink);
   letter-spacing: 0.04em; text-transform: uppercase; }
-.dw-dir-count { font-family: var(--display); font-size: 2.2rem; color: var(--accent);
+.dw-dir-count { font-family: var(--display); font-size: var(--fs-xl); color: var(--accent);
   line-height: 1.1; margin: 0.2rem 0; }
-.dw-dir-count small { font-size: 0.8rem; color: var(--ink-3); margin-left: 0.4rem; }
+.dw-dir-count small { font-size: var(--fs-sm); color: var(--ink-3); margin-left: 0.4rem; }
 .dw-meter { height: 8px; background: var(--line); margin: 0.4rem 0 0.7rem; }
 .dw-meter span { display: block; height: 100%; background: var(--accent);
   animation: dw-grow 0.9s steps(16) both; }
 @keyframes dw-grow { from { width: 0; } }
-.dw-dir { height: 14.5rem; overflow: hidden; }
-.dw-vac { height: 12.5rem; overflow: hidden; }
-.dw-vac-title { font-family: var(--display); font-size: 1.15rem; color: var(--ink);
+.dw-dir { height: 12rem; overflow: hidden; }
+.dw-vac { height: 11rem; overflow: hidden; }
+.dw-vac-title { font-family: var(--display); font-size: var(--fs-lg); color: var(--ink);
   line-height: 1.2; }
-.dw-vac-meta { color: var(--ink-3); font-size: 0.8rem; margin: 0.3rem 0 0.5rem; }
-.dw-vac-pay { color: var(--accent); font-size: 0.9rem; }
+.dw-vac-meta { color: var(--ink-3); font-size: var(--fs-sm); margin: 0.3rem 0 0.5rem; }
+.dw-vac-pay { color: var(--accent); font-size: var(--fs-sm); }
 
 /* filters: an active one must look different from an idle one */
 [data-baseweb="select"]:not(:has([data-baseweb="tag"])) > div { border-style: dashed !important; }
@@ -270,17 +285,18 @@ button[kind="pills"], button[kind="pillsActive"],
   color: #1B1B1D !important; border-color: var(--accent) !important; }
 [data-testid="stBaseButton-pillsActive"] * { color: #1B1B1D !important; }
 .dw-active { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center;
-  margin: 0.4rem 0 1rem; font-size: 0.78rem; }
+  margin: 0.4rem 0 1rem; font-size: var(--fs-xs); }
 .dw-active .dw-tag { border: 2px solid var(--accent); color: var(--accent);
   padding: 0.1rem 0.6rem; background: rgba(170, 168, 255, 0.08); }
 .dw-active .dw-none { color: var(--ink-3); }
-.dw-answer { border-left: 4px solid var(--accent); background: var(--card); padding: 0.8rem 1rem;
-  margin: 0.6rem 0; color: var(--ink); font-size: 0.95rem; line-height: 1.55; }
-.dw-q-meta { color: var(--ink-3); font-size: 0.8rem; margin-bottom: 0.3rem; }
-.dw-fl { font-family: var(--display); font-size: 0.95rem; letter-spacing: 0.08em;
+.dw-answer { border-left: 4px solid var(--accent); background: var(--card);
+  padding: var(--s3) var(--s4);
+  margin: 0.6rem 0; color: var(--ink); font-size: var(--fs-md); line-height: 1.55; }
+.dw-q-meta { color: var(--ink-3); font-size: var(--fs-sm); margin-bottom: 0.3rem; }
+.dw-fl { font-family: var(--display); font-size: var(--fs-md); letter-spacing: 0.08em;
   text-transform: uppercase; color: var(--ink-2); margin-bottom: 0.3rem; }
 .dw-badge { display: inline-block; min-width: 1.3rem; padding: 0 0.35rem; margin-left: 0.5rem;
-  background: var(--accent); color: #1B1B1D; text-align: center; font-size: 0.78rem; }
+  background: var(--accent); color: #1B1B1D; text-align: center; font-size: var(--fs-xs); }
 """
 
 
@@ -290,7 +306,10 @@ def css() -> str:
         f":root {{ --bg: {BG}; --card: {CARD}; --line: {LINE}; --ink: {INK}; --ink-2: {INK_2};"
         f" --ink-3: {INK_3}; --accent: {ACCENT}; --cursor: {SERIES[1]}; --ok: #7ED5B0;"
         f" --warn: #F2A56D; --bad: #FF7A6B;"
-        f" --body: {FONT_BODY}; --display: {FONT_DISPLAY}; }}"
+        f" --body: {FONT_BODY}; --display: {FONT_DISPLAY};"
+        f" --fs-xs: 0.75rem; --fs-sm: 0.85rem; --fs-md: 1rem; --fs-lg: 1.25rem; --fs-xl: 1.75rem;"
+        f" --fs-2xl: 2.5rem; --s1: 0.25rem; --s2: 0.5rem; --s3: 0.75rem; --s4: 1rem; --s5: 1.5rem;"
+        f" --s6: 2rem; }}"
     )
     return f"<style>{variables}{_STYLE}{_MOTION}{_BLOCKS}</style>"
 

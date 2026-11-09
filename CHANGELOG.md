@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+### Changed (proportions)
+- Headings and figures are set in **Tektur** (technical, no longer pixelated; Tiny5 is gone).
+- **One type scale** of six steps (0.75, 0.85, 1, 1.25, 1.75, 2.5 rem) replaces twenty-one ad-hoc sizes, one
+  spacing scale, equal-height cards in a row, and the menu sections are plain headings (no fold, no chevron;
+  `expanded=True`). A test refuses any font size outside the scale.
+
 ### Added (cabinet v2)
 - The profile became a **cabinet of five pages** under a menu grouped by what you do: Для мене, Збережені,
   Профіль, Навчання, Практика. The sidebar cannot be collapsed and carries a **pixel frog** (a tadpole that

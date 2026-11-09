@@ -44,7 +44,8 @@ navigation = st.navigation(
         "Система": [
             st.Page("views/system.py", title="Стан і дані", icon=":material/health_and_safety:"),
         ],
-    }
+    },
+    expanded=True,  # every item visible, never behind "View more"
 )
 ui.pet_card()  # the frog sits under the menu on every page
 navigation.run()

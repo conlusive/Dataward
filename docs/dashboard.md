@@ -102,12 +102,13 @@ is shown as a tag too.
 - **Colours**: the "smoky lilac" pair, surface `#303032` and accent `#AAA8FF`; cards are a step darker
   (`#28282A`). The theme is in `.streamlit/config.toml` (native Streamlit options) and `dashboard_theme.py`
   (one stylesheet for the tiles, tabs, sidebar and header).
-- **Pixel and terminal**: Tiny5 (a pixel font with good Cyrillic) for headings, figures and labels,
+- **Pixel and terminal**: Tektur (angular and technical, not pixelated, good Cyrillic) for headings,
+  figures and labels,
   JetBrains Mono for text and tables. Corners are stepped (a CSS clip), a page starts with a prompt
   (`$ вакансії · каталог`) and a blinking cursor after the title (switched off by `prefers-reduced-motion`),
   section labels read `// ВИБІРКА`, the open tab has an arrow. The fonts come from Google Fonts, and the
-  browser falls back to its own monospace font offline. Pixelify Sans was tried first and dropped: its
-  Cyrillic is crude.
+  browser falls back to its own monospace font offline. Pixelify Sans (crude Cyrillic) and Tiny5 (read as too pixelated) were tried and
+  dropped.
 - **Logo**: three rising pixel bars, then DATAWARD spelled in a 5x7 pixel font with a pixel shadow, and a
   static terracotta full stop; the sidebar icon and the favicon are the bars and the stop. `dashboard_logo.py` draws them from a glyph
   table (`python -m jobmarket.dashboard_logo` rewrites `dashboard/static/`), and a test keeps the committed
