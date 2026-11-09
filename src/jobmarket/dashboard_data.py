@@ -180,8 +180,18 @@ def open_by_category(market: pd.DataFrame, *, top: int = 15) -> pd.DataFrame:
 
 
 # ---- skills ----------------------------------------------------------------------------------
-def latest_month(demand: pd.DataFrame) -> Any:
-    return demand["month"].max()
+MIN_MONTH_VACANCIES = 200  # fewer new vacancies than this and a share is mostly noise
+
+
+def latest_month(demand: pd.DataFrame, *, min_vacancies: int = MIN_MONTH_VACANCIES) -> Any:
+    """The newest month with enough vacancies to give meaningful shares.
+
+    A month that has only just begun holds a handful of vacancies, and a skill in one of three is
+    "33%". When no month is big enough (a young dataset) the newest month is used as it is.
+    """
+    sizes = demand.groupby("month")["month_vacancies"].max()
+    enough = sizes[sizes >= min_vacancies]
+    return enough.index.max() if len(enough) else demand["month"].max()
 
 
 def top_skills(

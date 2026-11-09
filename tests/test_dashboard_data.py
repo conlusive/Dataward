@@ -114,6 +114,25 @@ def test_top_skills_are_the_latest_months_most_demanded(frames: dict[str, pd.Dat
     ]
 
 
+def test_a_month_that_has_only_just_begun_is_not_the_latest_month() -> None:
+    demand = pd.DataFrame(
+        {
+            "month": [date(2026, 12, 1), date(2026, 11, 1)],
+            "month_vacancies": [3, 4000],
+            "skill_id": ["python", "python"],
+        }
+    )
+
+    assert dd.latest_month(demand) == date(2026, 11, 1)  # December has 3 vacancies so far
+    assert dd.latest_month(demand, min_vacancies=2) == date(2026, 12, 1)
+
+
+def test_in_a_young_dataset_the_newest_month_is_used_as_it_is(
+    frames: dict[str, pd.DataFrame],
+) -> None:
+    assert dd.latest_month(frames["fct_skill_demand_monthly"]) == NOV  # no month reaches 200
+
+
 def test_a_skills_trend_is_in_time_order(frames: dict[str, pd.DataFrame]) -> None:
     trend = dd.skill_trend(frames["fct_skill_demand_monthly"], "python")
 
