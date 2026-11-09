@@ -80,14 +80,23 @@ closed vacancies, checks, LLM cost, a link). See [docs/observability.md](docs/ob
 Two methods find the skills a vacancy asks for (a taxonomy of about 490 skills, see the
 [guide](docs/taxonomy_guide.md)):
 
-| Method | Status | Numbers |
+| Method | Status | On the 150-vacancy gold set (precision / recall / F1) |
 |---|---|---|
-| Dictionary (trie; "strict" words need an exact spelling and a context word) | running every night | at least one skill in 91% of vacancies (6,282 of 6,911) |
-| LLM (cached, `--dry-run` first, a cost cap) | implemented, **not run on the corpus yet** (needs an API key) | a dry run estimated 474 requests for 479 vacancies, about $0.11 (prices not verified) |
+| Dictionary (trie; "strict" words need an exact spelling and a context word) | running every night; at least one skill in 91% of vacancies (6,282 of 6,911) | 0.74 / 0.91 / 0.81 |
+| LLM (Gemini, cached, `--dry-run` first, a cost cap) | run only on the 150 gold vacancies, not on the corpus; about $8 per 10,000 vacancies at list prices (the free tier was used, nothing was billed) | 0.88 / 0.72 / 0.80 |
 
-**Precision and recall are not measured yet.** They need a hand-labelled set. The sheet of 150 vacancies
-is ready and is labelled blind on purpose, and the labelling is still to be done. Until then the numbers
-above say what was found, not how accurate it is.
+The dictionary finds more and is wrong more often; the LLM is more careful and misses more (it rarely
+names code review, monitoring or DevOps). Neither wins on F1, which is why the dictionary stays the
+nightly method and the LLM is a measured option. Details and the most frequent mistakes of each:
+[docs/metrics.md](docs/metrics.md).
+
+**How far to trust these numbers.** The gold labels were made by an LLM (Claude), blind to both methods'
+answers, and not by a human; the file says so (`labelled_by`). The LLM method is a different model, but
+two language models can make the same mistakes, so the real accuracy may differ. 150 vacancies are
+enough to see which method is better, not to quote a second decimal. A human check of 15-20 of the
+labelled vacancies (`gold-label --relabel`) would settle how far they can be trusted. The labelling also
+listed 504 skills the taxonomy lacks (ArduPilot, UART, Clean Architecture, Kotlin Coroutines...), kept in
+the gold file as the list of what to add next.
 
 ## Consumers
 
@@ -117,8 +126,8 @@ All from the first days of data, so these are snapshots, not trends.
    graph of strong pairs splits into 9 stacks; the largest (78 skills) is built around Terraform: cloud
    and DevOps.
 3. **Mentions of AI coding tools and assistants are in 14.1% of October vacancies** (611), about as common as
-   Git. This is a broad dictionary group ("Copilot", "Cursor", "AI tools"), and its precision is not
-   measured.
+   Git. This is a broad dictionary group ("Copilot", "Cursor", "AI tools"); on the gold set its
+   precision is 0.85 and recall 0.81 (29 of 36 mentions found, 5 false alarms).
 4. **Few vacancies show a salary:** 11.8% (814 of 6,911). Where they do, Python's median is 2,700 USD a month
    (quartiles 1,600 to 4,625, 107 vacancies), a biased sample of the employers who choose to say.
 5. **The survey: senior software engineers' median salary rose from 2,350 USD (2011) to 4,300 (2023), and is
@@ -135,8 +144,8 @@ All from the first days of data, so these are snapshots, not trends.
   retries and dependencies of seven steps are about a hundred lines ([why](docs/decisions.md)).
 - **The salary model could not use vacancies**, so it uses the survey.
 - **Not done:** object storage for bronze (it lives in a rolling Actions cache, which is not durable), a
-  Postgres warehouse, hosting the dashboard, monthly retraining, the labelled set for precision and recall,
-  the LLM run. The pipeline has run nightly for days, not weeks, so the reliability claims above are about
+  Postgres warehouse, hosting the dashboard, monthly retraining, the LLM run on the whole corpus (it was run only on the
+  gold set). The pipeline has run nightly for days, not weeks, so the reliability claims above are about
   how it is built and tested, not yet about a long record.
 
 ## Run it

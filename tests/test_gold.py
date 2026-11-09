@@ -2,6 +2,7 @@ from datetime import datetime
 from pathlib import Path
 
 import pytest
+import yaml
 
 from jobmarket.cli import main
 from jobmarket.gold import (
@@ -349,3 +350,18 @@ def test_skills_the_taxonomy_lacks_are_kept_and_counted_on_the_metrics_page(
     page = metrics.read_text(encoding="utf-8")
     assert sum(len(v) for v in load_wanted(gold_file).values()) == 3
     assert "Quantum basketry (2)" in page and "Origami (1)" in page  # the spellings are merged
+
+
+def test_a_reimport_keeps_the_regression_floor_set_by_hand(
+    silver: SilverStore, tmp_path: Path
+) -> None:
+    sheet, gold_file = _labelled(silver, tmp_path)
+    gold_file.write_text(
+        gold_file.read_text(encoding="utf-8") + "regression_min_f1: 0.78\n", encoding="utf-8"
+    )
+
+    import_labels(
+        silver, labelled_by="test", sheet=sheet, gold_file=gold_file, texts_file=tmp_path / "t.yaml"
+    )
+
+    assert yaml.safe_load(gold_file.read_text(encoding="utf-8"))["regression_min_f1"] == 0.78

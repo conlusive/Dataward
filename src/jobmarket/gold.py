@@ -191,11 +191,18 @@ def write_gold(
         if vid in candidates
     ]
     gold_file.parent.mkdir(parents=True, exist_ok=True)
+    # a re-import must not drop the regression floor the owner set by hand
+    floor = None
+    if gold_file.exists():
+        floor = (yaml.safe_load(gold_file.read_text(encoding="utf-8")) or {}).get(
+            "regression_min_f1"
+        )
     gold_file.write_text(
         "# Labelled skills per vacancy (ids from the taxonomy). Texts are kept separately.\n"
         + yaml.safe_dump(
             {
                 "labelled_by": labelled_by,
+                **({"regression_min_f1": floor} if floor is not None else {}),
                 # skills a vacancy asks for that the taxonomy lacks: the list of what to add next
                 "wanted": {
                     v: sorted(w) for v, w in (wanted or {}).items() if v in candidates and w
