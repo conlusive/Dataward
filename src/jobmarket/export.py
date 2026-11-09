@@ -18,6 +18,7 @@ from jobmarket.skill_clusters import cluster_skills
 
 SCHEMA_FILE = Path("warehouse/models/marts/schema.yml")
 EXPORT_DIR = Path("data/export")
+PUBLIC_DIR = Path("data/export_public")  # what the public CI artifact carries
 SUMMARY_FILE = "last_update.json"
 CLUSTERS_TABLE = "skill_clusters"  # computed here from fct_skill_pairs, not a dbt model
 
@@ -35,6 +36,19 @@ def contracts(schema_file: Path = SCHEMA_FILE) -> dict[str, list[tuple[str, str]
             continue
         found[model["name"]] = [(c["name"], str(c["data_type"]).upper()) for c in model["columns"]]
     return found
+
+
+def private_tables(schema_file: Path = SCHEMA_FILE) -> set[str]:
+    """Models flagged `meta.private`: third-party listings that are exported for local use only.
+
+    The nightly workflow must keep these out of the public artifact; a test checks that it does.
+    """
+    schema = yaml.safe_load(schema_file.read_text(encoding="utf-8"))
+    return {
+        model["name"]
+        for model in schema.get("models", [])
+        if (model.get("meta") or {}).get("private")
+    }
 
 
 def _check(con: duckdb.DuckDBPyConnection, table: str, expected: list[tuple[str, str]]) -> None:
@@ -132,3 +146,43 @@ def export_gold(
     shutil.rmtree(out_dir, ignore_errors=True)
     staging.rename(out_dir)
     return counts
+
+
+def publish_copy(
+    source: Path = EXPORT_DIR, target: Path = PUBLIC_DIR, *, schema_file: Path = SCHEMA_FILE
+) -> list[str]:
+    """Copy an export without its private tables; returns the names of the tables copied.
+
+    The repository is public, so what its CI artifact carries must not hold third-party listings.
+    The copy is written beside the export and swapped in whole; `last_update.json` in it no longer
+    mentions the private tables.
+    """
+    if not (source / SUMMARY_FILE).exists():
+        raise ExportError(f"{source} holds no export (no {SUMMARY_FILE}): run `make export` first")
+    private = private_tables(schema_file)
+    staging = target.with_name(target.name + ".tmp")
+    shutil.rmtree(staging, ignore_errors=True)
+    staging.mkdir(parents=True)
+    copied: list[str] = []
+    try:
+        for file in sorted(source.iterdir()):
+            if not file.is_file() or file.stem in private and file.suffix == ".parquet":
+                continue
+            if file.name == SUMMARY_FILE:
+                summary = json.loads(file.read_text(encoding="utf-8"))
+                summary["tables"] = {
+                    name: info for name, info in summary["tables"].items() if name not in private
+                }
+                (staging / file.name).write_text(
+                    json.dumps(summary, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+                )
+                continue
+            shutil.copy2(file, staging / file.name)
+            if file.suffix == ".parquet":
+                copied.append(file.stem)
+    except Exception:
+        shutil.rmtree(staging, ignore_errors=True)
+        raise
+    shutil.rmtree(target, ignore_errors=True)
+    staging.rename(target)
+    return copied

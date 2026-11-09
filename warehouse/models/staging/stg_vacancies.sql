@@ -3,6 +3,7 @@
 select
     id,
     source,
+    url,
     title,
     company,
     category,

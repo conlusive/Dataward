@@ -271,3 +271,63 @@ models:
       - name: weight
         data_type: double
         data_tests: [not_null]
+
+  - name: fct_vacancy_catalog
+    description: >
+      One row per real vacancy for the catalog page: direction, level, salary, skills, dates, open or
+      closed, and the link to the original page. Third-party listings, so it is exported for local use
+      only and never published (see meta.private).
+    meta:
+      private: true
+    config:
+      contract: {enforced: true}
+    columns:
+      - name: vacancy_id
+        data_type: varchar
+        data_tests: [unique, not_null]
+      - name: title
+        data_type: varchar
+        data_tests: [not_null]
+      - name: company
+        data_type: varchar
+      - name: source
+        data_type: varchar
+        data_tests: [not_null]
+      - name: category
+        data_type: varchar
+      - name: seniority
+        data_type: varchar
+      - name: remote
+        data_type: boolean
+      - name: locations
+        data_type: varchar
+      - name: english_level
+        data_type: varchar
+      - name: experience_years
+        data_type: double
+      - name: salary_usd_min
+        data_type: double
+      - name: salary_usd_max
+        data_type: double
+      - name: first_listed_on
+        data_type: date
+        data_tests: [not_null]
+      - name: last_seen_on
+        data_type: date
+      - name: is_open
+        data_type: boolean
+        data_tests: [not_null]
+      - name: members
+        data_type: integer
+        data_tests: [not_null]
+      - name: url
+        data_type: varchar
+        data_tests: [not_null]
+      - name: url_other
+        data_type: varchar
+      - name: skills
+        data_type: varchar[]
+        data_tests: [not_null]
+      - name: skills_required
+        data_type: varchar[]
+        data_tests: [not_null]

@@ -16,7 +16,7 @@ from loguru import logger
 from jobmarket.bronze import BronzeStore
 from jobmarket.config import Settings
 from jobmarket.dq import LAYERS, run_checks
-from jobmarket.export import EXPORT_DIR, ExportError, export_gold
+from jobmarket.export import EXPORT_DIR, PUBLIC_DIR, ExportError, export_gold, publish_copy
 from jobmarket.flow import (
     StepResult,
     backfill_steps,
@@ -189,6 +189,10 @@ def _build_parser() -> argparse.ArgumentParser:
     commands.add_parser(
         "export",
         help="write the gold marts to data/export as parquet, checked against the contracts",
+    )
+    commands.add_parser(
+        "export-public",
+        help="copy data/export to data/export_public without the private tables (what CI uploads)",
     )
     dq_cmd = commands.add_parser(
         "dq", help="data-quality checks; exit 1 on an error (a warning only reports)"
@@ -457,6 +461,19 @@ def _export() -> int:
     return 0
 
 
+def _export_public() -> int:
+    if not EXPORT_DIR.exists():
+        logger.warning("{} does not exist: nothing to publish", EXPORT_DIR)
+        return 0  # the run failed earlier; the artifact step ignores a missing folder
+    try:
+        copied = publish_copy()
+    except ExportError as error:
+        logger.error("export-public failed: {}", error)
+        return 1
+    logger.info("{} tables copied to {} (private ones left out)", len(copied), PUBLIC_DIR)
+    return 0
+
+
 def _make_seeds() -> int:
     silver = SilverStore(Settings.from_env().duckdb_path)
     try:
@@ -553,6 +570,8 @@ def main(argv: Sequence[str] | None = None) -> int:
         return _dq(args.layer)
     if args.command == "export":
         return _export()
+    if args.command == "export-public":
+        return _export_public()
     if args.command == "make-seeds":
         return _make_seeds()
     if args.command == "skills-review":

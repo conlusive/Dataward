@@ -2,11 +2,20 @@
 
 ## Unreleased
 
+### Added
+- **Vacancy catalog**: the dbt model `fct_vacancy_catalog` (one row per real vacancy, with skills, salary,
+  dates and the link) and a Каталог page: filters in the sidebar, a table, a card of the chosen vacancy, what
+  the selection asks for and which companies hire. The table is flagged `meta.private`; `jobmarket export-public` makes a copy of
+  the export without it, the nightly workflow uploads only that copy, and tests cover both.
+- A pixel logo (`dashboard_logo.py`), the sidebar grouped into Огляд / Вакансії / Аналітика / Система.
+
 ### Changed
 - **Dashboard redesign**: a home page with six numbered tiles, five pages with tabs (Головна, Ринок,
   Навички, Зарплати, Стан і дані), a searchable and sortable skill ranking with the change against the
   previous month, declared salaries by skill, CSV downloads, and a dark "smoky lilac" theme with monospace
   type. The stack graph now draws at most 60 of the strongest links.
+- The look is now pixel and terminal: Tiny5 headings, stepped corners, a prompt and a blinking cursor,
+  square chart marks.
 
 ## 0.2.1: the first measured accuracy
 

@@ -235,3 +235,107 @@ def write_export(directory: Path) -> Path:
     (directory / "status.json").write_text(json.dumps(STATUS), encoding="utf-8")
     (directory / "last_update.json").write_text(json.dumps(LAST_UPDATE), encoding="utf-8")
     return directory
+
+
+def _vacancy(vacancy_id: str, title: str, **fields: object) -> dict[str, object]:
+    base: dict[str, object] = {
+        "vacancy_id": vacancy_id, "title": title, "company": "Acme", "source": "dou",
+        "category": "Python", "seniority": "middle", "remote": False, "locations": "",
+        "english_level": None, "experience_years": None, "salary_usd_min": None,
+        "salary_usd_max": None, "first_listed_on": date(2026, 11, 5),
+        "last_seen_on": date(2026, 11, 9), "is_open": True, "members": 1,
+        "url": f"https://example.com/{vacancy_id}", "url_other": None, "skills": [],
+        "skills_required": [],
+    }  # fmt: skip
+    return base | fields
+
+
+def catalog() -> pd.DataFrame:
+    """Six vacancies whose filters have answers that are easy to check by hand."""
+    return pd.DataFrame(
+        [
+            _vacancy(
+                "v1",
+                "Senior Python Developer",
+                seniority="senior",
+                remote=True,
+                locations="Київ",
+                experience_years=5.0,
+                salary_usd_min=3000.0,
+                salary_usd_max=4500.0,
+                first_listed_on=date(2026, 11, 8),
+                skills=["Python", "Django", "Docker"],
+                skills_required=["Python", "Django"],
+            ),
+            _vacancy(
+                "v2",
+                "Middle Python Engineer",
+                company="Beta",
+                source="djinni",
+                locations="Львів",
+                experience_years=3.0,
+                salary_usd_min=2000.0,
+                members=2,
+                url_other="https://example.com/v2b",
+                skills=["Python", "SQL"],
+                skills_required=["Python"],
+            ),
+            _vacancy(
+                "v3",
+                "QA Automation Engineer",
+                category="QA",
+                remote=True,
+                first_listed_on=date(2026, 11, 2),
+                skills=["Docker", "SQL"],
+            ),
+            _vacancy(
+                "v4",
+                "Junior Java Developer",
+                company="Gamma",
+                source="djinni",
+                category="Java",
+                seniority="junior",
+                locations="Київ",
+                experience_years=1.0,
+                salary_usd_max=1500.0,
+                first_listed_on=date(2026, 11, 7),
+                last_seen_on=date(2026, 11, 7),
+                is_open=False,
+                skills=["Java"],
+                skills_required=["Java"],
+            ),
+            _vacancy(
+                "v5",
+                "Product Manager",
+                company=None,
+                category="Product Manager",
+                seniority=None,
+                locations="Дніпро",
+                first_listed_on=date(2026, 11, 1),
+            ),
+            _vacancy(
+                "v6",
+                "DevOps Engineer",
+                company="Delta",
+                category="DevOps",
+                seniority="senior",
+                remote=True,
+                experience_years=6.0,
+                salary_usd_min=5000.0,
+                salary_usd_max=7000.0,
+                first_listed_on=date(2026, 11, 9),
+                skills=["Docker", "Python"],
+                skills_required=["Docker"],
+            ),
+        ]
+    )
+
+
+def write_catalog(directory: Path) -> Path:
+    """The catalog as the pipeline exports it (local only)."""
+    directory.mkdir(parents=True, exist_ok=True)
+    path = directory / "fct_vacancy_catalog.parquet"
+    frame = catalog()
+    frame["english_level"] = frame["english_level"].astype("string")
+    frame.to_parquet(path, index=False)
+    return path

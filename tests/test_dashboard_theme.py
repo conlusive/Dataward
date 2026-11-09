@@ -68,3 +68,29 @@ def test_text_and_marks_are_readable_on_the_surfaces() -> None:
         assert _contrast(t.INK, surface) >= 7
     for mark in (*t.SERIES, t.MUTED_MARK):
         assert _contrast(mark, t.CARD) >= 3  # a mark needs 3:1
+
+
+def test_skill_tags_mark_the_required_ones_and_escape_the_text() -> None:
+    html = t.chips(["Python", "<b>x</b>", "SQL"], ["Python"])
+
+    assert '<span class="dw-chip req">Python</span>' in html
+    assert '<span class="dw-chip">SQL</span>' in html and "<b>" not in html
+    assert t.chips([]) == ""
+
+
+def test_a_fact_list_leaves_out_empty_values_and_escapes_the_rest() -> None:
+    html = t.facts([("Компанія", "Acme <i>"), ("Де", ""), ("Рівень", "senior")])
+
+    assert "<dt>Компанія</dt><dd>Acme &lt;i&gt;</dd>" in html and "Де" not in html
+    assert t.facts([("a", "")]) == ""
+
+
+def test_a_sidebar_label_is_escaped() -> None:
+    assert "&lt;" in t.side_label("<x>") and "dw-side-label" in t.side_label("Пошук")
+
+
+def test_the_style_is_pixel_and_terminal() -> None:
+    css = t.css()
+
+    assert "'Tiny5'" in css and "clip-path" in css  # pixel type and stepped corners
+    assert "prefers-reduced-motion" in css  # the blinking cursor can be switched off

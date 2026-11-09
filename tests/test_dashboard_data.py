@@ -6,7 +6,17 @@ import pytest
 
 from jobmarket import dashboard_data as dd
 from jobmarket.export import SCHEMA_FILE, contracts
-from tests.dashboard_fixtures import GRID, NOV, tables, write_export, write_grid
+from tests.dashboard_fixtures import (
+    GRID,
+    NOV,
+    catalog,
+    tables,
+    write_catalog,
+    write_export,
+    write_grid,
+)
+
+NBSP = "\u00a0"
 
 
 @pytest.fixture(scope="module")
@@ -437,3 +447,201 @@ def test_a_huge_cluster_is_capped_so_the_graph_stays_readable(
     edges, qualified = dd.stack_edges(pairs, clusters, 1)
 
     assert len(edges) == dd.STACK_EDGE_LIMIT and qualified == 435
+
+
+# ---- the vacancy catalog -----------------------------------------------------------------------
+@pytest.fixture
+def vacancies(tmp_path: Path) -> pd.DataFrame:
+    write_catalog(tmp_path)
+    loaded = dd.read_catalog(tmp_path)
+    assert loaded is not None
+    return loaded
+
+
+def _ids(frame: pd.DataFrame) -> list[str]:
+    return sorted(frame["vacancy_id"])
+
+
+def test_an_export_without_the_catalog_gives_none_not_an_error(tmp_path: Path) -> None:
+    write_export(tmp_path)
+
+    assert dd.read_catalog(tmp_path) is None
+
+
+def test_the_catalog_is_read_with_blanks_filled_and_helper_columns_added(
+    vacancies: pd.DataFrame,
+) -> None:
+    unnamed = vacancies[vacancies["vacancy_id"] == "v5"].iloc[0]
+
+    assert unnamed["company"] == "" and unnamed["seniority"] == dd.NO_LEVEL
+    top = vacancies.set_index("vacancy_id")["salary_top"]
+    assert top["v1"] == 4500 and top["v2"] == 2000 and top["v4"] == 1500 and pd.isna(top["v3"])
+    assert vacancies.set_index("vacancy_id")["n_skills"]["v1"] == 3
+
+
+def test_a_catalog_lacking_a_column_says_to_update_the_export(tmp_path: Path) -> None:
+    write_catalog(tmp_path)
+    path = tmp_path / dd.CATALOG_FILE
+    pd.read_parquet(path).drop(columns=["skills"]).to_parquet(path, index=False)
+
+    with pytest.raises(dd.DataError, match="skills"):
+        dd.read_catalog(tmp_path)
+
+
+def test_the_catalog_columns_the_dashboard_reads_are_the_ones_the_contract_publishes() -> None:
+    published = {name: {c for c, _ in cols} for name, cols in contracts(SCHEMA_FILE).items()}
+
+    assert published["fct_vacancy_catalog"] == dd.CATALOG_COLUMNS
+    assert set(catalog().columns) == dd.CATALOG_COLUMNS
+
+
+def test_with_no_filter_set_every_vacancy_passes(vacancies: pd.DataFrame) -> None:
+    assert len(dd.filter_catalog(vacancies)) == 6
+
+
+def test_the_search_needs_every_word_in_the_title_or_the_company_in_any_case(
+    vacancies: pd.DataFrame,
+) -> None:
+    assert _ids(dd.filter_catalog(vacancies, query="PYTHON")) == ["v1", "v2"]  # not v6's skill
+    assert _ids(dd.filter_catalog(vacancies, query="acme")) == ["v1", "v3"]  # by company
+    assert _ids(dd.filter_catalog(vacancies, query="python senior")) == ["v1"]
+    assert dd.filter_catalog(vacancies, query="python  nothing").empty
+
+
+def test_category_level_and_source_filters(vacancies: pd.DataFrame) -> None:
+    assert _ids(dd.filter_catalog(vacancies, categories=["QA", "Java"])) == ["v3", "v4"]
+    assert _ids(dd.filter_catalog(vacancies, levels=["senior"])) == ["v1", "v6"]
+    assert _ids(dd.filter_catalog(vacancies, levels=[dd.NO_LEVEL])) == ["v5"]
+    assert _ids(dd.filter_catalog(vacancies, sources=["djinni"])) == ["v2", "v4"]
+
+
+def test_skills_can_be_required_together_or_one_of(vacancies: pd.DataFrame) -> None:
+    both = dd.filter_catalog(vacancies, skills=["Docker", "Python"])
+    either = dd.filter_catalog(vacancies, skills=["Docker", "Python"], all_skills=False)
+
+    assert _ids(both) == ["v1", "v6"]
+    assert _ids(either) == ["v1", "v2", "v3", "v6"]
+
+
+def test_open_salary_remote_and_date_filters(vacancies: pd.DataFrame) -> None:
+    assert "v4" not in _ids(dd.filter_catalog(vacancies, only_open=True))
+    assert _ids(dd.filter_catalog(vacancies, with_salary=True)) == ["v1", "v2", "v4", "v6"]
+    assert _ids(dd.filter_catalog(vacancies, remote_only=True)) == ["v1", "v3", "v6"]
+    assert _ids(dd.filter_catalog(vacancies, listed_since=date(2026, 11, 7))) == ["v1", "v4", "v6"]
+
+
+def test_a_minimum_salary_compares_with_the_top_of_the_range_and_drops_vacancies_without_one(
+    vacancies: pd.DataFrame,
+) -> None:
+    assert _ids(dd.filter_catalog(vacancies, min_salary=3000)) == ["v1", "v6"]
+    assert _ids(dd.filter_catalog(vacancies, min_salary=1)) == ["v1", "v2", "v4", "v6"]
+
+
+def test_filters_combine(vacancies: pd.DataFrame) -> None:
+    result = dd.filter_catalog(vacancies, skills=["Docker"], remote_only=True, levels=["senior"])
+
+    assert _ids(result) == ["v1", "v6"]
+
+
+@pytest.mark.parametrize(
+    ("how", "expected"),
+    [
+        ("Нові спочатку", ["v6", "v1", "v4", "v2", "v3", "v5"]),
+        ("Зарплата: від більшої", ["v6", "v1", "v2", "v4", "v5", "v3"]),  # no salary last, by title
+        ("Більше навичок", ["v1", "v6", "v2", "v3", "v4", "v5"]),
+        ("Назва А–Я", ["v6", "v4", "v2", "v5", "v3", "v1"]),
+    ],
+)
+def test_the_catalog_sorts_in_each_order(
+    vacancies: pd.DataFrame, how: str, expected: list[str]
+) -> None:
+    assert dd.sort_catalog(vacancies, how)["vacancy_id"].tolist() == expected
+
+
+def test_a_salary_reads_as_a_range_a_lower_bound_an_upper_bound_or_nothing() -> None:
+    nbsp = "\u00a0"
+
+    assert dd.salary_label(3000, 4500) == f"3{nbsp}000–4{nbsp}500 $"
+    assert dd.salary_label(2000, None) == f"від 2{nbsp}000 $"
+    assert dd.salary_label(None, 1500) == f"до 1{nbsp}500 $"
+    assert dd.salary_label(2000, 2000) == f"2{nbsp}000 $"
+    assert dd.salary_label(None, None) == "" and dd.salary_label(float("nan"), float("nan")) == ""
+
+
+def test_skill_counts_describe_the_selection_not_the_whole_market(vacancies: pd.DataFrame) -> None:
+    counts = dd.skill_counts(vacancies)
+
+    assert counts["skill"].tolist() == ["Docker", "Python", "SQL", "Django", "Java"]
+    assert counts["vacancies"].tolist() == [3, 3, 2, 1, 1]
+    assert counts["share"].iloc[0] == pytest.approx(0.5)
+    assert dd.skill_counts(vacancies.iloc[0:0]).empty
+    assert dd.skill_counts(vacancies, top=2)["skill"].tolist() == ["Docker", "Python"]
+
+
+def test_company_counts_skip_unnamed_vacancies(vacancies: pd.DataFrame) -> None:
+    counts = dd.company_counts(vacancies)
+
+    assert counts["company"].tolist() == ["Acme", "Beta", "Delta", "Gamma"]
+    assert counts["vacancies"].tolist() == [2, 1, 1, 1]
+
+
+def test_filter_options_are_most_frequent_first(vacancies: pd.DataFrame) -> None:
+    assert dd.catalog_options(vacancies, "category") == [
+        "Python", "DevOps", "Java", "Product Manager", "QA",
+    ]  # fmt: skip
+    assert dd.skill_options(vacancies) == ["Docker", "Python", "SQL", "Django", "Java"]
+
+
+def test_the_table_shows_readable_columns_with_the_salary_as_text_and_the_link_last(
+    vacancies: pd.DataFrame,
+) -> None:
+    table = dd.catalog_table(dd.sort_catalog(vacancies, "Нові спочатку"))
+
+    assert list(table.columns) == [
+        "Назва", "Компанія", "Напрямок", "Рівень", "Зарплата", "Навички", "Де", "Джерело",
+        "З'явилась", "Посилання",
+    ]  # fmt: skip
+    first = table.iloc[0]  # v6, the newest
+    assert first["Назва"] == "DevOps Engineer" and first["Зарплата"] == f"5{NBSP}000–7{NBSP}000 $"
+    assert first["Де"] == "віддалено" and first["Посилання"] == "https://example.com/v6"
+    assert table.iloc[-1]["Рівень"] == "—"  # v5 names no level
+
+
+def test_where_says_the_city_and_whether_it_is_remote() -> None:
+    assert dd.where_label("Київ", True) == "Київ · віддалено"
+    assert dd.where_label("Київ", False) == "Київ"
+    assert dd.where_label("", True) == "віддалено" and dd.where_label("", None) == ""
+
+
+def test_a_row_names_at_most_six_skills_and_counts_the_rest() -> None:
+    frame = catalog()
+    frame.at[0, "skills"] = list("ABCDEFGH")
+
+    table = dd.catalog_table(frame.assign(seniority="x", salary_top=None))
+
+    assert table.iloc[0]["Навички"] == "A, B, C, D, E, F +2"
+
+
+def test_the_median_salary_uses_the_middle_of_each_range(vacancies: pd.DataFrame) -> None:
+    assert dd.median_salary(vacancies) == pytest.approx(2875)  # 1500, 2000, 3750, 6000
+    assert dd.median_salary(vacancies[vacancies["salary_top"].isna()]) is None
+
+
+def test_novelty_counts_the_days_up_to_the_newest_listing(vacancies: pd.DataFrame) -> None:
+    assert dd.listed_within(vacancies, 1) == 1  # only 9 November
+    assert dd.listed_within(vacancies, 2) == 2  # 9 and 8
+    assert dd.listed_within(vacancies, 3) == 3  # 9, 8 and 7 (the closed v4 counts too)
+    assert dd.listed_within(vacancies, 30) == 6
+    assert dd.listed_within(vacancies.iloc[0:0], 7) == 0
+
+
+def test_missing_locations_read_as_empty_text(tmp_path: Path) -> None:
+    write_catalog(tmp_path)
+    path = tmp_path / dd.CATALOG_FILE
+    frame = pd.read_parquet(path)
+    frame["locations"] = None
+    frame.to_parquet(path, index=False)
+
+    loaded = dd.read_catalog(tmp_path)
+
+    assert loaded is not None and (loaded["locations"] == "").all()

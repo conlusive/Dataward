@@ -70,6 +70,15 @@ REQUIRED: dict[str, set[str]] = {
 }
 
 
+# The vacancy catalog is optional too: it lists third-party vacancies, so it is exported for local
+# use only and is absent from the public CI artifact (see `private_tables` in export.py).
+CATALOG_FILE = "fct_vacancy_catalog.parquet"
+CATALOG_COLUMNS = {
+    "vacancy_id", "title", "company", "source", "category", "seniority", "remote", "locations",
+    "english_level", "experience_years", "salary_usd_min", "salary_usd_max", "first_listed_on",
+    "last_seen_on", "is_open", "members", "url", "url_other", "skills", "skills_required",
+}  # fmt: skip
+
 # The salary model's grid is optional: it exists only after `make train`.
 GRID_FILE = "salary_model_grid.parquet"
 GRID_INFO_FILE = "salary_model.json"
@@ -492,3 +501,192 @@ def stamp(iso: str) -> str:
     moment = pd.Timestamp(iso)
     moment = moment.tz_localize("UTC") if moment.tzinfo is None else moment.tz_convert("UTC")
     return str(moment.strftime("%d.%m.%Y %H:%M UTC"))
+
+
+# ---- the vacancy catalog ---------------------------------------------------------------------
+NO_LEVEL = "unknown"  # what the pipeline stores for a vacancy that names no level
+SORTS = {
+    "Нові спочатку": (["first_listed_on", "title"], [False, True]),
+    "Зарплата: від більшої": (["salary_top", "title"], [False, True]),
+    "Більше навичок": (["n_skills", "title"], [False, True]),
+    "Назва А–Я": (["title"], [True]),
+}
+
+
+def read_catalog(directory: Path) -> pd.DataFrame | None:
+    """The vacancy catalog, or None when this export has none (the CI artifact never has it)."""
+    path = directory / CATALOG_FILE
+    if not path.exists():
+        return None
+    frame = pd.read_parquet(path)
+    missing = CATALOG_COLUMNS - set(frame.columns)
+    if missing:
+        raise DataError(f"{CATALOG_FILE} lacks the columns {sorted(missing)}: update the export")
+    frame = frame.copy()
+    frame["seniority"] = frame["seniority"].fillna(NO_LEVEL)
+    frame["company"] = frame["company"].fillna("")
+    frame["category"] = frame["category"].fillna("")
+    frame["locations"] = frame["locations"].fillna("")
+    frame["skills"] = frame["skills"].map(lambda items: list(items) if items is not None else [])
+    frame["skills_required"] = frame["skills_required"].map(
+        lambda items: list(items) if items is not None else []
+    )
+    frame["first_listed_on"] = pd.to_datetime(frame["first_listed_on"]).dt.date
+    frame["salary_top"] = frame["salary_usd_max"].fillna(frame["salary_usd_min"])
+    frame["salary_mid"] = frame[["salary_usd_min", "salary_usd_max"]].mean(axis=1)
+    frame["n_skills"] = frame["skills"].map(len)
+    return frame
+
+
+def filter_catalog(
+    catalog: pd.DataFrame,
+    *,
+    query: str = "",
+    categories: list[str] | None = None,
+    levels: list[str] | None = None,
+    sources: list[str] | None = None,
+    skills: list[str] | None = None,
+    all_skills: bool = True,
+    only_open: bool = False,
+    with_salary: bool = False,
+    min_salary: float = 0,
+    remote_only: bool = False,
+    listed_since: Any = None,
+) -> pd.DataFrame:
+    """The vacancies that pass every filter that is set; an unset filter lets everything through.
+
+    ``query`` must be found in the title or the company (every word, any case). ``skills`` need
+    all of the chosen skills by default, or any of them with ``all_skills=False``.
+    ``min_salary`` is USD a month and is compared with the top of the vacancy's range.
+    """
+    keep = pd.Series(True, index=catalog.index)
+    for word in query.lower().split():
+        text = (catalog["title"].fillna("") + " " + catalog["company"]).str.lower()
+        keep &= text.str.contains(word, regex=False)
+    for column, values in (
+        ("category", categories), ("seniority", levels), ("source", sources),
+    ):  # fmt: skip
+        if values:
+            keep &= catalog[column].isin(values)
+    if skills:
+        wanted = set(skills)
+        if all_skills:
+            keep &= catalog["skills"].map(lambda have: wanted <= set(have))
+        else:
+            keep &= catalog["skills"].map(lambda have: bool(wanted & set(have)))
+    if only_open:
+        keep &= catalog["is_open"]
+    if with_salary or min_salary > 0:
+        keep &= catalog["salary_top"].notna()
+    if min_salary > 0:
+        keep &= catalog["salary_top"] >= min_salary
+    if remote_only:
+        keep &= catalog["remote"].fillna(False)
+    if listed_since is not None:
+        keep &= catalog["first_listed_on"] >= listed_since
+    return catalog[keep]
+
+
+def sort_catalog(catalog: pd.DataFrame, how: str) -> pd.DataFrame:
+    """One of ``SORTS``; vacancies with no salary go last in the salary order."""
+    columns, ascending = SORTS[how]
+    return catalog.sort_values(columns, ascending=ascending, na_position="last", kind="stable")
+
+
+def salary_label(low: float | None, high: float | None) -> str:
+    """ "2 000–3 500 $", "від 2 000 $", "до 3 500 $" or "" when the vacancy states no salary."""
+    first = None if low is None or pd.isna(low) else fmt_int(low)
+    last = None if high is None or pd.isna(high) else fmt_int(high)
+    if first and last:
+        return f"{first}–{last} $" if first != last else f"{first} $"
+    if first:
+        return f"від {first} $"
+    if last:
+        return f"до {last} $"
+    return ""
+
+
+def skill_counts(catalog: pd.DataFrame, *, top: int = 15) -> pd.DataFrame:
+    """Which skills the vacancies in ``catalog`` ask for: ``skill``, ``vacancies``, ``share``."""
+    if catalog.empty:
+        return pd.DataFrame(columns=["skill", "vacancies", "share"])
+    counts = catalog["skills"].explode().dropna().value_counts()
+    frame = counts.rename_axis("skill").reset_index(name="vacancies")
+    frame["share"] = frame["vacancies"] / len(catalog)
+    return frame.sort_values(["vacancies", "skill"], ascending=[False, True]).head(top)
+
+
+def company_counts(catalog: pd.DataFrame, *, top: int = 15) -> pd.DataFrame:
+    """The companies with the most vacancies in ``catalog``: ``company``, ``vacancies``."""
+    named = catalog[catalog["company"] != ""]
+    counts = named["company"].value_counts()
+    frame = counts.rename_axis("company").reset_index(name="vacancies")
+    return frame.sort_values(["vacancies", "company"], ascending=[False, True]).head(top)
+
+
+def catalog_options(catalog: pd.DataFrame, column: str) -> list[str]:
+    """The values of a column to offer in a filter, most frequent first (blank ones left out)."""
+    counts = catalog[column].replace("", pd.NA).dropna().value_counts()
+    ordered = sorted(counts.items(), key=lambda item: (-int(item[1]), str(item[0])))
+    return [str(value) for value, _ in ordered]
+
+
+def skill_options(catalog: pd.DataFrame) -> list[str]:
+    """Every skill that occurs in the catalog, most frequent first."""
+    return [str(name) for name in skill_counts(catalog, top=10_000)["skill"]]
+
+
+TABLE_SKILLS = 6  # skills named in a row of the table; the card shows all of them
+
+
+def where_label(locations: str, remote: object) -> str:
+    place = locations or ""
+    if remote is True or remote == 1:
+        return f"{place} · віддалено" if place else "віддалено"
+    return place
+
+
+def catalog_table(catalog: pd.DataFrame) -> pd.DataFrame:
+    """The vacancies as the table shows them: readable columns, salary as text, the link last."""
+    skills = catalog["skills"].map(
+        lambda have: (
+            ", ".join(have[:TABLE_SKILLS])
+            + (f" +{len(have) - TABLE_SKILLS}" if len(have) > TABLE_SKILLS else "")
+        )
+    )
+    return pd.DataFrame(
+        {
+            "Назва": catalog["title"].to_numpy(),
+            "Компанія": catalog["company"].to_numpy(),
+            "Напрямок": catalog["category"].to_numpy(),
+            "Рівень": catalog["seniority"].replace({NO_LEVEL: "—"}).to_numpy(),
+            "Зарплата": [
+                salary_label(low, high)
+                for low, high in zip(
+                    catalog["salary_usd_min"], catalog["salary_usd_max"], strict=True
+                )
+            ],
+            "Навички": skills.to_numpy(),
+            "Де": [
+                where_label(place, remote)
+                for place, remote in zip(catalog["locations"], catalog["remote"], strict=True)
+            ],
+            "Джерело": catalog["source"].to_numpy(),
+            "З'явилась": catalog["first_listed_on"].to_numpy(),
+            "Посилання": catalog["url"].to_numpy(),
+        }
+    )
+
+
+def median_salary(catalog: pd.DataFrame) -> float | None:
+    """The median mid-range salary (USD a month), or None when no vacancy states a salary."""
+    mids = catalog["salary_mid"].dropna()
+    return float(mids.median()) if len(mids) else None
+
+
+def listed_within(catalog: pd.DataFrame, days: int) -> int:
+    """How many vacancies first appeared in the last ``days`` days before the newest one."""
+    if catalog.empty:
+        return 0
+    cutoff = catalog["first_listed_on"].max() - pd.Timedelta(days=days)
+    return int((catalog["first_listed_on"] > cutoff).sum())
