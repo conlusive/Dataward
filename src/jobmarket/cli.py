@@ -25,7 +25,7 @@ from jobmarket.flow import (
     run_url_from_env,
     summarize,
 )
-from jobmarket.gold import SHEET_FILE
+from jobmarket.gold import SHEET_FILE, sheet_ids
 from jobmarket.gold_commands import evaluate, import_labels, make_sheet
 from jobmarket.gold_label import label_sheet
 from jobmarket.gold_seeds import write_seeds
@@ -143,6 +143,12 @@ def _build_parser() -> argparse.ArgumentParser:
     extract_cmd.add_argument("source", choices=[*PARSERS, "all"])
     extract_cmd.add_argument("--limit", type=int, default=None, help="at most N new LLM requests")
     extract_cmd.add_argument(
+        "--rpm", type=float, default=None, help="at most N requests a minute (for a free tier)"
+    )
+    extract_cmd.add_argument(
+        "--sheet", action="store_true", help="only the vacancies of the gold label sheet"
+    )
+    extract_cmd.add_argument(
         "--max-cost-usd", type=float, default=None, help="stop starting new batches above this cost"
     )
     extract_cmd.add_argument(
@@ -221,10 +227,17 @@ def _parse_surveys() -> int:
     return 1 if problems else 0
 
 
-def _extract_skills(source: str, limit: int | None, max_cost: float | None, dry_run: bool) -> int:
+def _extract_skills(
+    source: str,
+    limit: int | None,
+    max_cost: float | None,
+    dry_run: bool,
+    rpm: float | None = None,
+    sheet_only: bool = False,
+) -> int:
     settings = Settings.from_env()
     try:
-        client = client_from_env()
+        client = client_from_env(rpm=rpm)
     except LlmError as exc:
         if not dry_run:
             logger.error("{}. Use --dry-run to see what a run would cost without a key.", exc)
@@ -244,6 +257,7 @@ def _extract_skills(source: str, limit: int | None, max_cost: float | None, dry_
                 Normalizer(load_taxonomy()),
                 source=None if source == "all" else source,
                 run_id=run_id,
+                only_ids=sheet_ids() if sheet_only else None,
                 limit=limit,
                 max_cost_usd=max_cost,
                 dry_run=dry_run,
@@ -523,7 +537,9 @@ def main(argv: Sequence[str] | None = None) -> int:
     if args.command == "parse-surveys":
         return _parse_surveys()
     if args.command == "extract-skills":
-        return _extract_skills(args.source, args.limit, args.max_cost_usd, args.dry_run)
+        return _extract_skills(
+            args.source, args.limit, args.max_cost_usd, args.dry_run, args.rpm, args.sheet
+        )
     if args.command == "gold-label":
         return _gold_label(args.relabel)
     if args.command in ("gold-sample", "gold-import", "gold-eval"):

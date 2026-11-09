@@ -122,6 +122,7 @@ async def run_llm_extraction(
     *,
     source: str | None,
     run_id: str,
+    only_ids: set[str] | None = None,
     prompt_version: str = DEFAULT_PROMPT_VERSION,
     limit: int | None = None,
     max_cost_usd: float | None = None,
@@ -131,6 +132,8 @@ async def run_llm_extraction(
 ) -> LlmRunStats:
     prompt = load_prompt(prompt_version)
     inputs = silver.llm_inputs(source)
+    if only_ids is not None:  # e.g. the vacancies of the gold sheet: nothing else is asked
+        inputs = [row for row in inputs if row[0] in only_ids]
     keys = {
         vid: cache_key(
             title, chash, model=client.model, prompt_version=prompt_version, prompt=prompt

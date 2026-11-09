@@ -94,6 +94,22 @@ uv run jobmarket skills-review                         # most frequent skills th
 uv run jobmarket skills-renormalize                    # re-map stored answers after editing the taxonomy
 ```
 
+Free of charge: a Gemini key from Google AI Studio on a project **without Cloud Billing** cannot be
+charged; it is on the free tier, whose request limits Google shows in AI Studio. A subscription (even
+a student one) does not add API quota. To stay inside the limits, ask only about the gold-sheet
+vacancies and slowly:
+
+```bash
+export GEMINI_API_KEY=...                       # in your own terminal; never paste it anywhere
+export LLM_MODEL=gemini/gemini-2.5-flash-lite
+DUCKDB_PATH=data/jobmarket_test.duckdb uv run jobmarket extract-skills all --sheet --rpm 8
+```
+
+`--rpm N` spaces the requests, a `429` waits for the server's `Retry-After` (else 15, 30, 45 seconds),
+and a request that still fails is not cached, so running the same command again (after a minute, or
+the next day if the daily quota is gone) asks only about what is missing. The estimate for the 150
+sheet vacancies is about 158,000 prompt tokens and 150 requests (`--dry-run` shows it without a key).
+
 `LLM_MODEL` picks the provider: a plain name is OpenAI, `gemini/...` uses `GEMINI_API_KEY`,
 `ollama/...` uses `OLLAMA_BASE_URL`. Answers are cached by title, text hash, prompt and model, so a
 repeat run costs nothing; prices live in `src/jobmarket/skills/llm_prices.yaml` (edit when they change).
