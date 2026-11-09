@@ -16,6 +16,7 @@ COPY src ./src
 RUN uv sync --no-dev --group dashboard
 
 COPY dashboard ./dashboard
+COPY .streamlit ./.streamlit
 
 RUN useradd --create-home --uid 1000 app && mkdir -p /app/data/export && chown -R app:app /app/data
 USER app

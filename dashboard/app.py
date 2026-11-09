@@ -2,16 +2,28 @@
 
 import streamlit as st
 
-st.set_page_config(page_title="Dataward: ринок праці в ІТ України", page_icon="📊", layout="wide")
+from jobmarket import dashboard_ui as ui
+
+st.set_page_config(
+    page_title="Dataward · ринок праці в ІТ України",
+    page_icon=":material/query_stats:",
+    layout="wide",
+)
+ui.setup()
 
 navigation = st.navigation(
-    [
-        st.Page("views/overview.py", title="Огляд ринку", icon="📈", default=True),
-        st.Page("views/skills.py", title="Навички", icon="🔎"),
-        st.Page("views/stacks.py", title="Стеки", icon="🧩"),
-        st.Page("views/salary.py", title="Зарплати", icon="💵"),
-        st.Page("views/status.py", title="Стан пайплайну", icon="🩺"),
-        st.Page("views/about.py", title="Про дані", icon="ℹ️"),
-    ]
+    {
+        "Dataward": [
+            st.Page("views/home.py", title="Головна", icon=":material/home:", default=True),
+        ],
+        "Аналітика": [
+            st.Page("views/market.py", title="Ринок", icon=":material/monitoring:"),
+            st.Page("views/skills.py", title="Навички", icon=":material/psychology:"),
+            st.Page("views/salary.py", title="Зарплати", icon=":material/payments:"),
+        ],
+        "Система": [
+            st.Page("views/system.py", title="Стан і дані", icon=":material/health_and_safety:"),
+        ],
+    }
 )
 navigation.run()

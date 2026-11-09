@@ -229,7 +229,7 @@ def test_slo_and_run_tables_use_plain_words() -> None:
     slo = dd.slo_table(STATUS)
     runs = dd.runs_table(STATUS)
 
-    assert slo["стан"].tolist() == ["виконано", "замало даних"]
+    assert slo["стан"].tolist() == ["✓ виконано", "… замало даних"]
     assert runs["впали кроки"].tolist() == ["", "parse"]
 
 
@@ -292,3 +292,148 @@ def test_a_profile_that_is_not_in_the_grid_gets_none() -> None:
         )
         is None
     )
+
+
+# ---- the analyst's views: ranking, totals, health ------------------------------------------------
+def _ranking(frames: dict[str, pd.DataFrame], **kwargs: object) -> pd.DataFrame:
+    return dd.skill_ranking(
+        frames["fct_skill_demand_monthly"], frames["dim_skill"], frames["fct_salary_by_skill"],
+        month=NOV, **kwargs,
+    )  # fmt: skip
+
+
+def test_the_ranking_orders_by_share_then_name_and_adds_required_share_and_salary(
+    frames: dict[str, pd.DataFrame],
+) -> None:
+    ranking = _ranking(frames)
+
+    assert ranking["canonical"].tolist() == ["Django", "Docker", "Python", "SQL"]
+    python = ranking[ranking["canonical"] == "Python"].iloc[0]
+    assert python["required_share"] == pytest.approx(2 / 3)
+    assert python["salary_median"] == 3000 and pd.isna(ranking.iloc[0]["salary_median"])
+
+
+def test_the_change_is_in_percentage_points_against_the_previous_month(
+    frames: dict[str, pd.DataFrame],
+) -> None:
+    ranking = _ranking(frames, previous=date(2026, 10, 1))
+
+    python = ranking[ranking["canonical"] == "Python"].iloc[0]
+    assert python["change_pp"] == pytest.approx((0.6667 - 0.5) * 100)
+    assert ranking[ranking["canonical"] == "Django"]["change_pp"].isna().all()  # not seen then
+
+
+def test_without_a_previous_month_there_is_no_change(frames: dict[str, pd.DataFrame]) -> None:
+    assert _ranking(frames)["change_pp"].isna().all()
+
+
+def test_months_are_newest_first_and_a_young_dataset_keeps_its_small_months(
+    frames: dict[str, pd.DataFrame],
+) -> None:
+    demand = frames["fct_skill_demand_monthly"]
+
+    assert dd.month_options(demand) == [NOV, date(2026, 10, 1)]
+    assert dd.month_options(demand, min_vacancies=3) == [NOV]  # October has only 2 vacancies
+
+
+def test_the_salary_ranking_is_highest_median_first_and_can_demand_more_vacancies(
+    frames: dict[str, pd.DataFrame],
+) -> None:
+    salary = pd.concat(
+        [
+            frames["fct_salary_by_skill"],
+            pd.DataFrame(
+                {"skill_id": ["sql"], "vacancies_with_salary": [9], "salary_p25": [3000.0],
+                 "salary_median": [4000.0], "salary_p75": [5000.0]}
+            ),
+        ]
+    )  # fmt: skip
+
+    assert dd.salary_ranking(salary, frames["dim_skill"])["canonical"].tolist() == ["SQL", "Python"]
+    assert dd.salary_ranking(salary, frames["dim_skill"], min_vacancies=5)[
+        "canonical"
+    ].tolist() == ["SQL"]
+
+
+def test_market_totals_sum_each_day_over_the_slice(frames: dict[str, pd.DataFrame]) -> None:
+    totals = dd.market_totals(frames["fct_market_daily"])
+
+    assert totals["date"].tolist() == [date(2026, 11, 1), date(2026, 11, 2)]
+    assert totals["open_vacancies"].tolist() == [16, 17]
+    assert totals["closed_vacancies"].tolist() == [0, 2]
+
+
+def test_open_by_level_names_the_unknown_one_in_ukrainian() -> None:
+    market = pd.DataFrame(
+        {"date": [date(2026, 11, 1)] * 2, "seniority": ["unknown", "senior"],
+         "open_vacancies": [30, 10]}
+    )  # fmt: skip
+
+    levels = dd.open_by_seniority(market)
+
+    assert levels["seniority"].tolist() == ["не вказано", "senior"]
+    assert dd.open_by_seniority(market.iloc[0:0]).empty
+
+
+def _status(slo: list[bool | None], checks: list[str]) -> dict[str, object]:
+    return {
+        "slo": [{"ok": ok} for ok in slo],
+        "dq_latest": [{"status": status} for status in checks],
+    }
+
+
+@pytest.mark.parametrize(
+    ("slo", "checks", "tone"),
+    [
+        ([True, True], ["pass"], "ok"),
+        ([True, None], ["pass", "warn"], "warn"),
+        ([True, False], ["pass"], "bad"),
+        ([True], ["error"], "bad"),
+        ([None, None], [], "neutral"),
+    ],
+)
+def test_health_is_the_worst_state_of_the_slos_and_checks(
+    slo: list[bool | None], checks: list[str], tone: str
+) -> None:
+    assert dd.health(_status(slo, checks))[0] == tone
+
+
+def test_health_counts_in_its_detail() -> None:
+    tone, headline, detail = dd.health(_status([True, True, None], ["pass"]))
+
+    assert (tone, headline, detail) == ("ok", "Усе в нормі", "SLO виконано: 2 з 3")
+
+
+def test_numbers_are_grouped_with_a_no_break_space_and_times_are_shown_in_utc() -> None:
+    assert dd.fmt_int(1234567.4) == "1\u00a0234\u00a0567" and dd.fmt_int(0) == "0"
+    assert dd.stamp("2026-11-09T04:15:00+00:00") == "09.11.2026 04:15 UTC"
+    assert dd.stamp("2026-11-09T06:15:00+02:00") == "09.11.2026 04:15 UTC"
+    assert dd.stamp("2026-11-09T04:15:00") == "09.11.2026 04:15 UTC"  # no zone: UTC
+
+
+def test_a_graph_keeps_only_the_strongest_links_and_the_skills_they_touch() -> None:
+    skills = pd.DataFrame({"skill_id": list("abcd"), "canonical": list("ABCD")})
+    clusters = pd.DataFrame({"skill_id": list("abcd"), "cluster_id": [1] * 4})
+    pairs = pd.DataFrame(
+        {"skill_a": ["a", "a", "c"], "skill_b": ["b", "c", "d"], "npmi": [0.9, 0.6, 0.1]}
+    )
+
+    edges, qualified = dd.stack_edges(pairs, clusters, 1, min_npmi=0.5)
+    dot = dd.stack_dot(pairs, clusters, skills, 1, min_npmi=0.5)
+
+    assert qualified == 2 and edges["npmi"].tolist() == [0.9, 0.6]
+    assert dot.count(" -- ") == 2 and '"D";' not in dot  # D has no strong link: not drawn
+
+
+def test_a_huge_cluster_is_capped_so_the_graph_stays_readable(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    ids = [f"s{i}" for i in range(30)]
+    clusters = pd.DataFrame({"skill_id": ids, "cluster_id": [1] * 30})
+    pairs = pd.DataFrame(
+        [{"skill_a": a, "skill_b": b, "npmi": 0.9} for i, a in enumerate(ids) for b in ids[i + 1 :]]
+    )  # 435 links
+
+    edges, qualified = dd.stack_edges(pairs, clusters, 1)
+
+    assert len(edges) == dd.STACK_EDGE_LIMIT and qualified == 435

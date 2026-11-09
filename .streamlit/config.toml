@@ -1,0 +1,36 @@
+# The dashboard's look (read when `streamlit run` starts in the repository root; the dashboard image
+# copies this file too). Colours: "smoky lilac" surface and accent; chart colours were checked
+# with the dataviz palette validator on this surface (dark band, colour-blind separation).
+[theme]
+base = "dark"
+primaryColor = "#AAA8FF"
+backgroundColor = "#303032"
+secondaryBackgroundColor = "#28282A"
+textColor = "#ECECF1"
+borderColor = "#414145"
+dataframeBorderColor = "#414145"
+dataframeHeaderBackgroundColor = "#28282A"
+linkColor = "#AAA8FF"
+greenColor = "#7ED5B0"
+orangeColor = "#F2A56D"
+redColor = "#FF7A6B"
+blueColor = "#AAA8FF"
+blueBackgroundColor = "#383850"
+blueTextColor = "#D2D1FF"
+baseRadius = "0.75rem"
+showSidebarBorder = true
+# Cyrillic is required (the UI is Ukrainian): both families have it. If the font host is not
+# reachable the browser falls back to its own monospace font.
+font = "JetBrains Mono:https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap, monospace"
+headingFont = "Martian Mono:https://fonts.googleapis.com/css2?family=Martian+Mono:wght@300..700&display=swap, monospace"
+codeFont = "JetBrains Mono, monospace"
+headingFontWeights = [500, 500, 500, 500, 500, 500]
+metricValueFontSize = "1.9rem"
+metricValueFontWeight = 500
+chartCategoricalColors = ["#8481F5", "#E5603B"]
+
+[client]
+toolbarMode = "minimal"
+
+[browser]
+gatherUsageStats = false
