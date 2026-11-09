@@ -1,5 +1,6 @@
 """Streamlit helpers shared by the dashboard pages: cached loading and error handling."""
 
+from html import escape
 from pathlib import Path
 from typing import Any, Literal
 
@@ -26,6 +27,20 @@ def table(name: str) -> pd.DataFrame:
     """A gold table; a missing file or column is shown as a message and stops the page."""
     try:
         return _table(str(dd.data_dir()), name)
+    except dd.DataError as error:
+        st.error(f"Немає даних: {error}")
+        st.stop()
+
+
+@st.cache_data(ttl=CACHE_SECONDS, show_spinner=False)
+def _catalog(directory: str) -> pd.DataFrame | None:
+    return dd.read_catalog(Path(directory))
+
+
+def catalog() -> pd.DataFrame | None:
+    """The vacancy catalog, or None when this export has none (it is local-only data)."""
+    try:
+        return _catalog(str(dd.data_dir()))
     except dd.DataError as error:
         st.error(f"Немає даних: {error}")
         st.stop()
@@ -105,3 +120,43 @@ def card(title: str, note: str = "") -> Any:
     box = st.container(border=True)
     box.markdown(theme.card_title(title, note), unsafe_allow_html=True)
     return box
+
+
+def sidebar_label(text: str) -> None:
+    """A small heading in the sidebar, above a group of filters."""
+    st.sidebar.markdown(theme.side_label(text), unsafe_allow_html=True)
+
+
+def _has(value: Any) -> bool:
+    return bool(pd.notna(value))
+
+
+def vacancy_card(row: Any) -> None:
+    """One vacancy in full: title, facts, skills (required ones marked) and the links out."""
+    # a missing link arrives as NaN, which is truthy: test it explicitly
+    other = str(row["url_other"]) if _has(row["url_other"]) and row["url_other"] else ""
+    rows = [
+        ("Компанія", row["company"]),
+        ("Напрямок", row["category"]),
+        ("Рівень", "" if row["seniority"] == dd.NO_LEVEL else row["seniority"]),
+        ("Зарплата", dd.salary_label(row["salary_usd_min"], row["salary_usd_max"]) + " / міс"
+         if dd.salary_label(row["salary_usd_min"], row["salary_usd_max"]) else ""),
+        ("Де", dd.where_label(row["locations"], row["remote"])),
+        ("Досвід", f"від {row['experience_years']:g} р." if _has(row["experience_years"]) else ""),
+        ("Англійська", str(row["english_level"]) if pd.notna(row["english_level"]) else ""),
+        ("З'явилась", f"{row['first_listed_on']:%d.%m.%Y}"),
+        ("Остання зустріч", f"{row['last_seen_on']:%d.%m.%Y}" if _has(row["last_seen_on"]) else ""),
+        ("Стан", "відкрита" if row["is_open"] else "закрита"),
+        ("Джерело", str(row["source"]) + (" + ще одне оголошення" if other else "")),
+    ]  # fmt: skip
+    st.markdown(f'<div class="dw-lead">{escape(str(row["title"]))}</div>', unsafe_allow_html=True)
+    st.markdown(theme.facts(rows), unsafe_allow_html=True)
+    if len(row["skills"]):
+        st.markdown(
+            '<div class="dw-muted">Навички (■ — названо вимогою)</div>'
+            + theme.chips(list(row["skills"]), list(row["skills_required"])),
+            unsafe_allow_html=True,
+        )
+    st.link_button("Відкрити оголошення ↗", row["url"])
+    if other:
+        st.link_button("Те саме оголошення на іншому сайті ↗", other)

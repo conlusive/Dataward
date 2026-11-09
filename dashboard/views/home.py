@@ -123,14 +123,31 @@ with right, ui.card("Рівні", "відкриті вакансії на ост
         )
     )
 
+vacancies = ui.catalog()
+if vacancies is not None:
+    ui.section("Свіжі вакансії")
+    fresh = dd.sort_catalog(dd.filter_catalog(vacancies, only_open=True), "Нові спочатку").head(8)
+    st.dataframe(
+        dd.catalog_table(fresh)[
+            ["Назва", "Компанія", "Напрямок", "Рівень", "Зарплата", "Посилання"]
+        ],
+        hide_index=True,
+        column_config={
+            "Посилання": st.column_config.LinkColumn("Посилання", display_text="відкрити ↗"),
+            "Назва": st.column_config.TextColumn(width="large"),
+        },
+    )
+    st.page_link("views/catalog.py", label="Весь каталог з фільтрами →")
+
 ui.section("Куди далі")
 tiles = [
+    ("views/catalog.py", "Каталог", "Вакансії списком: напрямок, рівень, навички, зарплата."),
     ("views/market.py", "Ринок", "Динаміка, категорії, рівні й таблиця з вакансіями за днями."),
     ("views/skills.py", "Навички", "Рейтинг, одна навичка докладно, стеки, що йдуть разом."),
     ("views/salary.py", "Зарплати", "Калькулятор, орієнтири DOU, зарплати за навичками."),
     ("views/system.py", "Стан і дані", "Чи здорові дані, перевірки якості, звідки вони."),
 ]
-for column, (page, title, text) in zip(st.columns(4), tiles, strict=True):
+for column, (page, title, text) in zip(st.columns(len(tiles)), tiles, strict=True):
     with column, st.container(border=True):
         st.page_link(page, label=f"{title} →")
         st.caption(text)

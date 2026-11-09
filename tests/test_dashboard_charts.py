@@ -84,14 +84,15 @@ def test_grouped_columns_use_the_series_order_that_was_asked_for() -> None:
     assert spec["encoding"]["x"]["sort"] == ["01.11", "02.11"]  # the days still sort by date
 
 
-def test_ranked_bars_keep_the_given_order_and_cap_the_bar_thickness() -> None:
+def test_ranked_bars_keep_the_given_order_cap_the_thickness_and_end_square() -> None:
     frame = pd.DataFrame({"label": ["b", "a", "c"], "value": [3, 2, 1]})
 
     spec = charts.ranked_bars(frame).to_dict()
 
     bars = spec["layer"][0]
     assert bars["encoding"]["y"]["sort"] == ["b", "a", "c"]
-    assert bars["mark"]["size"] <= 24 and bars["mark"]["cornerRadiusEnd"] == 4
+    assert bars["mark"]["size"] <= 24
+    assert not any(key.startswith("cornerRadius") for key in bars["mark"])  # pixel style: square
 
 
 def test_an_emphasised_bar_is_the_accent_and_the_rest_are_grey() -> None:
@@ -124,3 +125,26 @@ def test_the_trend_and_survey_charts_build() -> None:
 
     assert len(charts.share_trend(months).to_dict()["layer"]) == 3
     assert len(charts.survey_band(years).to_dict()["layer"]) == 3
+
+
+def test_the_markers_are_squares_in_every_chart() -> None:
+    months = pd.DataFrame({"month": [date(2026, 10, 1), date(2026, 11, 1)], "value": [0.1, 0.2]})
+    years = pd.DataFrame(
+        {"year": [2024, 2025], "low": [1.0, 2.0], "mid": [2.0, 3.0], "high": [3.0, 4.0]}
+    )
+    ranged = pd.DataFrame({"label": ["x"], "low": [1.0], "mid": [2.0], "high": [3.0]})
+    specs = [
+        charts.lines(_wide()).to_dict(),
+        charts.share_trend(months).to_dict(),
+        charts.survey_band(years).to_dict(),
+        charts.ranges(ranged).to_dict(),
+    ]
+
+    for spec in specs:
+        shapes = [
+            layer["mark"].get("shape")
+            for layer in spec["layer"]
+            if layer["mark"]["type"] == "point"
+        ]
+        assert shapes and set(shapes) <= {"square", None}, spec["layer"]
+        assert "square" in shapes

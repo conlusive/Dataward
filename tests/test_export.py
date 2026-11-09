@@ -5,7 +5,14 @@ from pathlib import Path
 import duckdb
 import pytest
 
-from jobmarket.export import SCHEMA_FILE, ExportError, contracts, export_gold
+from jobmarket.export import (
+    SCHEMA_FILE,
+    ExportError,
+    contracts,
+    export_gold,
+    private_tables,
+    publish_copy,
+)
 
 SCHEMA = """
 version: 2
@@ -136,3 +143,85 @@ models:
         ("flask", 1, 3, "python"),
         ("python", 1, 3, "python"),
     ]
+
+
+def test_the_vacancy_catalog_is_private_and_the_workflow_uploads_only_the_public_copy() -> None:
+    """The repository is public: listings of other people must not reach the CI artifact."""
+    workflow = Path(".github/workflows/pipeline-daily.yml").read_text(encoding="utf-8")
+
+    assert "fct_vacancy_catalog" in private_tables(SCHEMA_FILE)
+    assert "uv run jobmarket export-public" in workflow
+    upload = workflow[workflow.index("Upload gold export") :]
+    assert "path: data/export_public" in upload and "path: data/export\n" not in upload
+
+
+def _export_with_a_private_table(tmp_path: Path) -> tuple[Path, Path]:
+    schema = tmp_path / "schema.yml"
+    schema.write_text(
+        SCHEMA.replace(
+            "  - name: not_published\n",
+            "  - name: secret\n    meta: {private: true}\n"
+            "    config: {contract: {enforced: true}}\n    columns:\n      - name: x\n"
+            "        data_type: integer\n  - name: not_published\n",
+        ),
+        encoding="utf-8",
+    )
+    database = _database(
+        tmp_path,
+        GOOD + "; CREATE TABLE secret AS SELECT 1 AS x",
+    )
+    export_gold(database, schema_file=schema, out_dir=tmp_path / "export")
+    return schema, tmp_path / "export"
+
+
+def test_the_public_copy_leaves_out_private_tables_and_their_summary_entry(tmp_path: Path) -> None:
+    schema, export = _export_with_a_private_table(tmp_path)
+    assert (export / "secret.parquet").exists()  # the local export keeps it
+
+    copied = publish_copy(export, tmp_path / "public", schema_file=schema)
+
+    assert copied == ["dim_thing"]
+    assert sorted(p.name for p in (tmp_path / "public").iterdir()) == [
+        "dim_thing.parquet", "last_update.json",
+    ]  # fmt: skip
+    summary = json.loads((tmp_path / "public" / "last_update.json").read_text(encoding="utf-8"))
+    assert list(summary["tables"]) == ["dim_thing"]
+    assert (
+        "secret" in json.loads((export / "last_update.json").read_text(encoding="utf-8"))["tables"]
+    )
+
+
+def test_the_public_copy_replaces_the_previous_one_whole(tmp_path: Path) -> None:
+    schema, export = _export_with_a_private_table(tmp_path)
+    public = tmp_path / "public"
+    public.mkdir()
+    (public / "stale.parquet").write_text("old", encoding="utf-8")
+
+    publish_copy(export, public, schema_file=schema)
+
+    assert not (public / "stale.parquet").exists()
+
+
+def test_other_files_of_the_export_are_copied_as_they_are(tmp_path: Path) -> None:
+    schema, export = _export_with_a_private_table(tmp_path)
+    (export / "status.json").write_text('{"ok": true}', encoding="utf-8")
+
+    publish_copy(export, tmp_path / "public", schema_file=schema)
+
+    assert (tmp_path / "public" / "status.json").read_text(encoding="utf-8") == '{"ok": true}'
+
+
+def test_there_is_nothing_to_publish_without_an_export(tmp_path: Path) -> None:
+    with pytest.raises(ExportError, match="make export"):
+        publish_copy(tmp_path / "none", tmp_path / "public")
+
+
+def test_only_a_model_with_the_meta_flag_is_private(schema: Path, tmp_path: Path) -> None:
+    assert private_tables(schema) == set()
+
+    flagged = tmp_path / "flagged.yml"
+    flagged.write_text(
+        SCHEMA.replace("  - name: dim_thing\n", "  - name: dim_thing\n    meta: {private: true}\n"),
+        encoding="utf-8",
+    )
+    assert private_tables(flagged) == {"dim_thing"}

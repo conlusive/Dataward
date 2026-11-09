@@ -84,12 +84,19 @@ jobs:
               print(row)
           EOF
 
+      # The repository is public, so the artifact must not carry third-party listings: tables flagged
+      # `meta.private` in schema.yml are left out of a copy, and only the copy is uploaded
+      # (tests/test_export.py checks both steps).
+      - name: Prepare the public export
+        if: always()
+        run: uv run jobmarket export-public
+
       # Parquet for the dashboards, kept as a run artifact until the publishing target exists.
       - name: Upload gold export
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: gold-export
-          path: data/export
+          path: data/export_public
           retention-days: 14
           if-no-files-found: ignore

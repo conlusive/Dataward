@@ -1,9 +1,9 @@
 """Charts in the dashboard's look, built with Altair (it ships with Streamlit).
 
-Marks follow the dataviz rules: thin bars with a rounded data end, two-pixel lines, markers of at
-least eight pixels, hairline grid, a legend only when two series share a chart, values on the
-marks selectively, and a tooltip on every mark. Colours come from ``dashboard_theme``; a source
-keeps its colour whatever the filter leaves on the screen.
+Marks follow the dataviz rules, in a pixel style: thin square-ended bars, two-pixel lines, square
+markers of at least eight pixels, a hairline grid, a legend only when two series share a chart,
+values on the marks selectively, and a tooltip on every mark. Colours come from
+``dashboard_theme``; a source keeps its colour whatever the filter leaves on the screen.
 
 Every function takes a frame with the fixed column names it documents (the pages prepare it), so
 no field name carries a space or a dot that Vega would read as a path.
@@ -112,9 +112,9 @@ def lines(wide: pd.DataFrame, *, height: int = 300) -> Any:
     always = long["date"].nunique() <= 2
     base = alt.Chart(long).encode(x=x, y=y, color=color)
     line = base.mark_line(strokeWidth=2, interpolate="linear")
-    dots = base.mark_point(filled=True, size=70, stroke=t.CARD, strokeWidth=2).encode(
-        opacity=alt.value(1) if always else alt.condition(nearest, alt.value(1), alt.value(0))
-    )
+    dots = base.mark_point(
+        filled=True, shape="square", size=64, stroke=t.CARD, strokeWidth=2
+    ).encode(opacity=alt.value(1) if always else alt.condition(nearest, alt.value(1), alt.value(0)))
     columns = [str(c) for c in wide.columns]
     pivot = _date(wide.rename_axis("date").reset_index(), "date")
     pivot.columns = pd.Index(["date", *columns])
@@ -157,7 +157,7 @@ def ranked_bars(
         x=alt.X("value:Q", axis=None, scale=alt.Scale(zero=True, nice=False)),
     )
     bars = (
-        base.mark_bar(size=size, cornerRadiusEnd=4)
+        base.mark_bar(size=size)
         .encode(
             color=color,
             opacity=alt.condition(hover, alt.value(1), alt.value(0.88)),
@@ -192,7 +192,7 @@ def grouped_columns(
             "series:N", scale=alt.Scale(domain=names, range=colors), legend=alt.Legend(title=None)
         ),
     )
-    bars = base.mark_bar(size=10, cornerRadiusTopLeft=4, cornerRadiusTopRight=4).encode(
+    bars = base.mark_bar(size=10).encode(
         tooltip=[
             alt.Tooltip("day:N", title="День"),
             alt.Tooltip("series:N", title="Показник"),
@@ -228,12 +228,12 @@ def ranges(frame: pd.DataFrame, *, unit: str = "USD/міс", height: int | None 
         alt.Tooltip("mid:Q", title="типова", format=",.0f"),
         alt.Tooltip("high:Q", title="верхня межа", format=",.0f"),
     ]
-    span = base.mark_rule(strokeWidth=8, strokeCap="round", color=t.MARK, opacity=0.4).encode(
+    span = base.mark_rule(strokeWidth=8, strokeCap="square", color=t.MARK, opacity=0.4).encode(
         x=x_low, x2="high:Q", tooltip=tips
     )
-    dot = base.mark_point(filled=True, size=110, color=t.MARK, stroke=t.CARD, strokeWidth=2).encode(
-        x="mid:Q", tooltip=tips
-    )
+    dot = base.mark_point(
+        filled=True, shape="square", size=100, color=t.MARK, stroke=t.CARD, strokeWidth=2
+    ).encode(x="mid:Q", tooltip=tips)
     return _finish(alt.layer(span, dot), height or rows * 34 + 50)
 
 
@@ -263,9 +263,9 @@ def share_trend(frame: pd.DataFrame, *, height: int = 240) -> Any:
     ]
     area = base.mark_area(color=t.MARK, opacity=0.1)
     line = base.mark_line(color=t.MARK, strokeWidth=2)
-    dots = base.mark_point(color=t.MARK, filled=True, size=70, stroke=t.CARD, strokeWidth=2).encode(
-        tooltip=tips
-    )
+    dots = base.mark_point(
+        color=t.MARK, filled=True, shape="square", size=64, stroke=t.CARD, strokeWidth=2
+    ).encode(tooltip=tips)
     return _finish(alt.layer(area, line, dots), height)
 
 
@@ -289,7 +289,7 @@ def survey_band(frame: pd.DataFrame, *, height: int = 260) -> Any:
         y2="high:Q",
     )
     line = base.mark_line(color=t.MARK, strokeWidth=2).encode(y="mid:Q")
-    dots = base.mark_point(color=t.MARK, filled=True, size=70, stroke=t.CARD, strokeWidth=2).encode(
-        y="mid:Q", tooltip=tips
-    )
+    dots = base.mark_point(
+        color=t.MARK, filled=True, shape="square", size=64, stroke=t.CARD, strokeWidth=2
+    ).encode(y="mid:Q", tooltip=tips)
     return _finish(alt.layer(band, line, dots), height)

@@ -17,14 +17,15 @@ redColor = "#FF7A6B"
 blueColor = "#AAA8FF"
 blueBackgroundColor = "#383850"
 blueTextColor = "#D2D1FF"
-baseRadius = "0.75rem"
+baseRadius = "none"
+buttonRadius = "none"
 showSidebarBorder = true
-# Cyrillic is required (the UI is Ukrainian): both families have it. If the font host is not
+# Pixel headings (Tiny5) and a terminal body font. Cyrillic is required (the UI is Ukrainian): both have it. If the font host is not
 # reachable the browser falls back to its own monospace font.
 font = "JetBrains Mono:https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap, monospace"
-headingFont = "Martian Mono:https://fonts.googleapis.com/css2?family=Martian+Mono:wght@300..700&display=swap, monospace"
+headingFont = "Tiny5:https://fonts.googleapis.com/css2?family=Tiny5&display=swap, monospace"
 codeFont = "JetBrains Mono, monospace"
-headingFontWeights = [500, 500, 500, 500, 500, 500]
+headingFontWeights = [400, 400, 400, 400, 400, 400]
 metricValueFontSize = "1.9rem"
 metricValueFontWeight = 500
 chartCategoricalColors = ["#8481F5", "#E5603B"]

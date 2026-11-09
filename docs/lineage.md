@@ -39,14 +39,18 @@ graph LR
     fct_salary_survey[fct_salary_survey]
     fct_skill_demand_monthly[fct_skill_demand_monthly]
     fct_skill_pairs[fct_skill_pairs]
+    fct_vacancy_catalog[fct_vacancy_catalog]
     fct_vacancy_daily[fct_vacancy_daily]
     fct_vacancy_lifetime[fct_vacancy_lifetime]
     ml_features_salary[ml_features_salary]
   end
   city_map --> stg_survey_salaries
+  dim_skill --> fct_vacancy_catalog
   fct_vacancy_daily --> fct_market_daily
+  fct_vacancy_daily --> fct_vacancy_catalog
   fct_vacancy_daily --> fct_vacancy_lifetime
   int_group_skills --> fct_skill_pairs
+  int_group_skills --> fct_vacancy_catalog
   int_group_skills --> int_group_skills_rolled_up
   int_group_skills_rolled_up --> fct_salary_by_skill
   int_group_skills_rolled_up --> fct_skill_demand_monthly
@@ -54,6 +58,7 @@ graph LR
   int_skill_ancestors --> int_group_skills_rolled_up
   int_vacancies_deduped --> fct_salary_by_skill
   int_vacancies_deduped --> fct_skill_demand_monthly
+  int_vacancies_deduped --> fct_vacancy_catalog
   int_vacancies_deduped --> int_group_skills
   position_map --> stg_survey_salaries
   src_silver_dou_salaries --> stg_survey_salaries
@@ -61,6 +66,7 @@ graph LR
   src_silver_vacancies --> silver_vacancies_history
   src_silver_vacancies --> stg_vacancies
   src_silver_vacancy_groups --> int_vacancies_deduped
+  src_silver_vacancy_sightings --> fct_vacancy_catalog
   src_silver_vacancy_sightings --> fct_vacancy_daily
   src_silver_vacancy_skills --> stg_vacancy_skills
   stg_skills --> dim_skill
@@ -68,6 +74,7 @@ graph LR
   stg_survey_salaries --> fct_salary_survey
   stg_survey_salaries --> ml_features_salary
   stg_vacancies --> fct_market_daily
+  stg_vacancies --> fct_vacancy_catalog
   stg_vacancies --> fct_vacancy_lifetime
   stg_vacancies --> int_vacancies_deduped
   stg_vacancy_skills --> int_group_skills
