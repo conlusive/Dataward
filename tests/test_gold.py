@@ -3,10 +3,12 @@ from pathlib import Path
 
 import pytest
 
+from jobmarket.cli import main
 from jobmarket.gold import (
     Candidate,
     Metrics,
     load_gold,
+    load_labelled_by,
     parse_sheet,
     render_metrics,
     render_sheet,
@@ -122,7 +124,11 @@ def test_the_texts_are_kept_out_of_the_committed_gold_file(tmp_path: Path) -> No
     gold_file, texts_file = tmp_path / "gold.yaml", tmp_path / "texts.yaml"
 
     write_gold(
-        {"dou:1": {"python", "django"}}, {c.id: c for c in CANDIDATES}, gold_file, texts_file
+        {"dou:1": {"python", "django"}},
+        {c.id: c for c in CANDIDATES},
+        gold_file,
+        texts_file,
+        labelled_by="test",
     )
 
     assert "Python, Django" not in gold_file.read_text(encoding="utf-8")
@@ -192,7 +198,12 @@ def test_import_refuses_a_sheet_with_unknown_ids_and_writes_nothing(
         encoding="utf-8",
     )
 
-    assert import_labels(silver, sheet=sheet, gold_file=gold_file, texts_file=texts) == 2
+    assert (
+        import_labels(
+            silver, labelled_by="test", sheet=sheet, gold_file=gold_file, texts_file=texts
+        )
+        == 2
+    )
     assert not gold_file.exists() and not texts.exists()
 
 
@@ -201,7 +212,12 @@ def test_a_full_cycle_from_sheet_to_metrics(silver: SilverStore, tmp_path: Path)
         tmp_path / n for n in ("s.md", "g.yaml", "t.yaml", "m.md")
     )
     make_sheet(silver, 4, 1, prefill=True, force=True, sheet=sheet)  # prefilled: python, django
-    assert import_labels(silver, sheet=sheet, gold_file=gold_file, texts_file=texts) == 0
+    assert (
+        import_labels(
+            silver, labelled_by="test", sheet=sheet, gold_file=gold_file, texts_file=texts
+        )
+        == 0
+    )
     # a method that has not run at all is left out, not shown with zeros
     assert evaluate(silver, gold_file=gold_file, out=metrics_file) == 0
     assert "| dictionary |" not in metrics_file.read_text(encoding="utf-8")
@@ -225,7 +241,38 @@ def test_a_vacancy_whose_text_changed_after_labelling_is_not_scored(
 ) -> None:
     sheet, gold_file, texts = tmp_path / "s.md", tmp_path / "g.yaml", tmp_path / "t.yaml"
     make_sheet(silver, 2, 1, prefill=True, force=True, sheet=sheet)
-    import_labels(silver, sheet=sheet, gold_file=gold_file, texts_file=texts)
+    import_labels(silver, labelled_by="test", sheet=sheet, gold_file=gold_file, texts_file=texts)
     silver._con.execute("UPDATE silver_vacancies SET content_hash = 'changed'")
 
     assert evaluate(silver, gold_file=gold_file, out=tmp_path / "m.md") == 2  # nothing usable left
+
+
+def test_the_gold_file_and_the_metrics_page_say_who_made_the_labels(
+    silver: SilverStore, tmp_path: Path
+) -> None:
+    sheet, gold_file, texts, metrics_file = (
+        tmp_path / n for n in ("s.md", "g.yaml", "t.yaml", "m.md")
+    )
+    make_sheet(silver, 3, 1, prefill=True, force=True, sheet=sheet)
+
+    import_labels(
+        silver, labelled_by="an LLM, blind", sheet=sheet, gold_file=gold_file, texts_file=texts
+    )
+    evaluate(silver, gold_file=gold_file, out=metrics_file)
+
+    assert load_labelled_by(gold_file) == "an LLM, blind"
+    assert gold_file.read_text(encoding="utf-8").splitlines()[1] == "labelled_by: an LLM, blind"
+    assert "The labels were made by: an LLM, blind." in metrics_file.read_text(encoding="utf-8")
+
+
+def test_a_gold_file_from_before_the_provenance_was_recorded_still_loads(tmp_path: Path) -> None:
+    old = tmp_path / "old.yaml"
+    old.write_text("# old\nvacancies:\n- {id: dou:1, content_hash: h, skills: [python]}\n")
+
+    assert load_labelled_by(old) is None and "dou:1" in load_gold(old)
+    assert "not recorded" in render_metrics([], [], {}, labelled_by=load_labelled_by(old))
+
+
+def test_importing_without_saying_who_labelled_is_refused() -> None:
+    with pytest.raises(SystemExit):
+        main(["gold-import"])

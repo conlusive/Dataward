@@ -171,8 +171,13 @@ def _build_parser() -> argparse.ArgumentParser:
         "gold-label", help="label the sheet in the terminal, blind, saving after each vacancy"
     )
     label_cmd.add_argument("--relabel", action="store_true", help="also go through labelled ones")
-    commands.add_parser(
+    import_cmd = commands.add_parser(
         "gold-import", help="read the labelled sheet into data/gold/skills_gold.yaml"
+    )
+    import_cmd.add_argument(
+        "--labelled-by",
+        required=True,
+        help='who made the labels, recorded in the gold file and the metrics (e.g. "a person")',
     )
     commands.add_parser(
         "gold-eval",
@@ -296,7 +301,7 @@ def _gold(args: argparse.Namespace) -> int:
         if args.command == "gold-sample":
             return make_sheet(silver, args.n, args.seed, prefill=args.prefill, force=args.force)
         if args.command == "gold-import":
-            return import_labels(silver)
+            return import_labels(silver, labelled_by=args.labelled_by)
         return evaluate(silver)
     finally:
         silver.close()

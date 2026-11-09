@@ -11,6 +11,7 @@ from jobmarket.gold import (
     TEXTS_FILE,
     Candidate,
     load_gold,
+    load_labelled_by,
     parse_sheet,
     render_metrics,
     render_sheet,
@@ -50,6 +51,7 @@ def make_sheet(
 def import_labels(
     silver: SilverStore,
     *,
+    labelled_by: str,
     sheet: Path = SHEET_FILE,
     gold_file: Path = GOLD_FILE,
     texts_file: Path = TEXTS_FILE,
@@ -80,7 +82,7 @@ def import_labels(
             "{} vacancies are not labelled yet and are left out (label them with `gold-label`)",
             len(parsed.unlabelled),
         )
-    write_gold(parsed.labels, candidates, gold_file, texts_file)
+    write_gold(parsed.labels, candidates, gold_file, texts_file, labelled_by=labelled_by)
     wanted = sum(len(v) for v in parsed.wanted.values())
     logger.info(
         "imported {} vacancies; {} skills the taxonomy lacks were requested",
@@ -134,7 +136,9 @@ def evaluate(silver: SilverStore, *, gold_file: Path = GOLD_FILE, out: Path = ME
         rows.append((method, score(evaluated, predicted), _cost_per_10k(silver, method)))
         errors[method] = top_errors(evaluated, predicted)
     out.parent.mkdir(parents=True, exist_ok=True)
-    out.write_text(render_metrics(rows, [], errors), encoding="utf-8")
+    out.write_text(
+        render_metrics(rows, [], errors, labelled_by=load_labelled_by(gold_file)), encoding="utf-8"
+    )
     for name, metrics, _ in rows:
         logger.info(
             "{}: precision {:.2f} recall {:.2f} F1 {:.2f} on {} vacancies",

@@ -1,9 +1,9 @@
-"""The hand-labelled gold set for skills: sampling, a label sheet, import and precision/recall.
+"""The labelled gold set for skills: sampling, a label sheet, import and precision/recall.
 
-The labels are the point of the whole thing: only a person can say which skills a vacancy really
-asks for. This module prepares everything around that. Labelling blind (no suggestions) keeps the
-metric honest: people tend to accept a prepared list, which makes the method that prepared it look
-better than it is.
+The labels are the point of the whole thing: the metrics are only as good as who made them, so every
+gold file records `labelled_by` and the metrics page repeats it. This module prepares everything
+around that. Labelling blind (no suggestions) keeps the metric honest: a labeller tends to accept a
+prepared list, which makes the method that prepared it look better than it is.
 """
 
 import random
@@ -173,7 +173,12 @@ def parse_sheet(text: str, known_ids: set[str]) -> SheetLabels:
 
 
 def write_gold(
-    labels: dict[str, set[str]], candidates: dict[str, Candidate], gold_file: Path, texts_file: Path
+    labels: dict[str, set[str]],
+    candidates: dict[str, Candidate],
+    gold_file: Path,
+    texts_file: Path,
+    *,
+    labelled_by: str,
 ) -> None:
     gold = [
         {
@@ -186,8 +191,10 @@ def write_gold(
     ]
     gold_file.parent.mkdir(parents=True, exist_ok=True)
     gold_file.write_text(
-        "# Hand-labelled skills per vacancy (ids from the taxonomy). Texts are kept separately.\n"
-        + yaml.safe_dump({"vacancies": gold}, allow_unicode=True, sort_keys=False),
+        "# Labelled skills per vacancy (ids from the taxonomy). Texts are kept separately.\n"
+        + yaml.safe_dump(
+            {"labelled_by": labelled_by, "vacancies": gold}, allow_unicode=True, sort_keys=False
+        ),
         encoding="utf-8",
     )
     texts_file.write_text(
@@ -208,6 +215,12 @@ def write_gold(
         ),
         encoding="utf-8",
     )
+
+
+def load_labelled_by(gold_file: Path = GOLD_FILE) -> str | None:
+    """Who made the labels (None for a file written before this was recorded)."""
+    value = yaml.safe_load(gold_file.read_text(encoding="utf-8")).get("labelled_by")
+    return str(value) if value else None
 
 
 def load_gold(gold_file: Path = GOLD_FILE) -> dict[str, dict[str, Any]]:
@@ -246,13 +259,17 @@ def render_metrics(
     rows: list[tuple[str, Metrics, float | None]],
     gaps: list[tuple[str, int]],
     errors: dict[str, tuple[list[tuple[str, int]], list[tuple[str, int]]]],
+    labelled_by: str | None = None,
 ) -> str:
     lines = [
         "# Skill extraction metrics",
         "",
-        "Measured against the hand-labelled gold set (`data/gold/skills_gold.yaml`),",
+        "Measured against the gold set (`data/gold/skills_gold.yaml`),",
         "micro-averaged over (vacancy, skill) pairs. Cost is per 10,000 vacancies, from the",
         "logged token usage.",
+        "",
+        f"**The labels were made by: {labelled_by or 'not recorded'}.** A metric is only as"
+        " independent as its labels.",
         "",
         "| Method | Vacancies | Precision | Recall | F1 | Cost per 10k vacancies |",
         "|---|---|---|---|---|---|",
