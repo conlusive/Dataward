@@ -1,5 +1,5 @@
--- Share of the month's new real vacancies that ask for a skill, parents included (Django counts for
--- Python). The denominator is every vacancy of the month, also those with no skill found.
+-- Share of the month's new real vacancies that ask for a skill, parents included (Next.js counts for
+-- React). The denominator is every vacancy of the month, also those with no skill found.
 with vacancies as (
 
     select vacancy_group_id, cast(date_trunc('month', first_listed_on) as date) as month

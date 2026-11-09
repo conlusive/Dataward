@@ -1,0 +1,38 @@
+# Changelog
+
+## 0.2.0: the pipeline, its checks, and what sits on top
+
+The first release that is more than ingestion. Everything below was built between 2026-11-06 and
+2026-11-09.
+
+### Added
+- **Silver**: parsers for DOU and Djinni, salary parsing with USD conversion at the National Bank rate,
+  seniority, experience and English from the text, a skill dictionary (trie, strict ambiguous words), an
+  LLM method with a cache and a cost cap, deduplication across the two sites, the DOU salary survey.
+- **Gold (dbt)**: vacancy lifecycle and SCD2 history, deduplicated skill demand with roll-ups to parent
+  skills, skill co-occurrence (lift, PMI, NPMI), salary percentiles that are not published for small
+  samples, how long vacancies stay open, a daily market mart, features for the salary model. Enforced
+  column contracts and tests on every mart.
+- **Export**: parquet checked against the dbt contracts, `last_update.json`, skill clusters (Louvain).
+- **Reliability**: a test that a date run twice leaves silver and gold unchanged, `make backfill`, a
+  contract file for silver, 13 data-quality checks with warn and error levels, SLOs.
+- **Operations**: one flow (`make pipeline`) with timeouts, retries for scraping, step dependencies and
+  run records; Docker images for the pipeline and the dashboard; a Telegram summary when a bot is set up.
+- **Observability**: `ops_pipeline_runs`, `jobmarket status`, `status.json`, a postmortem template and a
+  first real postmortem.
+- **Consumers**: a Streamlit dashboard (six pages, Ukrainian) and a salary model (CatBoost p10/p50/p90 on
+  the survey, MLflow tracking and promotion) with a calculator.
+- **Docs**: architecture, data sources, data model, a generated dbt lineage, data quality, taxonomy guide,
+  decisions, operations, a test that the docs' links and `make` targets exist.
+
+### Known gaps
+- Bronze is kept in a rolling GitHub Actions cache, not in durable object storage.
+- No Postgres warehouse, no hosted dashboard, no monthly retraining.
+- Precision and recall of the skill methods are not measured yet (the hand-labelled set is not done), and
+  the LLM method has not been run on the corpus.
+- The history is days, not weeks: no trends yet, and the reliability record is short.
+
+## 0.1.0: ingestion into bronze
+
+Scrapers for DOU, Djinni, the National Bank and the DOU survey, an immutable bronze store, run records,
+CI and a daily workflow.

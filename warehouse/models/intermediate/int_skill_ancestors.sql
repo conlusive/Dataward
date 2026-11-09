@@ -1,5 +1,5 @@
 -- Every skill with all of its ancestors in the taxonomy (depth 0 is the skill itself), so a vacancy that
--- asks for Django also counts for Python.
+-- asks for Next.js also counts for React.
 with recursive walk as (
 
     select skill_id, skill_id as ancestor_id, 0 as depth
