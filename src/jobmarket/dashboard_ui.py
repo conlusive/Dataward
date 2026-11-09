@@ -201,11 +201,6 @@ def avatar_card() -> None:
         st.page_link("views/profile.py", label="Мій профіль →")
         if due:
             st.page_link("views/practice.py", label=f"Повторити питань: {due} →")
-        st.markdown(
-            f'<div class="dw-hint">{theme.kbd("?")} гарячі клавіші · {theme.kbd("Ctrl", "K")} '
-            "палітра</div>",
-            unsafe_allow_html=True,
-        )
 
 
 def go_practice(skill: str) -> None:

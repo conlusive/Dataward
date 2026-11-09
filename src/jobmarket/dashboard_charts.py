@@ -48,11 +48,17 @@ def series_domain(names: list[str], *, keep_order: bool = False) -> tuple[list[s
     return ordered, colors
 
 
-def _finish(chart: Any, height: int) -> Any:
-    """The shared chrome: transparent surface, hairline grid, muted text, a quiet legend."""
+def _finish(chart: Any, height: int, width: int | None = None) -> Any:
+    """The shared chrome: transparent surface, hairline grid, muted text, a quiet legend.
+
+    ``width`` is only for charts with a fixed shape (a ring, a grid); the rest stretch.
+    """
+    size: dict[str, int] = {"height": height}
+    if width is not None:
+        size["width"] = width
     return (
         chart.properties(
-            height=height,
+            **size,
             background="transparent",
             padding={"left": 2, "right": 10, "top": 6, "bottom": 2},
         )
@@ -357,3 +363,110 @@ def stacked_bars(
         )
     )  # fmt: skip
     return _finish(bars, height)
+
+
+HEAT = ("#3B3B3F", "#4D4B8C", "#6562C4", "#8481F5", "#B8B6FF")  # no answers, then four steps
+_WEEKDAY_LABELS = "['Пн','Вт','Ср','Чт','Пт','Сб','Нд']"
+
+
+def donut(frame: pd.DataFrame, *, unit: str = "Вакансій", size: int = 190) -> Any:
+    """A ring split into parts, the total in the middle. Columns: ``label``, ``value``.
+
+    For a whole with at most five parts (sources, levels): more would be a bar chart. Parts keep
+    the order of the frame, so the biggest comes first; "Інші" is the grey one.
+    """
+    order = frame["label"].tolist()
+    names, colors = series_domain(order, keep_order=True)
+    total = int(frame["value"].sum())
+    data = frame.assign(share=frame["value"] / total if total else 0.0, rank=range(len(frame)))
+    hover = alt.selection_point(on="pointerover", fields=["label"], empty=False, clear="pointerout")
+    arcs = (
+        alt.Chart(data)
+        .mark_arc(innerRadius=size * 0.33, outerRadius=size * 0.5, stroke=t.CARD, strokeWidth=3)
+        .encode(
+            theta=alt.Theta("value:Q", stack=True),
+            order=alt.Order("rank:Q"),
+            color=alt.Color(
+                "label:N",
+                scale=alt.Scale(domain=names, range=colors),
+                legend=alt.Legend(orient="right", title=None, symbolType="square"),
+            ),
+            opacity=alt.condition(hover, alt.value(1), alt.value(0.9)),
+            tooltip=[
+                alt.Tooltip("label:N", title="Частина"),
+                alt.Tooltip("value:Q", title=unit, format=",d"),
+                alt.Tooltip("share:Q", title="Частка", format=".0%"),
+            ],
+        )
+        .add_params(hover)
+    )
+    middle = (
+        alt.Chart(pd.DataFrame({"total": [f"{total:,}".replace(",", " ")]}))
+        .mark_text(color=t.INK, font=FONT, fontSize=18, fontWeight="bold")
+        .encode(text="total:N")
+    )
+    return _finish(alt.layer(arcs, middle), size, size)
+
+
+def ring(ratio: float, *, caption: str, colour: str = t.MARK, size: int = 110) -> Any:
+    """One value from 0 to 1 as a ring with the percent in the middle (progress, readiness)."""
+    ratio = min(max(float(ratio), 0.0), 1.0)
+    data = pd.DataFrame(
+        {"part": ["done", "rest"], "value": [ratio, 1 - ratio], "rank": [0, 1],
+         "caption": [caption, caption]}
+    )  # fmt: skip
+    arcs = (
+        alt.Chart(data)
+        .mark_arc(innerRadius=size * 0.34, outerRadius=size * 0.5, stroke=t.CARD, strokeWidth=2)
+        .encode(
+            theta=alt.Theta("value:Q", stack=True),
+            order=alt.Order("rank:Q"),
+            color=alt.Color(
+                "part:N",
+                scale=alt.Scale(domain=["done", "rest"], range=[colour, t.GRID]),
+                legend=None,
+            ),
+            tooltip=[
+                alt.Tooltip("caption:N", title="Показник"),
+                alt.Tooltip("value:Q", title="Частка", format=".0%"),
+            ],
+        )  # fmt: skip
+    )
+    middle = (
+        alt.Chart(pd.DataFrame({"text": [f"{ratio:.0%}"]}))
+        .mark_text(color=t.INK, font=FONT, fontSize=15, fontWeight="bold")
+        .encode(text="text:N")
+    )
+    return _finish(alt.layer(arcs, middle), size, size)
+
+
+def activity_grid(frame: pd.DataFrame, *, cell: int = 15) -> Any:
+    """A week-by-weekday grid of answers per day. Columns: ``date``, ``week``, ``weekday``,
+    ``count``, ``level`` (what ``dashboard_data.activity_grid`` returns). Square cells, one hue.
+    """
+    data = frame.assign(date=pd.to_datetime(frame["date"]))
+    weeks = int(data["week"].max()) + 1 if len(data) else 1
+    chart = (
+        alt.Chart(data)
+        .mark_rect(stroke=t.CARD, strokeWidth=3)
+        .encode(
+            x=alt.X("week:O", axis=None),
+            y=alt.Y(
+                "weekday:O",
+                axis=alt.Axis(
+                    title=None,
+                    grid=False,
+                    labelPadding=4,
+                    labelExpr=f"datum.value % 2 == 0 ? {_WEEKDAY_LABELS}[datum.value] : ''",
+                ),
+            ),
+            color=alt.Color(
+                "level:O", scale=alt.Scale(domain=[0, 1, 2, 3, 4], range=list(HEAT)), legend=None
+            ),
+            tooltip=[
+                alt.Tooltip("date:T", title="Дата", format="%d.%m.%Y"),
+                alt.Tooltip("count:Q", title="Відповідей", format=",d"),
+            ],
+        )  # fmt: skip
+    )
+    return _finish(chart, 7 * cell, weeks * cell)

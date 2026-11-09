@@ -398,3 +398,17 @@ def test_a_goal_that_is_not_a_number_falls_back_to_the_default(tmp_path: Path) -
     path.write_text(json.dumps({"goal": "many"}), encoding="utf-8")
 
     assert pr.load(path).goal == pr.DEFAULT_GOAL
+
+
+def test_several_vacancies_are_saved_at_once_and_only_new_ones_are_counted() -> None:
+    profile = pr.Profile()
+    rows = [
+        {"id": "v1", "title": "A", "company": "X", "url": "u1"},
+        {"id": "v2", "title": "B", "company": "Y", "url": "u2"},
+    ]
+
+    first = pr.save_vacancies(profile, rows, date(2026, 11, 9))
+    third = {"id": "v3", "title": "C", "company": "Z", "url": "u3"}
+    again = pr.save_vacancies(profile, [*rows, third], date(2026, 11, 10))
+
+    assert (first, again) == (2, 1) and list(profile.saved) == ["v1", "v2", "v3"]

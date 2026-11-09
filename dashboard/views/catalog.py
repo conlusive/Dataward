@@ -39,48 +39,61 @@ def reset_filters() -> None:
 category_counts = catalog["category"].value_counts()
 level_names = {dd.NO_LEVEL: "не вказано"}
 
-with st.sidebar:
-    ui.sidebar_label("Пошук")
-    query = st.text_input("Назва або компанія", key="cat_q", placeholder="наприклад: python senior")
-    ui.sidebar_label("Напрямок і рівень")
-    ui.html('<div class="dw-fl">Напрямок</div>')
-    directions = st.multiselect(
-        "Напрямок",
-        dd.catalog_options(catalog, "category"),
-        key="cat_dirs",
-        placeholder="Усі напрямки",
-        label_visibility="collapsed",
+head = st.container()  # the header goes here once the number of results is known
+
+ADVANCED = ("cat_skill_mode", "cat_open", "cat_salary_only", "cat_min_salary", "cat_remote",
+            "cat_since")  # fmt: skip
+changed = sum(st.session_state[k] != DEFAULTS[k] for k in ADVANCED)
+with st.container(key="cat_filters"):
+    first, second, third = st.columns([3, 3, 3])
+    query = first.text_input(
+        "Назва або компанія", key="cat_q", placeholder="назва або компанія",
+        label_visibility="collapsed", icon=":material/search:",
+    )  # fmt: skip
+    directions = second.multiselect(
+        "Напрямок", dd.catalog_options(catalog, "category"), key="cat_dirs",
+        placeholder="Усі напрямки", label_visibility="collapsed",
         format_func=lambda name: f"{name} ({category_counts.get(name, 0)})",
-    )
-    ui.html('<div class="dw-fl">Рівень</div>')
-    levels = st.pills(
-        "Рівень", dd.catalog_options(catalog, "seniority"), selection_mode="multi",
-        key="cat_levels", label_visibility="collapsed",
-        format_func=lambda name: level_names.get(name, name),
     )  # fmt: skip
-    ui.sidebar_label("Навички")
-    skills = st.multiselect(
-        "Навички", dd.skill_options(catalog), key="cat_skills", placeholder="Будь-які",
+    skills = third.multiselect(
+        "Навички", dd.skill_options(catalog), key="cat_skills", placeholder="Будь-які навички",
         label_visibility="collapsed",
     )  # fmt: skip
-    mode = st.radio("Потрібні", ["усі", "будь-яка"], key="cat_skill_mode", horizontal=True)
-    ui.sidebar_label("Умови")
-    only_open = st.toggle("Лише відкриті", key="cat_open")
-    with_salary = st.toggle("Лише з вилкою", key="cat_salary_only")
-    top_salary = int(catalog["salary_top"].max()) if catalog["salary_top"].notna().any() else 0
-    min_salary = (
-        st.slider("Зарплата від, USD/міс", 0, top_salary, step=100, key="cat_min_salary")
-        if top_salary > 0
-        else 0
+    levels_col, sources_col, more_col, reset_col = st.columns(
+        [4, 3, 2, 2], vertical_alignment="bottom"
     )
-    remote_only = st.toggle("Лише віддалено", key="cat_remote")
-    since = st.selectbox("З'явилась", list(SINCE), key="cat_since")
-    ui.html('<div class="dw-fl">Джерело</div>')
-    sources = st.pills(
-        "Джерело", dd.catalog_options(catalog, "source"), selection_mode="multi",
-        key="cat_sources", label_visibility="collapsed",
-    )  # fmt: skip
-    st.button("Скинути фільтри", on_click=reset_filters, width="stretch")
+    with levels_col:
+        ui.html('<div class="dw-fl">Рівень</div>')
+        levels = st.pills(
+            "Рівень", dd.catalog_options(catalog, "seniority"), selection_mode="multi",
+            key="cat_levels", label_visibility="collapsed",
+            format_func=lambda name: level_names.get(name, name),
+        )  # fmt: skip
+    with sources_col:
+        ui.html('<div class="dw-fl">Джерело</div>')
+        sources = st.pills(
+            "Джерело", dd.catalog_options(catalog, "source"), selection_mode="multi",
+            key="cat_sources", label_visibility="collapsed",
+        )  # fmt: skip
+    with more_col.popover(
+        f"Ще фільтри{f' · {changed}' if changed else ''}", icon=":material/tune:", width="stretch"
+    ):
+        mode = st.radio(
+            "Потрібні навички", ["усі", "будь-яка"], key="cat_skill_mode", horizontal=True
+        )
+        only_open = st.toggle("Лише відкриті", key="cat_open")
+        with_salary = st.toggle("Лише з вилкою", key="cat_salary_only")
+        remote_only = st.toggle("Лише віддалено", key="cat_remote")
+        top_salary = int(catalog["salary_top"].max()) if catalog["salary_top"].notna().any() else 0
+        min_salary = (
+            st.slider("Зарплата від, USD/міс", 0, top_salary, step=100, key="cat_min_salary")
+            if top_salary > 0
+            else 0
+        )
+        since = st.selectbox("З'явилась", list(SINCE), key="cat_since")
+    reset_col.button(
+        "Скинути", on_click=reset_filters, icon=":material/restart_alt:", width="stretch"
+    )
 
 latest = catalog["first_listed_on"].max()
 result = dd.filter_catalog(
@@ -112,19 +125,19 @@ chosen = [
 ]
 active = [pair for pair in chosen if pair]
 
-ui.header(
-    "Каталог вакансій",
-    "Шукайте за напрямком, рівнем, навичками й зарплатою: фільтри зліва, список нижче. "
-    "Клік по рядку відкриває вакансію докладно.",
-    eyebrow="вакансії · каталог",
-    pills=[theme.pill(f"{dd.fmt_int(len(result))} з {dd.fmt_int(len(catalog))}")],
-    domain="jobs",
-)
+with head:
+    ui.header(
+        "Каталог вакансій",
+        "Шукайте за напрямком, рівнем, навичками й зарплатою. Клік по рядку відкриває вакансію.",
+        eyebrow="вакансії · каталог",
+        pills=[theme.pill(f"{dd.fmt_int(len(result))} з {dd.fmt_int(len(catalog))}")],
+        domain="jobs",
+    )
 
 ui.html(theme.active_filters(active))
 
 if result.empty:
-    st.info("За цими фільтрами вакансій немає: послабте умови або натисніть «Скинути фільтри».")
+    st.info("За цими фільтрами вакансій немає: послабте умови або натисніть «Скинути».")
     st.stop()
 
 paid = int(result["salary_top"].notna().sum())

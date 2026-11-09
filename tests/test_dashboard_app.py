@@ -414,7 +414,7 @@ def test_the_reset_button_clears_every_filter(with_catalog: Path) -> None:
     app.toggle(key="cat_open").set_value(False).run()
     app.multiselect(key="cat_dirs").set_value(["QA"]).run()
 
-    next(b for b in app.button if b.label == "Скинути фільтри").click().run()
+    next(b for b in app.button if b.label == "Скинути").click().run()
 
     assert _found(app) == "5" and app.text_input(key="cat_q").value == ""
     assert app.multiselect(key="cat_dirs").value == [] and app.toggle(key="cat_open").value
@@ -444,9 +444,9 @@ def test_home_lists_the_freshest_open_vacancies_as_tiles_when_there_is_a_catalog
     app = _run("home")
 
     html = _markdown(app)
-    assert "Свіжі вакансії" in html and html.count('class="dw-vac"') == 5
+    assert "Свіжі вакансії" in html and html.count('class="dw-vac"') == 3  # one row, no more
     assert html.index("DevOps Engineer") < html.index("Senior Python Developer")  # newest first
-    assert len(app.get("link_button")) == 5
+    assert len(app.get("link_button")) == 3
 
 
 def test_home_without_a_catalog_has_no_vacancy_list(export: Path) -> None:
@@ -606,7 +606,9 @@ def test_the_profile_shows_the_streak_and_lights_the_medals_that_were_earned(exp
 def test_the_frog_is_in_the_sidebar_on_every_page(export: Path) -> None:
     for page in ("home", "market", "learn"):
         app = _run(page)
-        assert any("dw-pet" in m.value for m in app.sidebar.markdown), page
+        assert any("dw-avatar" in m.value and "dw-frog" in m.value for m in app.sidebar.markdown), (
+            page
+        )
 
 
 def test_the_sidebar_cannot_be_collapsed() -> None:
@@ -615,14 +617,38 @@ def test_the_sidebar_cannot_be_collapsed() -> None:
     assert "stSidebarCollapseButton" in theme.css() and "display: none" in theme.css()
 
 
-def test_home_invites_to_make_a_profile_and_then_shows_it(export: Path) -> None:
-    assert "Мій профіль" in _markdown(_run("home"))
-    assert "<em>Рівень:</em>" not in _markdown(_run("home"))
+def test_home_asks_an_empty_profile_for_skills_and_then_tracks_the_day(export: Path) -> None:
+    assert "Додайте навички" in _markdown(_run("home"))
 
     _saved_profile(skills={"Python": "know", "SQL": "know", "Docker": "learning"})
     html = _markdown(_run("home"))
 
-    assert "<em>Знаю:</em><b>2</b>" in html and "<em>Рівень:</em><b>1</b>" in html
+    assert "Додайте навички" not in html
+    assert "<em>Рівень:</em>" not in html  # the level lives in the avatar, not twice on the page
+
+
+def test_home_shows_the_goal_of_the_day_as_a_ring(export: Path) -> None:
+    app = _run("home")
+
+    assert any("ціль дня: 0/5" in c.value for c in app.caption)
+
+
+def test_home_shows_the_market_as_rings_per_source_level_and_direction(export: Path) -> None:
+    app = _run("home")
+
+    assert [t.label for t in app.tabs if t.label in {"Джерела", "Рівні", "Напрямки"}] == [
+        "Джерела",
+        "Рівні",
+        "Напрямки",
+    ]
+
+
+def test_home_shows_the_pipeline_behind_the_numbers(export: Path) -> None:
+    html = _markdown(_run("home"))
+
+    assert "Конвеєр даних" in html
+    assert "<em>Перевірки DQ:</em><b>1/2</b>" in html  # one check passed, one warns
+    assert "<em>SLO:</em><b>1/2</b>" in html  # the second one has too little data to say
 
 
 # ---- vacancies for me -------------------------------------------------------------------------

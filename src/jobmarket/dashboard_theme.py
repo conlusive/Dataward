@@ -329,6 +329,19 @@ _WORKSPACE = """
   border-left-color: var(--dom, var(--accent)) !important;
   color: var(--dom, var(--accent)) !important; }
 
+/* the menu is compact so that it fits without a scrollbar; the profile is the avatar below */
+[data-testid="stSidebarNavLink"] { padding-top: 0.2rem; padding-bottom: 0.2rem; min-height: 0; }
+[data-testid="stSidebarNavLink"][href$="profile"] { display: none; }
+[data-testid="stNavSectionHeader"] { margin-top: 0.4rem; padding-top: 0.1rem;
+  padding-bottom: 0.1rem; }
+[data-testid="stSidebarHeader"] { padding-top: 0.6rem; padding-bottom: 0.2rem; }
+[data-testid="stSidebarNav"] { padding-bottom: 0; }
+
+/* the filter bar sits above the list, not in the menu */
+.st-key-cat_filters { border: 2px solid var(--line); background: var(--card);
+  padding: var(--s3) var(--s4); margin-bottom: var(--s3); }
+.st-key-cat_filters [data-testid="stVerticalBlock"] { gap: var(--s2); }
+
 /* the avatar sits at the bottom of the sidebar whatever else is above it */
 [data-testid="stSidebarContent"] { display: flex; flex-direction: column; min-height: 100%; }
 [data-testid="stSidebarUserContent"] { flex: 1 1 auto; display: flex; flex-direction: column; }
