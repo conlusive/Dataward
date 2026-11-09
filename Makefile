@@ -1,4 +1,4 @@
-.PHONY: install lint test test-all scrape scrape-surveys parse backfill dbt-build dq dq-silver dq-gold pipeline export docker-build docker-pipeline dashboard docker-dashboard train gold
+.PHONY: install lint test test-all scrape scrape-surveys parse backfill dbt-build dq dq-silver dq-gold pipeline export docker-build docker-pipeline dashboard docker-dashboard train lineage gold
 
 install:
 	uv sync --group dashboard --group ml
@@ -75,6 +75,10 @@ docker-dashboard:
 train:
 	uv run --group ml jobmarket train-salary
 	uv run --group ml jobmarket salary-grid
+
+# Rewrite docs/lineage.md from the dbt manifest (a test fails when it is out of date).
+lineage:
+	uv run python -m jobmarket.lineage
 
 # Gold marts -> parquet in data/export (needs `make dbt-build` first).
 export:
