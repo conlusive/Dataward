@@ -20,6 +20,9 @@ dependencies = [
 jobmarket = "jobmarket.cli:main"
 
 [dependency-groups]
+dashboard = [
+    "streamlit>=1.67.0",
+]
 dev = [
     "dbt-core>=1.12.6",
     "dbt-duckdb>=1.11.1",
@@ -72,3 +75,7 @@ markers = [
 [[tool.mypy.overrides]]
 module = "networkx.*"
 ignore_missing_imports = true  # networkx ships no type information
+
+[[tool.mypy.overrides]]
+module = ["pandas.*", "streamlit.*", "altair.*"]
+ignore_missing_imports = true  # optional dashboard group; pandas is typed loosely on purpose

@@ -1,7 +1,7 @@
-.PHONY: install lint test test-all scrape scrape-surveys parse backfill dbt-build dq dq-silver dq-gold pipeline export docker-build docker-pipeline gold
+.PHONY: install lint test test-all scrape scrape-surveys parse backfill dbt-build dq dq-silver dq-gold pipeline export docker-build docker-pipeline dashboard docker-dashboard gold
 
 install:
-	uv sync
+	uv sync --group dashboard
 
 lint:
 	uv run ruff check .
@@ -62,6 +62,13 @@ docker-build:
 
 docker-pipeline:
 	docker compose run --rm pipeline
+
+# The dashboard on the last export (run `make pipeline` or `make export` first): localhost:8501
+dashboard:
+	uv run --group dashboard streamlit run dashboard/app.py
+
+docker-dashboard:
+	docker compose up --build dashboard
 
 # Gold marts -> parquet in data/export (needs `make dbt-build` first).
 export:

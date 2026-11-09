@@ -1,0 +1,25 @@
+# The dashboard image: Streamlit reading the parquet files of the pipeline's export (never the database).
+# Build:  docker build -f Dockerfile.dashboard -t jobmarket-dashboard .
+# Run:    docker run --rm -p 8501:8501 -v "$PWD/data/export:/app/data/export:ro" jobmarket-dashboard
+FROM python:3.11-slim
+
+RUN pip install --no-cache-dir uv==0.13.7
+
+WORKDIR /app
+ENV UV_FROZEN=1 UV_LINK_MODE=copy PATH="/app/.venv/bin:$PATH" PYTHONUNBUFFERED=1 \
+    DASHBOARD_DATA_DIR=/app/data/export
+
+# Only what the dashboard needs: the main dependencies and the `dashboard` group (no dbt, no dev tools).
+COPY pyproject.toml uv.lock README.md ./
+RUN uv sync --no-dev --group dashboard --no-install-project
+COPY src ./src
+RUN uv sync --no-dev --group dashboard
+
+COPY dashboard ./dashboard
+
+RUN useradd --create-home --uid 1000 app && mkdir -p /app/data/export && chown -R app:app /app/data
+USER app
+EXPOSE 8501
+
+CMD ["streamlit", "run", "dashboard/app.py", "--server.address=0.0.0.0", "--server.port=8501", \
+     "--server.headless=true", "--browser.gatherUsageStats=false"]

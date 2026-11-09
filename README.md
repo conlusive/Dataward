@@ -83,6 +83,15 @@ make docker-pipeline   # the same in a container, data in ./data
 Each step has a timeout, the scrape steps retry, a failed step skips the steps that depend on it, and
 every attempt is recorded in `ops_task_runs`. See [docs/orchestration.md](docs/orchestration.md).
 
+## Dashboard
+
+```bash
+make dashboard    # Streamlit on the last export: http://localhost:8501 (Ukrainian UI)
+```
+
+Six pages: market overview, skills, stacks, salaries, pipeline status, about the data. It reads only
+the exported parquet files. See [docs/dashboard.md](docs/dashboard.md).
+
 ## Observability
 
 ```bash
