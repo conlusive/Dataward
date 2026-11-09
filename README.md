@@ -1,201 +1,152 @@
-# jobmarket
+# Dataward: a data pipeline for the Ukrainian IT job market
 
-Reproducible, observable data pipeline for the Ukrainian IT job market:
-daily scraping into an immutable bronze layer, silver cleaning/dedup/SCD2, gold marts in dbt.
+[![CI](https://github.com/conlusive/Dataward/actions/workflows/ci.yml/badge.svg)](https://github.com/conlusive/Dataward/actions/workflows/ci.yml)
+[![Daily pipeline](https://github.com/conlusive/Dataward/actions/workflows/pipeline-daily.yml/badge.svg)](https://github.com/conlusive/Dataward/actions/workflows/pipeline-daily.yml)
 
-Status: phase 1 (ingestion into bronze). The full plan lives in the Obsidian vault.
+A reproducible, observable pipeline that scrapes IT vacancies from DOU and Djinni every night into an
+immutable bronze layer, cleans and deduplicates them into silver, builds gold marts in dbt, and serves a
+dashboard and a salary model on top. **It is not big data** (a few thousand vacancies a day). It is the
+engineering practices (idempotent runs, backfill, data contracts, quality checks, observability) applied
+to real, messy data, at a size where every result can be inspected.
 
-## Quick start
-
-```bash
-make install
-make lint
-make test
-make scrape RUN_DATE=2026-11-06        # NBU + jobs.dou.ua + djinni.co into data/bronze
+```mermaid
+flowchart LR
+  S["DOU, Djinni,<br/>NBU rates, DOU survey"] --> B[("Bronze<br/>raw files, never changed")]
+  B --> P["Silver<br/>parse, enrich, dedup"]
+  P -->|silver checks| G["Gold (dbt)<br/>marts + contracts"]
+  G -->|gold checks| E["Parquet export"]
+  E --> D["Dashboard"]
+  E --> M["Salary model"]
+  P & G -.-> O[("ops tables<br/>runs, checks, cost")]
 ```
 
-Single source or a smoke run:
+## The problem
 
-```bash
-uv run jobmarket scrape dou --run-date 2026-11-06 --max-pages 1
-uv run jobmarket scrape dou_salaries   # DOU salary surveys, manual (published twice a year)
-```
+Where is the Ukrainian IT job market moving: which skills are asked for, which go together, what
+salaries are stated and for how long a vacancy stays open? The sites show one listing at a time and
+keep no history. The answer needs a history, a clean one (the same job is on two sites), and numbers you
+can trust. The user is anyone choosing what to learn or what to hire for, and the pipeline's own
+operator: the whole point is that the data is dependable.
 
-Re-running a date is safe: pages already in bronze for that date are not downloaded again
-(`--refetch` forces it), and every run is recorded as a new attempt in `ops_scrape_runs`
-(`data/jobmarket.duckdb`).
+## The data (honestly)
 
-## Silver
+| | |
+|---|---|
+| Sources | jobs.dou.ua (16 categories), djinni.co (16 keywords), National Bank exchange rates, the open DOU salary survey (34 waves since 2010) |
+| Volume | about 6,900 vacancies on 2026-11-08; about 289,000 survey answers |
+| History | since 2026-11-06, so **trends need weeks to mean anything** |
+| Not here | work.ua (blocked by a Cloudflare challenge; I do not bypass it), vacancies outside the 16 categories |
 
-```bash
-uv run jobmarket parse all --run-date 2026-11-06   # bronze -> silver_vacancies (DuckDB)
-```
+The limits (about 12% of vacancies state a salary, the survey is self-reported, skills come from a
+dictionary) are in [docs/data_sources.md](docs/data_sources.md). Scraping is polite: `robots.txt`, 1-2
+requests per second, an honest User-Agent, no logins. Raw vacancy text is not published.
 
-Parses vacancy pages of one date into `silver_vacancies` (upsert by id; a backfill of an older date
-never overwrites newer data). Pages that no longer match the parser are counted as failed in
-`ops_task_runs` instead of stopping the run.
+## Architecture
 
-Salaries are recomputed on every `parse`: `salary_min/max/currency` from the declared range or the
-description, then `salary_usd_min/max` from the NBU rate on the publication date. `parse` reads only
-bronze; if a rate for some date is missing it logs the dates, and
+Medallion layers: **bronze** (raw files, a metadata file written last), **silver** (DuckDB tables written
+by Python with upserts), **gold** (dbt models with tests and enforced column contracts), plus **ops**
+tables that record every run. A nightly GitHub Actions job runs one flow: scrape, parse, silver checks,
+dbt, gold checks, export. A failed step skips the steps that depend on it, so bad data never reaches the
+files other people read.
 
-```bash
-uv run jobmarket fetch-rates   # downloads the missing NBU rates into bronze
-```
+- [docs/architecture.md](docs/architecture.md): the diagram, the layers, how it runs, what it would take at 100x
+- [docs/data_model.md](docs/data_model.md) and [docs/lineage.md](docs/lineage.md): every table, and the dbt lineage generated from the project
+- [docs/decisions.md](docs/decisions.md): the decisions, why, and what was rejected
 
-fetches them (run `parse` again afterwards).
+## Reliability (the part I care most about)
 
-`parse` also reads three signals from the text: `seniority` (from the title only), the required
-`experience_years_text` and the `english_level` (from the description). They are kept next to the
-page's own `experience_years` (Djinni JSON-LD) instead of replacing it. Gold cases live in
-`data/gold/vacancy_text_cases.yaml`.
+| Practice | How it is done | Proof |
+|---|---|---|
+| **Idempotent runs** | deterministic bronze paths, silver upserts that never let an older page overwrite a newer one, gold rebuilt from silver | a test runs a date twice and compares a hash of every silver table and mart |
+| **Backfill** | `make backfill FROM TO` re-parses the stored days without the network; the LLM answers come from a cache | tested on a range that includes a day that was never stored |
+| **Data contracts** | column types enforced in dbt on every mart and a contract file for silver; the export stops if a table differs | a test fails when the code and the contract drift |
+| **Quality checks** | 13 checks with `warn` and `error` levels, thresholds in one file, every result in `ops_dq_results`; an `error` stops the run before the export | each check is tested at its boundaries; a mutated threshold fails a test |
+| **SLOs** | data at most 36 h old, 95% of runs succeed in 30 days, under 10% of vacancies without a skill | `jobmarket status` measures them; "not enough data" is shown as such |
+| **A real failure** | a hidden employer (`"confidential"`, a string where an object was expected) failed 5 of 5,692 Djinni pages and the whole run | [postmortem](docs/postmortems/2026-11-07-djinni-hidden-employer.md): bronze was already saved, nothing was lost; the run now fails only when more than 5% of a day's pages are unreadable |
 
-Skills are found by a dictionary over `src/jobmarket/skills/taxonomy.yaml` (~490 skills, ~2000
-spellings). Ambiguous words ("Go", "R", "Spring", "Swift") count only with the exact case and a
-context word nearby; skills under "nice to have" headings are marked `nice`, benefit sections are
-ignored. Add a skill by appending a line; `make test` validates the file. Results go to
-`silver_vacancy_skills` (`method = dictionary`).
-
-Duplicates are found across both sites: inside one company, two vacancies are the same posting when
-the titles are almost equal and the text is the same or very similar, or when the text is
-near-identical and the levels do not conflict ("Senior X" and "X" merge, "Middle X" and "Senior X" do
-not). Every vacancy gets a `dedup_group_id` (the oldest member's id) and `silver_vacancy_groups` says
-which member supplies the text (DOU first) and which the salary (Djinni first).
-
-`make parse` runs the whole silver step for every stored day that has no finished parse yet (it is
-the catch-up used by the daily workflow), then fetches missing exchange rates and parses again.
-Each day's listing pages are also stored as `silver_vacancy_sightings` (who was listed when). dbt
-(`warehouse/`, DuckDB) turns them into `fct_vacancy_daily` (a vacancy is `new`, then `active`, and
-`closed` after two days off the listing; first-day vacancies are flagged `left_censored`) and keeps an
-SCD2 history of title/salary/description changes:
-
-```bash
-make dbt-build    # dbt snapshot + dbt build (models and tests)
-```
-
-## Running it
-
-```bash
-make pipeline          # the whole daily flow: scrape, parse, checks, dbt, checks, export
-make docker-pipeline   # the same in a container, data in ./data
-```
-
-Each step has a timeout, the scrape steps retry, a failed step skips the steps that depend on it, and
-every attempt is recorded in `ops_task_runs`. See [docs/orchestration.md](docs/orchestration.md).
-
-## Dashboard
-
-```bash
-make dashboard    # Streamlit on the last export: http://localhost:8501 (Ukrainian UI)
-```
-
-Six pages: market overview, skills, stacks, salaries, pipeline status, about the data. It reads only
-the exported parquet files. See [docs/dashboard.md](docs/dashboard.md).
-
-## Salary model
-
-```bash
-make train   # needs `uv sync --group ml` and `make export`: trains, compares, maybe promotes, writes the dashboard grid
-```
-
-CatBoost with p10/p50/p90 on the DOU survey rows, judged on the last survey year, with a baseline and
-MLflow tracking; the dashboard shows the range for a profile. Details and limits:
-[docs/ml.md](docs/ml.md), latest run: [docs/ml_report.md](docs/ml_report.md).
+Details: [idempotency and backfill](docs/idempotency_and_backfill.md), [data quality](docs/data_quality.md),
+[orchestration](docs/orchestration.md).
 
 ## Observability
 
+Every flow run is a row (`ops_pipeline_runs`: trigger, link to the Actions run, failed steps). Every step
+attempt, scrape, check and LLM call has its own table, so "what happened yesterday and why" is a query.
+`jobmarket status` prints the SLOs, recent runs and the checks that need attention; the dashboard's
+status page reads the same `status.json`; an optional Telegram message summarises each run (new and
+closed vacancies, checks, LLM cost, a link). See [docs/observability.md](docs/observability.md).
+
+## Skill extraction
+
+Two methods find the skills a vacancy asks for (a taxonomy of about 490 skills, see the
+[guide](docs/taxonomy_guide.md)):
+
+| Method | Status | Numbers |
+|---|---|---|
+| Dictionary (trie; "strict" words need an exact spelling and a context word) | running every night | at least one skill in 91% of vacancies (6,282 of 6,911) |
+| LLM (cached, `--dry-run` first, a cost cap) | implemented, **not run on the corpus yet** (needs an API key) | a dry run estimated 474 requests for 479 vacancies, about $0.11 (prices not verified) |
+
+**Precision and recall are not measured yet.** They need a hand-labelled set. The sheet of 150 vacancies
+is ready and is labelled blind on purpose, and the labelling is still to be done. Until then the numbers
+above say what was found, not how accurate it is.
+
+## Consumers
+
+- **Dashboard** (Streamlit, Ukrainian, reads only the exported parquet): market overview, skills, stacks,
+  salaries, pipeline status, about the data. [docs/dashboard.md](docs/dashboard.md)
+- **Salary model** (CatBoost p10/p50/p90, MLflow): trained on the survey, because only a few hundred
+  vacancies state a salary. Judged on the last survey year, which it never saw. [docs/ml.md](docs/ml.md)
+
+| Last survey year (14,358 answers) | Model | Baseline (median by role and experience) |
+|---|---|---|
+| Error of the median (USD per month) | 1,245 | 1,405 |
+| Real salary inside the p10-p90 range | 79.5% | 75.2% |
+
+Better than the baseline by about 11%, not a precise predictor: a survey shows what people earn, not what
+an employer will offer, and it is correlation, not causation.
+
+## What the data says
+
+All from the first days of data, so these are snapshots, not trends.
+
+1. **Python is the most requested skill:** 18.9% of the vacancies published in October 2026 (822 of 4,350),
+   ahead of CI/CD (16.2%), SQL (15.5%) and Git (13.5%). Three of the top twelve are not programming skills
+   (Leadership, CRM, Google Ads); I have not yet looked into whether the listings or the dictionary is the
+   cause.
+2. **Skills come in packages.** PyTorch and TensorFlow appear together 95 times more often than chance
+   (lift 94.6, 41 vacancies), NumPy and Pandas 76 times, Android and iOS 20 times (184 vacancies). The
+   graph of strong pairs splits into 9 stacks; the largest (78 skills) is built around Terraform: cloud
+   and DevOps.
+3. **Mentions of AI coding tools and assistants are in 14.1% of October vacancies** (611), about as common as
+   Git. This is a broad dictionary group ("Copilot", "Cursor", "AI tools"), and its precision is not
+   measured.
+4. **Few vacancies show a salary:** 11.8% (814 of 6,911). Where they do, Python's median is 2,700 USD a month
+   (quartiles 1,600 to 4,625, 107 vacancies), a biased sample of the employers who choose to say.
+5. **The survey: senior software engineers' median salary rose from 2,350 USD (2011) to 4,300 (2023), and is
+   4,000 in 2026**, in nominal dollars, for the years that state the level.
+6. **About 5% of the listings are duplicates** (6,890 listings made 6,543 distinct vacancies on 2026-11-07):
+   the same job on both sites or reposted.
+
+## What did not work, and what is next
+
+- **work.ua** blocks automated clients. I did not go around it, so there are two job sites, not three.
+- **The first deduplication thresholds were both too weak and too strict** (the same boilerplate on two
+  different vacancies; "Senior X" not matched with "X"). They were fixed on real pairs.
+- **The plan said Prefect; I used plain Python** for the flow: scheduling is GitHub Actions already, and the
+  retries and dependencies of seven steps are about a hundred lines ([why](docs/decisions.md)).
+- **The salary model could not use vacancies**, so it uses the survey.
+- **Not done:** object storage for bronze (it lives in a rolling Actions cache, which is not durable), a
+  Postgres warehouse, hosting the dashboard, monthly retraining, the labelled set for precision and recall,
+  the LLM run. The pipeline has run nightly for days, not weeks, so the reliability claims above are about
+  how it is built and tested, not yet about a long record.
+
+## Run it
+
 ```bash
-uv run jobmarket status    # SLOs, recent runs and the checks that need attention
+make install          # uv sync, with the optional dashboard and ml groups
+make pipeline         # the whole flow on today's date (the first full run took about 80 minutes, later days about 15)
+make dashboard        # http://localhost:8501
 ```
 
-SLOs: data at most 36 h old, at least 95% of runs in 30 days succeed, under 10% of vacancies without
-a skill. Every run is a row in `ops_pipeline_runs`, a Telegram summary is sent when the bot is
-configured, and `status.json` is written next to the parquet export. See
-[docs/observability.md](docs/observability.md) and [docs/postmortems](docs/postmortems).
-
-## Reliability
-
-A run for a date can be repeated and gives the same data (`tests/test_idempotency.py` compares hashes
-of every silver table and mart after two runs). Backfill and the data-quality checks:
-
-```bash
-make backfill FROM=2026-11-01 TO=2026-11-30   # re-parse stored days (no network), rebuild gold
-make dq                                       # 13 checks; exit 1 on an error, a warning only reports
-```
-
-`dq` runs in the daily workflow before the export, so bad data stops there and the consumers keep the
-last good files. Results go to `ops_dq_results`. Silver tables have contracts in `contracts/silver.yml`
-that a test keeps in step with the code. Details: [docs/idempotency_and_backfill.md](docs/idempotency_and_backfill.md).
-
-## Gold
-
-dbt also builds the marts: skill demand per month, which skills appear together (lift, PMI, NPMI),
-salary percentiles per skill and from the DOU survey, and how long vacancies stay open. A real
-vacancy listed on both DOU and Djinni counts once, and a skill counts for its parents (Django for
-Python). Marts do not publish samples that are too small (`warehouse/dbt_project.yml`, `vars`), and
-their column types are enforced contracts.
-
-```bash
-uv run jobmarket make-seeds   # position/city vocabularies for the survey -> warehouse/seeds
-make export                   # marts -> data/export/*.parquet + last_update.json (checked against the contracts)
-```
-
-`export` also writes `skill_clusters.parquet` (Louvain communities of the pair graph). The daily
-workflow keeps the export as the `gold-export` artifact. The manual `dbt-docs` workflow publishes the
-model documentation once GitHub Pages is switched on (Settings -> Pages -> Source: GitHub Actions).
-
-Method B asks an LLM for the skills (needs a key, never part of CI):
-
-```bash
-uv run jobmarket extract-skills all --dry-run          # counts requests and estimates the cost, no key
-OPENAI_API_KEY=... uv run jobmarket extract-skills all --max-cost-usd 2
-uv run jobmarket skills-review                         # most frequent skills the taxonomy lacks
-uv run jobmarket skills-renormalize                    # re-map stored answers after editing the taxonomy
-```
-
-`LLM_MODEL` picks the provider: a plain name is OpenAI, `gemini/...` uses `GEMINI_API_KEY`,
-`ollama/...` uses `OLLAMA_BASE_URL`. Answers are cached by title, text hash, prompt and model, so a
-repeat run costs nothing; prices live in `src/jobmarket/skills/llm_prices.yaml` (edit when they change).
-
-The skill gold set (the hand-labelled truth that precision/recall are measured against):
-
-```bash
-uv run jobmarket gold-sample --n 150     # data/gold/_label_sheet.md, blind (no suggestions)
-# open the sheet, list the skill ids each vacancy asks for under "Labels:" (ids: data/gold/_skill_ids.md)
-uv run jobmarket gold-import             # checks the ids, writes data/gold/skills_gold.yaml
-uv run jobmarket gold-eval               # precision / recall / F1 per method -> docs/metrics.md
-```
-
-The sheet and the vacancy texts stay local (gitignored); only the labels are committed. After the
-first `gold-eval`, put `regression_min_f1: <value>` in `skills_gold.yaml` and CI-style regression
-checks of the dictionary method start working (`tests/test_gold_regression.py`).
-
-DOU salary surveys (34 waves since 2010) are loaded separately:
-
-```bash
-uv run jobmarket scrape dou_salaries   # CSVs into bronze, a few times a year
-uv run jobmarket parse-surveys         # bronze -> silver_dou_salaries (~300k answers, ~7 s)
-```
-
-`src/jobmarket/silver/dou_salaries_columns.yaml` maps each wave's columns to one schema; a file
-whose columns changed fails alone and is reported, the other waves still load. Reloading replaces a
-file's rows atomically. Cross-tab subtotal rows (2022) are skipped so no respondent is counted twice.
-
-## Exploring the data
-
-`notebooks/01_eda_bronze.ipynb` summarises what is in `data/bronze`: volumes, statuses, distinct
-vacancies and salary coverage. Re-run it after more days accumulate.
-
-## Automation
-
-- `ci.yml`: ruff, mypy, pytest on every PR and push to `main`.
-- `docs.yml`: manual; builds the dbt docs site for GitHub Pages.
-- `pipeline-daily.yml`: scrape at 04:00 UTC (also manually, with `run_date` and `max_pages`).
-  Bronze is kept in a rolling GitHub Actions cache for now; this is interim storage and not
-  durable. Object storage (R2/S3) replaces it later.
-
-## Scraping etiquette
-
-`robots.txt` is honoured, at most 1-2 requests per second, honest User-Agent, no logins.
-work.ua is not scraped: it blocks automated clients with a Cloudflare challenge.
-Raw HTML is not published; `data/bronze_sample/` holds a few pages for tests only.
+A quick smoke run that scrapes one listing page per category: `SCRAPE_MAX_LIST_PAGES=1 make pipeline`.
+Docker: `make docker-pipeline`. Every command, step by step: [docs/operations.md](docs/operations.md).
+Checks: `make lint test` (about 725 tests, including real dbt runs on made-up data).
