@@ -337,6 +337,8 @@ _WORKSPACE = """
 [data-testid="stNavSectionHeader"] { margin-top: 0.3rem; padding-top: 0;
   padding-bottom: 0; min-height: 0; }
 [data-testid="stNavSectionHeader"]:empty { display: none; }
+[data-testid="stSidebarNavItems"] > div:nth-child(5) [data-testid="stNavSectionHeader"] {
+  display: none; }
 [data-testid="stSidebarHeader"] { padding-top: 0.6rem; padding-bottom: 0.2rem; }
 [data-testid="stSidebarNav"] { padding-bottom: 0; }
 [data-testid="stSidebarUserContent"] { padding-bottom: 0 !important; }
@@ -344,19 +346,37 @@ _WORKSPACE = """
 
 .st-key-dw_keys { position: absolute; width: 0; height: 0; overflow: hidden; }
 
+.st-key-cat_rows, .st-key-mkt_rows { display: flex; flex-direction: column; gap: var(--s2); }
+.st-key-cat_rows button, .st-key-mkt_rows button { height: auto; min-height: 3.4rem;
+  padding: var(--s2) var(--s3); justify-content: flex-start; text-align: left;
+  white-space: pre-line; background: var(--card); border: 2px solid var(--line);
+  border-left-width: 4px; border-radius: 0; }
+.st-key-cat_rows button p, .st-key-mkt_rows button p { text-align: left; margin: 0;
+  font-size: var(--fs-sm); color: var(--ink-3); line-height: 1.45; }
+.st-key-cat_rows button p strong, .st-key-mkt_rows button p strong { color: var(--ink);
+  font-size: var(--fs-md); display: block; }
+.st-key-cat_rows button:hover, .st-key-mkt_rows button:hover { border-color: var(--accent); }
+.st-key-cat_rows button[kind="primary"], .st-key-mkt_rows button[kind="primary"] {
+  background: rgba(170, 168, 255, 0.14); border-color: var(--accent); }
+.st-key-cat_detail, .st-key-mkt_detail { position: sticky; top: 3.5rem; }
+.st-key-dw_undo { border: 2px solid var(--accent); background: rgba(170, 168, 255, 0.10);
+  padding: var(--s2) var(--s3); margin-bottom: var(--s3); }
+.dw-undo { font-size: var(--fs-sm); color: var(--ink); }
 .dw-pager { text-align: right; font-size: var(--fs-sm); color: var(--ink-3);
   padding-bottom: 0.6rem; }
 
 /* the filter bar sits above the list, not in the menu: every control has a label of one height
    above it and the same height, so the rows line up */
-.st-key-cat_filters [data-testid="stHorizontalBlock"] { gap: var(--s3); align-items: flex-start; }
-.st-key-cat_filters .dw-fl { height: 1.4rem; margin: 0 0 var(--s1); line-height: 1.4rem; }
+.st-key-cat_filters [data-testid="stHorizontalBlock"] { gap: var(--s4); align-items: flex-start; }
+.st-key-cat_filters .dw-fl { font-size: var(--fs-xs); height: 1.2rem; margin: 0 0 var(--s2);
+  line-height: 1.2rem; }
 .st-key-cat_filters button, .st-key-cat_filters [data-baseweb="select"] > div,
 .st-key-cat_filters input { min-height: 2.5rem; }
-.st-key-cat_filters [data-testid="stPills"] { min-height: 2.5rem; align-items: center; }
+.st-key-cat_filters [data-testid="stPills"] { min-height: 2.5rem; align-items: center;
+  flex-wrap: wrap; gap: var(--s2); }
 .st-key-cat_filters { border: 2px solid var(--line); background: var(--card);
-  padding: var(--s3) var(--s4); margin-bottom: var(--s3); }
-.st-key-cat_filters [data-testid="stVerticalBlock"] { gap: var(--s2); }
+  padding: var(--s4) var(--s5); margin-bottom: var(--s4); }
+.st-key-cat_filters [data-testid="stVerticalBlock"] { gap: var(--s3); }
 
 /* the avatar sits at the bottom of the sidebar whatever else is above it */
 [data-testid="stSidebarContent"] { display: flex; flex-direction: column; height: 100vh;

@@ -21,7 +21,7 @@ PAGES: Final[tuple[tuple[str, str], ...]] = (
     ("Ринок", "m"),
     ("Навички", "s"),
     ("Зарплати", "w"),
-    ("Стан і дані", "d"),
+    ("Стан системи", "d"),
 )
 
 # (keys, what it does) for the help overlay, after the "g" shortcuts
@@ -31,6 +31,7 @@ OTHER: Final[tuple[tuple[str, str], ...]] = (
     ("?", "ця довідка"),
     ("Space", "тренажер: показати відповідь"),
     ("1 · 2 · 3", "тренажер: оцінити відповідь"),
+    ("Z", "скасувати останню дію (також Ctrl Z)"),
     ("Esc", "закрити вікно або вийти з поля"),
 )
 
@@ -113,6 +114,9 @@ _SCRIPT: Final = """
     if (e.code === 'Escape' || e.key === 'Escape') {
       if (open) close(); else if (typing(e.target)) e.target.blur();
       return;
+    }
+    if (!open && !typing(e.target) && e.code === 'KeyZ' && !e.altKey && !e.shiftKey) {
+      if (click('.st-key-dw_undo_btn button')) { e.preventDefault(); return; }
     }
     if (open || typing(e.target) || e.ctrlKey || e.metaKey || e.altKey) return;
     if (pending) {

@@ -4,8 +4,10 @@ Pages are opened through the entry point (``app.py`` + ``switch_page``): the hom
 others, and that only works inside the navigation.
 """
 
+import re
 from datetime import date, timedelta
 from pathlib import Path
+from typing import Any
 
 import pytest
 
@@ -334,8 +336,19 @@ def _found(app: AppTest) -> str:
     return _metrics(app)["01 · Знайдено"]
 
 
-def _titles(app: AppTest) -> list[str]:
-    return list(app.dataframe[0].value["Вакансія"].str.split(" · ").str[0])
+def _titles(app: AppTest, key: str = "cat") -> list[str]:
+    """The titles on the rows of a vacancy list (each row is a button: **title** then details)."""
+    return [
+        b.label.split("\n")[0].strip("*")
+        for b in app.button
+        if b.key and b.key.startswith(f"{key}_row_")
+    ]
+
+
+def _opened(app: AppTest) -> str:
+    """The title of the vacancy that is open beside the list."""
+    leads = [m.value for m in app.markdown if 'class="dw-lead"' in m.value]
+    return re.sub(r"<[^>]+>", "", leads[0]) if leads else ""
 
 
 def test_without_a_catalog_the_page_explains_why_and_how_to_get_one(export: Path) -> None:
@@ -430,13 +443,12 @@ def test_the_selection_tabs_show_what_the_sample_asks_for_and_who_hires(
     assert not app.exception
 
 
-def test_the_catalog_can_be_downloaded_as_a_table_of_what_is_shown(with_catalog: Path) -> None:
+def test_the_list_follows_the_search(with_catalog: Path) -> None:
     app = _run("catalog")
 
     app.text_input(key="cat_q").input("python").run()
 
-    table = app.dataframe[0].value
-    assert list(table["Посилання"]) == ["https://example.com/v1", "https://example.com/v2"]
+    assert _titles(app) == ["Senior Python Developer", "Middle Python Engineer"]
 
 
 def test_home_lists_the_freshest_open_vacancies_as_tiles_when_there_is_a_catalog(
@@ -915,44 +927,146 @@ def test_a_vacancy_card_without_a_profile_has_no_save_button(tmp_path: Path, exp
     assert not any(b.key and b.key.startswith("save_") for b in app.button)
 
 
-# ---- the vacancy list: pick, analyse, save ----------------------------------------------------
-def _pick(app: AppTest, key: str, *rows: int) -> AppTest:
-    app.session_state[f"{key}_0"] = {"selection": {"rows": list(rows), "columns": []}}  # page one
-    return app.run()
+# ---- the vacancy list: the vacancy is open at once, a click on a row opens another ---------------
+def _row(app: AppTest, title: str, key: str = "cat") -> Any:
+    return next(
+        b for b in app.button
+        if b.key and b.key.startswith(f"{key}_row_") and b.label.startswith(f"**{title}**")
+    )  # fmt: skip
 
 
-def test_one_picked_vacancy_opens_its_card_with_the_market_comparison(with_catalog: Path) -> None:
-    app = _pick(_run("catalog"), "cat_table", 0)
-
-    html = _markdown(app)
-    assert not app.exception
-    assert "dw-skillrow" in html  # each skill against the share of the market
-    assert "Клікніть рядок" not in html
-
-
-def test_several_picked_vacancies_are_saved_into_the_profile_together(with_catalog: Path) -> None:
-    app = _pick(_run("catalog"), "cat_table", 0, 1)
-
-    save = next(b for b in app.button if b.key == "cat_save")
-    assert "(2)" in save.label and not save.disabled
-    save.click().run()
-
-    assert not app.exception and len(pr.load().saved) == 2
-    assert next(b for b in app.button if b.key == "cat_save").label.endswith("(2)")
-
-
-def test_nothing_picked_means_nothing_to_save(with_catalog: Path) -> None:
+def test_the_first_vacancy_is_open_without_any_click_and_there_is_no_table(
+    with_catalog: Path,
+) -> None:
     app = _run("catalog")
 
-    assert next(b for b in app.button if b.key == "cat_save").disabled
+    assert _opened(app) == _titles(app)[0]  # the card is there already
+    assert "dw-skillrow" in _markdown(app)  # with the comparison against the market
+    assert len(app.dataframe) == 0  # nothing to click into
+
+
+def test_a_click_on_a_row_opens_that_vacancy_and_lights_the_row(with_catalog: Path) -> None:
+    app = _run("catalog")
+    other = _titles(app)[2]
+
+    _row(app, other).click().run()
+
+    assert _opened(app) == other and not app.exception
+    assert _row(app, other).proto.type == "primary"  # the open one is marked
+    assert _row(app, _titles(app)[0]).proto.type == "secondary"
+
+
+def test_a_row_says_the_company_pay_and_fit_under_the_title(with_catalog: Path) -> None:
+    _saved_profile(skills={"Python": "know"})
+    app = _run("catalog")
+
+    label = _row(app, "Senior Python Developer").label
+
+    assert label.split("\n")[1].startswith("Acme") and "3" in label and "збіг" in label
+
+
+def test_the_page_can_be_saved_at_once_and_taken_back(with_catalog: Path) -> None:
+    app = _run("catalog")
+    rows = len(_titles(app))
+
+    next(b for b in app.button if b.key == "cat_save").click().run()
+
+    assert not app.exception and len(pr.load().saved) == rows
+    assert "Збережено вакансій" in _markdown(app)  # the bar that offers to take it back
+    next(b for b in app.button if b.key == "dw_undo_btn").click().run()
+    assert pr.load().saved == {}
+    assert not any(b.key == "dw_undo_btn" for b in app.button)  # nothing left to undo
+
+
+def test_saving_one_vacancy_from_its_card_can_be_taken_back_too(with_catalog: Path) -> None:
+    app = _run("catalog")
+    first = next(b for b in app.button if b.key and b.key.startswith("save_"))
+
+    first.click().run()
+
+    assert len(pr.load().saved) == 1
+    next(b for b in app.button if b.key == "dw_undo_btn").click().run()
     assert pr.load().saved == {}
 
 
-def test_the_market_has_the_same_vacancy_list_in_its_own_tab(with_catalog: Path) -> None:
+def _undo_script() -> None:
+    import streamlit as st
+
+    from jobmarket import dashboard_profile as pr
+    from jobmarket import dashboard_ui as ui
+
+    ui.undo_bar()
+    for name in ("one", "two"):
+        if st.button(name, key=f"act_{name}"):
+            current = pr.load()
+            current.name = name
+            ui.persist(current, f"Ім'я: {name}")
+            st.rerun()  # like the real pages: the bar is drawn first, so draw the page again
+    if st.button("quiet", key="act_quiet"):
+        current = pr.load()
+        current.name = "quiet"
+        ui.persist(current)  # a routine write: nothing to take back
+    if st.button("same", key="act_same"):
+        ui.persist(pr.load(), "Нічого не змінено")
+
+
+def _undo_app(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> AppTest:
+    monkeypatch.setenv("PROFILE_PATH", str(tmp_path / "profile.json"))
+    return AppTest.from_function(_undo_script, default_timeout=30).run()
+
+
+def _undo_button(app: AppTest) -> Any:
+    return next((b for b in app.button if b.key == "dw_undo_btn"), None)
+
+
+def test_an_action_is_taken_back_to_exactly_the_state_before_it(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    app = _undo_app(tmp_path, monkeypatch)
+    app.button(key="act_one").click().run()
+    app.button(key="act_two").click().run()
+
+    assert pr.load().name == "two" and "Ім&#x27;я: two" in _markdown(app)
+    _undo_button(app).click().run()
+    assert pr.load().name == "one"  # the last action first
+    _undo_button(app).click().run()
+    assert pr.load().name == "" and _undo_button(app) is None  # back to the empty profile
+
+
+def test_a_routine_write_or_no_change_offers_nothing_to_take_back(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    app = _undo_app(tmp_path, monkeypatch)
+
+    app.button(key="act_quiet").click().run()
+    app.button(key="act_same").click().run()
+
+    assert _undo_button(app) is None and pr.load().name == "quiet"
+
+
+def test_an_old_action_can_no_longer_be_taken_back(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    from jobmarket import dashboard_ui as ui
+
+    app = _undo_app(tmp_path, monkeypatch)
+    app.button(key="act_one").click()
+    monkeypatch.setattr(ui, "UNDO_SECONDS", 0)  # everything is already too old
+    app.run()
+
+    assert _undo_button(app) is None and pr.load().name == "one"
+
+
+def test_the_undo_bar_is_only_there_when_there_is_something_to_take_back(export: Path) -> None:
+    for page in ("home", "catalog", "market"):
+        assert not any(b.key == "dw_undo_btn" for b in _run(page).button), page
+
+
+def test_the_market_has_the_same_list_in_its_own_tab(with_catalog: Path) -> None:
     app = _run("market")
 
-    assert any(t.label == "Вакансії" for t in app.tabs)
-    assert any(b.key == "mkt_save" for b in app.button) and not app.exception
+    assert any(t.label == "Вакансії" for t in app.tabs) and not app.exception
+    assert _titles(app, "mkt") and _opened(app)
 
 
 def test_the_pages_do_not_print_the_shortcuts_the_question_mark_shows_them(export: Path) -> None:
@@ -987,15 +1101,3 @@ def test_changing_a_filter_takes_the_list_back_to_page_one(
     app.multiselect(key="cat_dirs").set_value(["Python"]).run()
 
     assert any("1–" in m.value and "dw-pager" in m.value for m in app.markdown)
-
-
-def test_the_list_shows_few_columns_and_the_csv_keeps_them_all(with_catalog: Path) -> None:
-    app = _run("catalog")
-
-    assert list(app.dataframe[0].value.columns) == [
-        "Вакансія",
-        "Рівень",
-        "Зарплата",
-        "Навички",
-        "Посилання",
-    ]

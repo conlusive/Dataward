@@ -38,6 +38,10 @@ edited = st.data_editor(
 )  # fmt: skip
 st.caption("Змініть етап чи нотатку, або позначте «Видалити», і натисніть кнопку нижче.")
 clicked = st.button("Зберегти зміни", key="pf_saved_apply")
-if clicked and pr.apply_saved_table(profile, edited) and ui.persist(profile):
+if (
+    clicked
+    and pr.apply_saved_table(profile, edited)
+    and ui.persist(profile, "Змінено збережені вакансії")
+):
     ui.flash("Зміни збережено.")
     st.rerun()

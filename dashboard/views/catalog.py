@@ -51,7 +51,7 @@ def label(text: str) -> None:
 
 
 with st.container(key="cat_filters"):
-    first, second, third = st.columns(3)
+    first, second, third, more_col = st.columns([4, 3, 3, 2])
     with first:
         label("Пошук")
         query = st.text_input(
@@ -71,7 +71,14 @@ with st.container(key="cat_filters"):
             "Навички", dd.skill_options(catalog), key="cat_skills", placeholder="Будь-які навички",
             label_visibility="collapsed",
         )  # fmt: skip
-    levels_col, sources_col, more_col, reset_col = st.columns([6, 3, 2, 2])
+    with more_col:
+        label("Додатково")
+        popover = st.popover(
+            f"Ще фільтри{f' · {changed}' if changed else ''}",
+            icon=":material/tune:",
+            width="stretch",
+        )
+    levels_col, sources_col, reset_col = st.columns([7, 3, 2])
     with levels_col:
         label("Рівень")
         levels = st.pills(
@@ -85,13 +92,6 @@ with st.container(key="cat_filters"):
             "Джерело", dd.catalog_options(catalog, "source"), selection_mode="multi",
             key="cat_sources", label_visibility="collapsed",
         )  # fmt: skip
-    with more_col:
-        label("Додатково")
-        popover = st.popover(
-            f"Ще фільтри{f' · {changed}' if changed else ''}",
-            icon=":material/tune:",
-            width="stretch",
-        )
     with reset_col:
         label("&nbsp;")
         st.button("Скинути", on_click=reset_filters, icon=":material/restart_alt:", width="stretch")

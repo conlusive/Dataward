@@ -24,7 +24,7 @@ topic into views. Filters live on the page, in a bar above the list, never in th
 | Page | Tabs | Shows | Reads |
 |---|---|---|---|
 | Головна | - | a header with a typed line; four bracketed figures; **Сьогодні**: up to three things to do now (coloured by where they lead) and two rings, the daily goal and readiness; **Ринок зараз**: the breakdown panel (thin stacked bars per day) beside rings of the market by source, level and direction; the four biggest **directions** as tiles with a button that opens their vacancies; the top-10 skills and what changed; the three freshest vacancies (with a catalog); **Конвеєр даних**: the health chip, the last runs as squares, when the data was exported, DQ checks passed, SLOs kept, rows in silver | `fct_market_daily`, `fct_skill_demand_monthly`, `dim_skill`, `status.json`, `last_update.json`, the catalog |
-| Каталог | Вакансії / Що вимагають / Компанії | **the vacancies themselves**: a filter bar (search, direction, skills, level and source as pills, and a "Ще фільтри" popover with all/any skills, only open, only with a salary, minimum salary, remote, when it appeared; the popover title counts what is changed), four tiles describing the selection, a **paged list** (15 a page, a pager, few columns that fit the page without a sideways scroll: title and company in one cell, level, salary, top skills, link), a card of the vacancy you click (all skills, required ones marked, dates, both links when it is on both sites), what the selection asks for, which companies hire, a CSV download | `fct_vacancy_catalog` (local only) |
+| Каталог | Вакансії / Що вимагають / Компанії | **the vacancies themselves**: a filter bar (search, direction, skills, level and source as pills, and a "Ще фільтри" popover with all/any skills, only open, only with a salary, minimum salary, remote, when it appeared; the popover title counts what is changed), four tiles describing the selection, a **list with the vacancy already open beside it** (rows on the left, 15 a page with a pager, each row two lines: title, then company, level, salary and fit; the first vacancy is open at once and a click on a row opens another; no table to click into), the open vacancy's card with the market comparison and a save button, "save the whole page" (all skills, required ones marked, dates, both links when it is on both sites), what the selection asks for, which companies hire, a CSV download | `fct_vacancy_catalog` (local only) |
 | Для мене | - | the open vacancies that suit your target, ranked by how well your skills cover them (a required skill counts twice), with what you have and what is missing, a readiness figure, a minimum-match slider and a card with a save button | the catalog, the profile |
 | Збережені | - | saved vacancies by stage (збережено, відгукнувся, співбесіда, оффер, відмова) with a note, edited in a table | the profile |
 | Профіль (the avatar) | - | **your frog**, its level and experience, the streak, a 20-week **activity grid**, what to do next, achievements, and the settings: skills you know and learn, a target (direction, level, minimum salary, remote), a daily goal | the profile file, `dim_skill`, `fct_market_daily` |
@@ -33,7 +33,7 @@ topic into views. Filters live on the page, in a bar above the list, never in th
 | Ринок | Динаміка / Категорії / Рівні / Таблиця | the same tiles for the filtered slice (source, category, level), a line per source, new vs closed per day, ranked bars, and the rows as a table with a CSV download | `fct_market_daily` |
 | Навички | Рейтинг / Навичка / Стеки | a searchable, sortable ranking (share, how often a hard requirement, change against the previous month in percentage points, declared salary) with a CSV download; one skill with its trend, salary and related skills; the stack clusters and a graph of one of them | demand, `dim_skill`, `fct_skill_pairs`, `fct_salary_by_skill`, `skill_clusters` |
 | Зарплати | Калькулятор / Орієнтири DOU / За навичками / Тривалість вакансій | the model's p10-p50-p90 for a profile; the survey's median by year with its p25-p75 band; declared salaries by skill; how long a vacancy stays open | `salary_model_grid` (optional), `fct_salary_survey`, `fct_salary_by_skill`, `fct_vacancy_lifetime` |
-| Стан і дані | Стан / Перевірки / Скрапінг / Про дані | health in one line, SLOs, recent runs, quality checks, scraping errors, volumes, the export's time and tables, sources and limitations | `status.json`, `last_update.json` |
+| Стан системи | Стан / Перевірки / Скрапінг / Про дані | health in one line, SLOs, recent runs, quality checks, scraping errors, volumes, the export's time and tables, sources and limitations | `status.json`, `last_update.json` |
 
 ## The vacancy catalog is local on purpose
 
@@ -95,16 +95,26 @@ Shortcuts exist but are not printed on the pages: `?` lists them, `Ctrl K` (`⌘
 
 | Keys | Does |
 |---|---|
-| `g` then a letter | go to a page: `h` Головна, `c` Каталог, `f` Для мене, `b` Збережені, `u` Профіль, `l` Навчання, `p` Практика, `m` Ринок, `s` Навички, `w` Зарплати, `d` Стан і дані |
+| `g` then a letter | go to a page: `h` Головна, `c` Каталог, `f` Для мене, `b` Збережені, `u` Профіль, `l` Навчання, `p` Практика, `m` Ринок, `s` Навички, `w` Зарплати, `d` Стан системи |
 | `/` | focus the search field of the page |
 | `Ctrl K` | the palette: type a part of a page name, arrows and Enter |
 | `Space`, `1` `2` `3` | trainer: reveal the answer, then "Знаю", "Частково", "Не знаю" |
+| `z` / `Ctrl Z` | take back the last action (see below) |
 | `Esc` | close the window, or leave a field |
 
 The table lives in `dashboard_keys.py` and the script is generated from it (`st.html` with
 `unsafe_allow_javascript`); it clicks the sidebar links and the trainer's buttons, so it knows nothing
 about Streamlit's routing. Keys are matched by position (`KeyboardEvent.code`), so they work in the
 Ukrainian layout. A test keeps the table equal to the menu and checks the script with `node --check`.
+
+## Taking an action back
+
+Every change to the profile that you make by hand (saving vacancies, editing the saved ones, ticking
+plan or material marks, the profile form) keeps the state before it. A slim bar over the page says
+"↶ Збережено вакансій: 15" with a **Скасувати** button (or press `z`); each press undoes one action, the
+newest first, up to 20 actions and for three minutes. Routine writes (a trainer answer) and writes that
+change nothing are not offered. The undo restores the file as it was, so XP, streak and the saved list go
+back together. Nothing is kept on disk besides the profile itself.
 
 ## Filters you can tell apart
 

@@ -18,7 +18,14 @@
   is pinned below it, so no menu item is out of reach on a short window. The filter bar has a label of one
   height above every control, so the rows line up.
 
+- The vacancy list is no longer a table you click into: **rows on the left and the vacancy already open on
+  the right** (the first one at once, a click on a row opens another). "Save the whole page" replaces
+  ticking rows. "Стан і дані" is now **"Стан системи"** without a heading above it (the heading looked like
+  a button that did nothing). The filter bar has more room, and its pills wrap.
+
 ### Added (workspace)
+- **Undo** for every hand-made change of the profile: a bar with "Скасувати" (and `z` / `Ctrl Z`), the newest
+  action first, 20 actions, three minutes.
 - A **vacancy list** shared by the catalog and a new "Вакансії" tab of the market page: sort, pick one row
   for a card with an analysis against the market (each skill's share, salary against the direction's
   median, days listed), pick several to save them together, CSV.

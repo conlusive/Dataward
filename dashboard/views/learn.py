@@ -34,14 +34,14 @@ def toggle(url: str) -> None:
     """A checkbox callback: a resource is finished, or not any more."""
     current = ui.profile()
     pr.toggle_resource(current, url, TODAY)
-    ui.persist(current)
+    ui.persist(current, "Змінено позначку матеріалу")
 
 
 def finish(skill: str) -> None:
     """A button callback: a skill being learned now counts as known."""
     current = ui.profile()
     pr.mark_skill(current, skill, "know")
-    if ui.persist(current):
+    if ui.persist(current, f"«{skill}» позначено як відому"):
         ui.flash(f"«{skill}» тепер серед ваших навичок.")
 
 
@@ -90,7 +90,11 @@ else:
         column_config={"Навичка": st.column_config.TextColumn(width=200)},
     )  # fmt: skip
     ticked = st.button("Зберегти позначки", key="pf_plan_apply")
-    if ticked and pr.apply_plan_table(profile, edited_plan) and ui.persist(profile):
+    if (
+        ticked
+        and pr.apply_plan_table(profile, edited_plan)
+        and ui.persist(profile, "Змінено позначки плану")
+    ):
         ui.flash("Позначки збережено.")
         st.rerun()
 

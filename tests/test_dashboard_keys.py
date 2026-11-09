@@ -61,3 +61,10 @@ def test_the_release_of_space_cannot_click_the_button_that_appears_under_it() ->
     code = keys.script()
 
     assert "keyup" in code and "swallow" in code  # else one Space reveals and also rates
+
+
+def test_z_clicks_the_undo_button_and_the_help_lists_it() -> None:
+    code = keys.script()
+
+    assert "KeyZ" in code and "st-key-dw_undo_btn" in code
+    assert any(k.startswith("Z") for k, _ in keys.OTHER)

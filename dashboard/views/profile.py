@@ -120,6 +120,6 @@ if submitted:
     profile.min_salary, profile.remote, profile.goal = int(min_salary), bool(remote), int(goal)
     pr.set_skills(profile, know, learning)
     profile.skills.update(outside)  # a skill the taxonomy no longer lists is not thrown away
-    if ui.persist(profile):
+    if ui.persist(profile, "Змінено профіль"):
         ui.flash("Профіль збережено.")
         st.rerun()

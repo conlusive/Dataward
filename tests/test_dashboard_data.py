@@ -790,25 +790,6 @@ def test_the_activity_grid_ends_today_and_levels_follow_the_steps() -> None:
     assert by_day[today] == 2 and by_day[date(2026, 11, 9)] == 1 and by_day[date(2026, 11, 8)] == 0
 
 
-def test_the_compact_list_joins_title_and_company_and_drops_the_rest(tmp_path: Path) -> None:
-    vacancies = _loaded_catalog(tmp_path)
-
-    table = dd.list_table(vacancies)
-
-    assert list(table.columns) == ["Вакансія", "Рівень", "Зарплата", "Навички", "Посилання"]
-    assert table["Вакансія"].iloc[0].count(" · ") == 1  # "title · company"
-    assert not table["Вакансія"].str.endswith(" · ").any()
-
-
-def test_a_vacancy_without_a_company_shows_only_its_title(tmp_path: Path) -> None:
-    vacancies = _loaded_catalog(tmp_path)
-    nameless = vacancies[vacancies["company"].str.strip() == ""]  # read_catalog fills a gap with ""
-
-    assert (
-        len(nameless) and dd.list_table(nameless)["Вакансія"].tolist() == nameless["title"].tolist()
-    )
-
-
 def test_a_page_stays_inside_the_list() -> None:
     assert dd.page_of(40, 0, 15) == (0, 0, 15)
     assert dd.page_of(40, 2, 15) == (2, 30, 40)  # the last page is the short one

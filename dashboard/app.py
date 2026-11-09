@@ -41,12 +41,13 @@ navigation = st.navigation(
             st.Page("views/skills.py", title="Навички", icon=":material/psychology:"),
             st.Page("views/salary.py", title="Зарплати", icon=":material/payments:"),
         ],
-        "Система": [
-            st.Page("views/system.py", title="Стан і дані", icon=":material/health_and_safety:"),
+        "\u200b": [  # no visible heading: a heading over one item looked like a button
+            st.Page("views/system.py", title="Стан системи", icon=":material/health_and_safety:"),
         ],
     },
     expanded=True,  # every item visible, never behind "View more"
 )
+ui.undo_bar()  # a slim bar while the last action can be taken back (also `z`)
 ui.keys()  # shortcuts: `?` lists them, they are not printed on the pages
 ui.avatar_card()  # you, at the foot of the sidebar, on every page
 navigation.run()

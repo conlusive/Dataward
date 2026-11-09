@@ -1,5 +1,7 @@
 """Streamlit helpers shared by the dashboard pages: cached loading and error handling."""
 
+import re
+import time
 from datetime import date
 from html import escape
 from pathlib import Path
@@ -222,14 +224,65 @@ def profile() -> pr.Profile:
     return pr.load()
 
 
-def persist(profile: pr.Profile) -> bool:
-    """Write the profile; a failure is a message on the page, not a stack trace."""
+UNDO_SECONDS = 180  # how long a done action can be taken back
+UNDO_LIMIT = 20
+
+
+def persist(profile: pr.Profile, what: str | None = None) -> bool:
+    """Write the profile; a failure is a message on the page, not a stack trace.
+
+    With ``what`` (a short phrase: "Збережено вакансію") the state before the write is kept, so the
+    action can be taken back with ``undo``. Routine writes, like a trainer answer, pass nothing.
+    """
+    before = pr.load() if what else None  # the file is still as it was before this action
     try:
         pr.save(profile)
     except OSError as error:
         st.error(f"Не вдалося зберегти профіль у {pr.default_path()}: {error}")
         return False
+    if what and before is not None and before != profile:
+        stack = st.session_state.setdefault("_undo", [])
+        stack.append((what, before, time.time()))
+        del stack[:-UNDO_LIMIT]
     return True
+
+
+def _undoable() -> list[tuple[str, pr.Profile, float]]:
+    """The actions that can still be taken back, the newest last; old ones are forgotten."""
+    stack: list[tuple[str, pr.Profile, float]] = st.session_state.get("_undo", [])
+    stack[:] = [item for item in stack if time.time() - item[2] < UNDO_SECONDS]
+    return stack
+
+
+def undo() -> None:
+    """A button callback: put the profile back as it was before the last action."""
+    stack = _undoable()
+    if not stack:
+        return
+    what, before, stamp = stack.pop()
+    try:
+        pr.save(before)
+    except OSError as error:
+        stack.append((what, before, stamp))
+        st.error(f"Не вдалося скасувати: {error}")
+        return
+    st.toast(f"Скасовано: {what[:1].lower()}{what[1:]}", icon=":material/undo:")
+
+
+def undo_bar() -> None:
+    """A slim bar above the page while there is something to take back (also `z`)."""
+    stack = _undoable()
+    if not stack:
+        return
+    with st.container(key="dw_undo"):
+        text, button = st.columns([7, 2], vertical_alignment="center")
+        extra = f" (ще {len(stack) - 1} до цього)" if len(stack) > 1 else ""
+        text.markdown(
+            f'<div class="dw-undo">↶ {escape(stack[-1][0])}{extra}</div>', unsafe_allow_html=True
+        )
+        button.button(
+            "Скасувати", key="dw_undo_btn", on_click=undo, icon=":material/undo:", width="stretch"
+        )
 
 
 def flash(message: str) -> None:
@@ -250,7 +303,7 @@ def _save_vacancy(row: Any) -> None:
         current, str(row["vacancy_id"]), title=str(row["title"]), company=str(row["company"]),
         url=str(row["url"]), today=date.today(),
     )  # fmt: skip
-    if added and persist(current):
+    if added and persist(current, "Збережено вакансію"):
         st.toast("Вакансію збережено в профілі.", icon=":material/bookmark_added:")
 
 
@@ -319,7 +372,7 @@ def _save_picked(key: str) -> None:
     rows = st.session_state.get(f"{key}_picked", [])
     current = pr.load()
     added = pr.save_vacancies(current, rows, date.today())
-    if added and persist(current):
+    if added and persist(current, f"Збережено вакансій: {added}"):
         st.toast(f"Збережено вакансій: {added}", icon=":material/bookmark_added:")
     elif not added:
         st.toast("Усі вибрані вакансії вже в профілі.")
@@ -357,6 +410,26 @@ def analysis_block(row: Any, analysis: dict[str, Any], mine: set[str]) -> None:
         st.caption(line)
 
 
+def _open(key: str, vacancy_id: str) -> None:
+    """A row button: show this vacancy on the right."""
+    st.session_state[f"{key}_shown"] = vacancy_id
+
+
+def _plain(text: object) -> str:
+    """Text for a button label, which is markdown: a title with `*`, `_` or `$` stays as typed."""
+    return re.sub(r"([\\`*_\[\]$~<>])", r"\\\1", str(text))
+
+
+def _row_label(row: Any, score: float | None) -> str:
+    """Two lines on a row: the title, then the company, level, salary and how well it fits you."""
+    level = "" if row["seniority"] == dd.NO_LEVEL else str(row["seniority"])
+    pay = dd.salary_label(row["salary_usd_min"], row["salary_usd_max"])
+    company = str(row["company"]) if _has(row["company"]) else ""
+    fit = f"збіг {score:.0%}" if score is not None else ""
+    second = " · ".join(_plain(x) for x in (company, level, pay, fit) if x)
+    return f"**{_plain(row['title'])}**\n{second}" if second else f"**{_plain(row['title'])}**"
+
+
 def vacancy_list(
     frame: pd.DataFrame,
     *,
@@ -365,9 +438,11 @@ def vacancy_list(
     catalog: pd.DataFrame,
     shares: dict[str, float],
 ) -> None:
-    """A list of vacancies: sort, select one or many, open, analyse, save, download.
+    """Vacancies as a list with the chosen one already open beside it (no clicking into a table).
 
-    It is a fragment, so choosing a row or a sort order redraws only the list and its card.
+    Rows on the left, 15 to a page; the vacancy on the right with its facts, skills, links, the
+    comparison with the market and a save button. The first one is open at once; a click on a row
+    opens another. It is a fragment, so a click redraws only the list and the card.
     """
     if frame.empty:
         st.info("За цими умовами вакансій немає.")
@@ -383,6 +458,7 @@ def vacancy_list(
         if st.session_state.get(f"{key}_sig") != signature:  # other filters or order: page one
             st.session_state[f"{key}_sig"] = signature
             st.session_state[f"{key}_page"] = 0
+            st.session_state.pop(f"{key}_shown", None)
         page, first, last = dd.page_of(
             len(ordered), st.session_state.get(f"{key}_page", 0), dd.PAGE_SIZE
         )
@@ -400,64 +476,43 @@ def vacancy_list(
             f'<div class="dw-pager">{first + 1}–{last} з {dd.fmt_int(len(ordered))}</div>',
             unsafe_allow_html=True,
         )
-        shown = ordered.iloc[first:last]
-        table = dd.list_table(shown)
-        if mine:
-            scores = [
-                pr.match(list(s), list(r), mine)[0]
-                for s, r in zip(shown["skills"], shown["skills_required"], strict=True)
-            ]
-            table.insert(0, "Збіг, %", [round((x or 0) * 100) for x in scores])
-        event = st.dataframe(
-            table, hide_index=True, height=35 * (len(table) + 1) + 3,
-            key=f"{key}_table_{page}", on_select="rerun", selection_mode="multi-row",
-            column_config={
-                "Збіг, %": st.column_config.ProgressColumn(
-                    format="%d", min_value=0, max_value=100, width=90
-                ),
-                "Вакансія": st.column_config.TextColumn(width=330),
-                "Рівень": st.column_config.TextColumn(width=80),
-                "Зарплата": st.column_config.TextColumn(width=125),
-                "Навички": st.column_config.TextColumn(width=230),
-                "Посилання": st.column_config.LinkColumn(
-                    "Посилання", display_text="відкрити ↗", width=100
-                ),
-            },
-        )  # fmt: skip
-        picked = [i for i in event.selection.rows if i < len(shown)]
+        shown = ordered.iloc[first:last].reset_index(drop=True)
+        ids = shown["vacancy_id"].astype(str).tolist()
+        opened = st.session_state.get(f"{key}_shown")
+        if opened not in ids:  # nothing chosen yet, or it is on another page: open the first
+            opened = ids[0]
+        listing, detail = st.columns([5, 6], gap="medium")
+        with listing, st.container(key=f"{key}_rows"):
+            for vacancy_id, (_, row) in zip(ids, shown.iterrows(), strict=True):
+                score = (
+                    pr.match(list(row["skills"]), list(row["skills_required"]), mine)[0]
+                    if mine
+                    else None
+                )
+                st.button(
+                    _row_label(row, score if mine else None), key=f"{key}_row_{vacancy_id}",
+                    type="primary" if vacancy_id == opened else "secondary",
+                    on_click=_open, args=(key, vacancy_id), width="stretch",
+                )  # fmt: skip
+        with detail, st.container(border=True, key=f"{key}_detail"):
+            row = shown.iloc[ids.index(opened)]
+            vacancy_card(row, profile=profile)
+            analysis_block(row, dd.vacancy_analysis(row, catalog, shares), mine)
         st.session_state[f"{key}_picked"] = [
             {
-                "id": str(shown.iloc[i]["vacancy_id"]), "title": str(shown.iloc[i]["title"]),
-                "company": str(shown.iloc[i]["company"]), "url": str(shown.iloc[i]["url"]),
+                "id": str(r["vacancy_id"]), "title": str(r["title"]),
+                "company": str(r["company"]), "url": str(r["url"]),
             }
-            for i in picked
+            for _, r in shown.iterrows()
         ]  # fmt: skip
         save, csv = st.columns([1, 1])
         save.button(
-            f"★ Зберегти вибрані ({len(picked)})", key=f"{key}_save", disabled=not picked,
+            f"★ Зберегти всі на сторінці ({len(shown)})", key=f"{key}_save",
             on_click=_save_picked, args=(key,),
         )  # fmt: skip
         csv.download_button(
             "Завантажити CSV (усе)", dd.catalog_table(ordered).to_csv(index=False).encode("utf-8"),
             file_name=f"dataward_{key}.csv", mime="text/csv", key=f"{key}_csv",
         )  # fmt: skip
-        with st.container(border=True):
-            if len(picked) == 1:
-                row = shown.iloc[picked[0]]
-                vacancy_card(row, profile=profile)
-                analysis_block(row, dd.vacancy_analysis(row, catalog, shares), mine)
-            elif picked:
-                st.markdown(
-                    f'<div class="dw-muted">Вибрано вакансій: {len(picked)}. Натисніть «Зберегти '
-                    "вибрані», щоб додати їх у профіль, або виберіть одну, щоб побачити аналіз."
-                    "</div>",
-                    unsafe_allow_html=True,
-                )
-            else:
-                st.markdown(
-                    '<div class="dw-muted">▸ Клікніть рядок: побачите вакансію й порівняння з '
-                    "ринком; відмічайте кілька, щоб зберегти разом.</div>",
-                    unsafe_allow_html=True,
-                )
 
     view()
