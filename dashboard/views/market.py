@@ -2,21 +2,61 @@ import streamlit as st
 
 from jobmarket import dashboard_charts as charts
 from jobmarket import dashboard_data as dd
+from jobmarket import dashboard_theme as theme
 from jobmarket import dashboard_ui as ui
 
 ui.header(
     "Ринок",
-    "Скільки вакансій відкрито, скільки з'являється і зникає, в яких категоріях і для якого рівня.",
-    eyebrow="Аналітика · ринок",
+    "Скільки вакансій відкрито, скільки з'являється і зникає, в яких напрямках і для якого рівня.",
+    eyebrow="аналітика / ринок",
 )
 
 market = ui.table("fct_market_daily")
 
+DEFAULTS: dict[str, list[str]] = {"mk_sources": [], "mk_levels": [], "mk_cats": []}
+for key, value in DEFAULTS.items():
+    st.session_state.setdefault(key, list(value))
+
+
+def reset_filters() -> None:
+    for name, default in DEFAULTS.items():
+        st.session_state[name] = list(default)
+
+
+level_names = {dd.NO_LEVEL: "не вказано"}
+
 ui.section("Фільтри")
-left, middle, right = st.columns(3)
-sources = left.multiselect("Джерело", sorted(market["source"].unique()), placeholder="Усі")
-categories = middle.multiselect("Категорія", sorted(market["category"].unique()), placeholder="Усі")
-levels = right.multiselect("Рівень", sorted(market["seniority"].unique()), placeholder="Усі")
+with st.container(border=True):
+    one, two, three = st.columns([2, 4, 4])
+    with one:
+        ui.html('<div class="dw-fl">Джерело</div>')
+        sources = st.pills(
+            "Джерело", sorted(market["source"].unique()), selection_mode="multi",
+            key="mk_sources", label_visibility="collapsed",
+        )  # fmt: skip
+    with two:
+        ui.html('<div class="dw-fl">Рівень</div>')
+        levels = st.pills(
+            "Рівень", sorted(market["seniority"].unique()), selection_mode="multi",
+            key="mk_levels", label_visibility="collapsed",
+            format_func=lambda name: level_names.get(name, name),
+        )  # fmt: skip
+    with three:
+        ui.html('<div class="dw-fl">Напрямок</div>')
+        categories = st.multiselect(
+            "Напрямок", sorted(market["category"].unique()), key="mk_cats",
+            placeholder="Усі напрямки", label_visibility="collapsed",
+        )  # fmt: skip
+
+chosen = [
+    ("Джерело", dd.short_list(sources)) if sources else None,
+    ("Рівень", dd.short_list([level_names.get(x, x) for x in levels])) if levels else None,
+    ("Напрямок", dd.short_list(categories)) if categories else None,
+]
+active = [pair for pair in chosen if pair]
+ui.html(theme.active_filters(active))
+if active:
+    st.button("Скинути фільтри", on_click=reset_filters)
 
 selected = dd.filter_market(market, sources=sources, categories=categories, seniorities=levels)
 if selected.empty:
@@ -57,22 +97,31 @@ if selected["date"].max() == market["date"].min():
 
 st.write("")
 dynamics, categories_tab, levels_tab, table_tab = st.tabs(
-    ["Динаміка", "Категорії", "Рівні", "Таблиця"]
+    ["Динаміка", "Напрямки", "Рівні", "Таблиця"]
 )
 
 with dynamics:
-    with ui.card("Відкриті вакансії за днями", "DOU і Djinni рахуються окремо."):
-        ui.chart(charts.lines(dd.open_by_day(selected)))
+    with ui.card("Розріз за днями", "тонкий стовпчик — один день; кольори — частини розрізу."):
+        pick_metric, pick_split = st.columns(2)
+        metric = pick_metric.selectbox("Показник", list(dd.METRICS), key="mk_metric")
+        split = pick_split.selectbox("Розріз", list(dd.BREAKDOWNS), key="mk_split")
+        daily, order = dd.daily_breakdown(selected, dd.METRICS[metric], dd.BREAKDOWNS[split])
+        names, colours = charts.series_domain(order, keep_order=True)
+        ui.html(theme.legend(names, colours))
+        ui.chart(charts.stacked_bars(daily, order=order, unit=metric))
     flow = totals.melt(
         id_vars="date", value_vars=["new_vacancies", "closed_vacancies"], var_name="series"
     ).replace({"new_vacancies": "Нові", "closed_vacancies": "Закриті"})
-    with ui.card(
-        "Нові й закриті за днями", "скільки вакансій з'явилося і скільки зникло з сайтів."
-    ):
+    started = selected["date"].min() == market["date"].min() and len(totals) > 1
+    flow_note = "скільки вакансій з'явилося і скільки зникло з сайтів."
+    if started:
+        flow_note += " Перші дні завищують «нові»: збір почався з порожньої бази."
+    with ui.card("Нові й закриті за днями", flow_note):
+        ui.html(theme.legend(["Нові", "Закриті"], list(theme.SERIES[:2])))
         ui.chart(charts.grouped_columns(flow, order=["Нові", "Закриті"]))
 
 by_category = dd.open_by_category(selected, top=15)
-with categories_tab, ui.card("Категорії", "відкриті вакансії на останній день, найбільші зверху."):
+with categories_tab, ui.card("Напрямки", "відкриті вакансії на останній день, найбільші зверху."):
     ui.chart(
         charts.ranked_bars(
             by_category.rename(columns={"category": "label", "open_vacancies": "value"}),
@@ -93,7 +142,7 @@ with levels_tab:
 with table_tab:
     shown = selected.sort_values(["date", "open_vacancies"], ascending=[False, False]).rename(
         columns={
-            "date": "Дата", "source": "Джерело", "category": "Категорія", "seniority": "Рівень",
+            "date": "Дата", "source": "Джерело", "category": "Напрямок", "seniority": "Рівень",
             "open_vacancies": "Відкриті", "new_vacancies": "Нові", "closed_vacancies": "Закриті",
         }
     )  # fmt: skip

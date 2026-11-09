@@ -645,3 +645,71 @@ def test_missing_locations_read_as_empty_text(tmp_path: Path) -> None:
     loaded = dd.read_catalog(tmp_path)
 
     assert loaded is not None and (loaded["locations"] == "").all()
+
+
+# ---- the home page: breakdowns, directions, runs -------------------------------------------------
+def test_a_metric_is_split_by_source_with_the_biggest_first(
+    frames: dict[str, pd.DataFrame],
+) -> None:
+    daily, order = dd.daily_breakdown(frames["fct_market_daily"], "open_vacancies", "source")
+
+    assert order == ["dou", "djinni"]  # dou has 22 open vacancy-days, djinni 11
+    pivot = daily.pivot(index="date", columns="series", values="value")
+    assert pivot["dou"].tolist() == [10, 12] and pivot["djinni"].tolist() == [6, 5]
+
+
+def test_the_tail_of_a_breakdown_is_folded_into_others(frames: dict[str, pd.DataFrame]) -> None:
+    daily, order = dd.daily_breakdown(
+        frames["fct_market_daily"], "open_vacancies", "category", top=1
+    )
+
+    assert order == ["Python", dd.OTHER]
+    assert daily[daily["series"] == dd.OTHER]["value"].tolist() == [6, 5]  # QA, folded
+
+
+def test_a_source_is_never_folded_and_an_unknown_level_is_named() -> None:
+    market = pd.DataFrame(
+        {
+            "date": [date(2026, 11, 1)] * 3,
+            "source": ["dou", "djinni", "dou"],
+            "seniority": ["unknown", "senior", "unknown"],
+            "category": ["a", "b", "c"],
+            "open_vacancies": [5, 3, 2],
+        }
+    )
+
+    _, by_source = dd.daily_breakdown(market, "open_vacancies", "source", top=1)
+    _, by_level = dd.daily_breakdown(market, "open_vacancies", "seniority")
+
+    assert by_source == ["dou", "djinni"] and by_level == ["не вказано", "senior"]
+
+
+def test_the_biggest_directions_come_with_their_share_and_top_skills(
+    frames: dict[str, pd.DataFrame],
+) -> None:
+    with_skills = dd.direction_stats(frames["fct_market_daily"], catalog())
+    without = dd.direction_stats(frames["fct_market_daily"])
+
+    assert with_skills["category"].tolist() == ["Python", "QA"]
+    assert with_skills["open"].tolist() == [12, 5]
+    assert with_skills["share"].iloc[0] == pytest.approx(12 / 17)
+    assert with_skills["skills"].iloc[0] == ["Python", "Django", "Docker"]
+    assert with_skills["skills"].iloc[1] == ["Docker", "SQL"]
+    assert without["skills"].iloc[0] == []
+    assert dd.direction_stats(frames["fct_market_daily"].iloc[0:0]).empty
+
+
+def test_the_runs_are_squares_oldest_first_with_a_tone() -> None:
+    from tests.dashboard_fixtures import STATUS
+
+    states = dd.run_states(STATUS)
+
+    assert states == [("2026-11-08: failed", "bad"), ("2026-11-09: success", "ok")]
+    assert dd.run_states(STATUS, last=1) == [("2026-11-09: success", "ok")]
+    assert dd.run_states({}) == []
+
+
+def test_a_long_selection_is_shortened_for_a_tag() -> None:
+    assert dd.short_list([]) == "" and dd.short_list(["a"]) == "a"
+    assert dd.short_list(["a", "b"]) == "a, b" and dd.short_list(["a", "b", "c", "d"]) == "a, b +2"
+    assert dd.short_list(["a", "b", "c", "d"], 3) == "a, b, c +1"

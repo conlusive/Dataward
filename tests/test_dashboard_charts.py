@@ -1,4 +1,4 @@
-from datetime import date
+from datetime import date, timedelta
 from typing import Any
 
 import pandas as pd
@@ -25,14 +25,15 @@ def test_a_source_keeps_its_colour_whatever_the_filter_leaves() -> None:
     both = charts.series_domain(["djinni", "dou"])
     only_djinni = charts.series_domain(["djinni"])
 
-    assert both == (["dou", "djinni"], list(t.SERIES))
-    assert only_djinni == (["djinni"], [t.SERIES[0]])  # the colour index follows the fixed order
+    assert both == (["dou", "djinni"], list(t.SERIES[:2]))
+    assert only_djinni == (["djinni"], [t.SERIES[1]])  # djinni is not repainted when dou is gone
 
 
 def test_unknown_series_come_after_the_known_sources_in_a_stable_order() -> None:
     domain, colours = charts.series_domain(["zeta", "dou", "alpha"])
 
     assert domain == ["dou", "alpha", "zeta"] and colours[0] == t.SERIES[0]
+    assert colours[1:] == [t.SERIES[0], t.SERIES[1]]  # the others take the colours in order
 
 
 def test_the_line_chart_builds_for_one_day_and_for_many() -> None:
@@ -80,7 +81,7 @@ def test_grouped_columns_use_the_series_order_that_was_asked_for() -> None:
     spec = charts.grouped_columns(frame, order=["Нові", "Закриті"]).to_dict()
 
     assert spec["encoding"]["color"]["scale"]["domain"] == ["Нові", "Закриті"]
-    assert spec["encoding"]["color"]["scale"]["range"] == list(t.SERIES)
+    assert spec["encoding"]["color"]["scale"]["range"] == list(t.SERIES[:2])
     assert spec["encoding"]["x"]["sort"] == ["01.11", "02.11"]  # the days still sort by date
 
 
@@ -148,3 +149,43 @@ def test_the_markers_are_squares_in_every_chart() -> None:
         ]
         assert shapes and set(shapes) <= {"square", None}, spec["layer"]
         assert "square" in shapes
+
+
+def test_a_ranked_stack_keeps_its_order_and_greys_the_folded_tail() -> None:
+    domain, colours = charts.series_domain(
+        ["QA", "Java", "Python", "DevOps", "Інші"], keep_order=True
+    )
+
+    assert domain == ["QA", "Java", "Python", "DevOps", "Інші"]
+    assert colours == [*t.SERIES, t.MUTED_MARK]
+
+
+def _daily() -> pd.DataFrame:
+    return pd.DataFrame(
+        {
+            "date": [date(2026, 11, 1), date(2026, 11, 2)] * 3,
+            "series": ["a", "a", "b", "b", "c", "c"],
+            "value": [3, 4, 2, 1, 1, 1],
+        }
+    )
+
+
+def test_stacked_bars_are_thin_stack_in_the_given_order_and_carry_no_legend_of_their_own() -> None:
+    spec = charts.stacked_bars(_daily(), order=["c", "b", "a"]).to_dict()
+
+    assert spec["mark"]["size"] <= 12 and spec["encoding"]["color"]["legend"] is None
+    assert spec["encoding"]["color"]["scale"]["domain"] == ["c", "b", "a"]
+    ranks = {row["series"]: row["rank"] for row in spec["datasets"][spec["data"]["name"]]}
+    assert ranks == {"c": 0, "b": 1, "a": 2}  # the stack goes from the bottom up
+
+
+def test_stacked_bars_get_thinner_as_days_pile_up_and_thin_their_labels() -> None:
+    many = pd.concat(
+        [_daily().assign(date=date(2026, 10, 1) + timedelta(days=n)) for n in range(40)],
+        ignore_index=True,
+    )
+
+    spec = charts.stacked_bars(many).to_dict()
+
+    assert spec["mark"]["size"] == 5
+    assert len(spec["encoding"]["x"]["axis"]["values"]) <= 14

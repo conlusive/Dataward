@@ -4,7 +4,11 @@ from pathlib import Path
 
 import streamlit as st
 
-from jobmarket import dashboard_ui as ui
+from jobmarket import dashboard_reload
+
+dashboard_reload.refresh()  # pick up edited modules from src/ before they are imported below
+
+from jobmarket import dashboard_ui as ui  # noqa: E402  (after the refresh on purpose)
 
 STATIC = Path(__file__).parent / "static"  # the pixel logo and the favicon (dashboard_logo.py)
 

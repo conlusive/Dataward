@@ -69,10 +69,28 @@ def setup() -> None:
 
 
 def header(
-    title: str, subtitle: str = "", *, eyebrow: str = "Dataward", pills: list[str] | None = None
+    title: str,
+    subtitle: str = "",
+    *,
+    eyebrow: str = "Dataward",
+    pills: list[str] | None = None,
+    typed: bool = False,
 ) -> None:
     """The page title: an <h1> with a small label above it and status chips on the right."""
-    st.markdown(theme.hero(eyebrow, title, subtitle, pills), unsafe_allow_html=True)
+    st.markdown(
+        theme.hero(eyebrow, title, subtitle, pills, typed_subtitle=typed), unsafe_allow_html=True
+    )
+
+
+def html(markup: str) -> None:
+    """Already-built markup from ``dashboard_theme`` (every piece of text in it is escaped)."""
+    st.markdown(markup, unsafe_allow_html=True)
+
+
+def open_with(page: str, key: str, value: object) -> None:
+    """A button callback: set a filter of another page, then go there."""
+    st.session_state[key] = value
+    st.switch_page(page)
 
 
 def section(label: str, number: int | None = None) -> None:

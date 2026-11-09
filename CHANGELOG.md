@@ -2,6 +2,21 @@
 
 ## Unreleased
 
+### Changed (dashboard v3)
+- **Home page** rebuilt: pipeline runs as squares, bracketed figures, a "BREAKDOWN" panel (thin stacked bars,
+  a metric and a cut from two selectors), direction tiles that open their vacancies, top skills and what
+  changed, fresh vacancy tiles.
+- **Filters you can tell apart**: toggle pills for short lists, dashed idle and accent-filled active
+  selects, tags of the active filters, a count and a reset button (market and catalog).
+- **Logo**: rising bars + the name + a static full stop (no blinking). **Motion**: stepped entrances, chart
+  wipes, growing meters, a typed subtitle; off for reduced motion. A fourth and third series colour,
+  validated.
+- A running dashboard now picks up edited modules (`dashboard_reload`) instead of failing with "no
+  attribute" until restarted.
+
+### Fixed
+- A source lost its colour when the other was filtered away (colour followed position, not the entity).
+
 ### Added
 - **Vacancy catalog**: the dbt model `fct_vacancy_catalog` (one row per real vacancy, with skills, salary,
   dates and the link) and a Каталог page: filters in the sidebar, a table, a card of the chosen vacancy, what

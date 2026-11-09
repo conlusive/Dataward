@@ -28,7 +28,7 @@ codeFont = "JetBrains Mono, monospace"
 headingFontWeights = [400, 400, 400, 400, 400, 400]
 metricValueFontSize = "1.9rem"
 metricValueFontWeight = 500
-chartCategoricalColors = ["#8481F5", "#E5603B"]
+chartCategoricalColors = ["#8481F5", "#E5603B", "#26A08F", "#B58A1F"]
 
 [client]
 toolbarMode = "minimal"

@@ -690,3 +690,74 @@ def listed_within(catalog: pd.DataFrame, days: int) -> int:
         return 0
     cutoff = catalog["first_listed_on"].max() - pd.Timedelta(days=days)
     return int((catalog["first_listed_on"] > cutoff).sum())
+
+
+# ---- the home page: breakdowns, directions, runs ------------------------------------------------
+METRICS = {
+    "Відкриті": "open_vacancies", "Нові": "new_vacancies", "Закриті": "closed_vacancies",
+}  # fmt: skip
+BREAKDOWNS = {"Джерело": "source", "Рівень": "seniority", "Напрямок": "category"}
+OTHER = "Інші"
+
+
+def daily_breakdown(
+    market: pd.DataFrame, metric: str, by: str, *, top: int = 4
+) -> tuple[pd.DataFrame, list[str]]:
+    """A metric per day split by ``by``: (``date``, ``series``, ``value``) and the stack order.
+
+    The ``top`` biggest values stay as they are; the rest are folded into "Інші" so that a chart
+    never needs more than ``top`` + 1 colours. A source is never folded (there are two).
+    """
+    renamed = market.assign(**{by: market[by].replace({NO_LEVEL: "не вказано"})})
+    totals = renamed.groupby(by)[metric].sum().sort_values(ascending=False)
+    keep = list(totals.index) if by == "source" else list(totals.head(top).index)
+    series = renamed[by].where(renamed[by].isin(keep), OTHER)
+    daily = (
+        renamed.assign(series=series)
+        .groupby(["date", "series"], as_index=False)[metric]
+        .sum()
+        .rename(columns={metric: "value"})
+    )
+    order = [name for name in keep if name in set(daily["series"])]
+    if OTHER in set(daily["series"]):
+        order.append(OTHER)
+    return daily, order
+
+
+def direction_stats(
+    market: pd.DataFrame, catalog: pd.DataFrame | None = None, *, top: int = 8
+) -> pd.DataFrame:
+    """The biggest directions on the latest day: ``category``, ``open``, ``share`` of all open
+    vacancies and, when a catalog is at hand, the three skills its open vacancies ask for most."""
+    if market.empty:
+        return pd.DataFrame(columns=["category", "open", "share", "skills"])
+    latest = market[market["date"] == market["date"].max()]
+    counts = latest.groupby("category")["open_vacancies"].sum().sort_values(ascending=False)
+    total = float(counts.sum()) or 1.0
+    rows = []
+    for category, open_now in counts.head(top).items():
+        skills: list[str] = []
+        if catalog is not None:
+            here = catalog[(catalog["category"] == category) & catalog["is_open"]]
+            skills = skill_counts(here, top=3)["skill"].tolist()
+        rows.append(
+            {"category": str(category), "open": int(open_now), "share": open_now / total,
+             "skills": skills}
+        )  # fmt: skip
+    return pd.DataFrame(rows, columns=["category", "open", "share", "skills"])
+
+
+def run_states(status: dict[str, Any], *, last: int = 14) -> list[tuple[str, str]]:
+    """The last pipeline runs, oldest first, as (label, tone) for the squares of a pulse strip."""
+    tones = {"success": "ok", "failed": "bad"}
+    runs = status.get("runs", [])[:last]
+    return [
+        (f"{run['run_date']}: {run['status']}", tones.get(run["status"], "warn"))
+        for run in reversed(runs)
+    ]
+
+
+def short_list(values: list[str], limit: int = 2) -> str:
+    """ "a, b" for up to ``limit`` values, "a, b +3" for more: a long selection in a small tag."""
+    shown = ", ".join(values[:limit])
+    return f"{shown} +{len(values) - limit}" if len(values) > limit else shown
