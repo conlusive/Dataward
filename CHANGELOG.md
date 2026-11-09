@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.2.1: the first measured accuracy
 
 ### Added
 - **Gold set**: `gold-label` (blind terminal labelling), `--labelled-by` provenance recorded in the gold
