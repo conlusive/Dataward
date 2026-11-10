@@ -1,16 +1,19 @@
 # The dashboard image: Streamlit reading the parquet files of the pipeline's export (never the database).
 # Build:  docker build -f Dockerfile.dashboard -t jobmarket-dashboard .
 # Run:    docker run --rm -p 8501:8501 -v "$PWD/data/export:/app/data/export:ro" jobmarket-dashboard
-# Hosted (see render.yaml): no volume; DASHBOARD_DATA_URL points at the published export, the start
-# script fetches it, and the server listens on $PORT. DASHBOARD_PROFILE=session keeps profiles per visitor.
+# Hosted (see render.yaml): no volume. The export as of the build is baked in (DASHBOARD_DATA_URL, which
+# Render also hands to the build) and refreshed in the background; the server listens on $PORT.
+# DASHBOARD_PROFILE=session keeps profiles per visitor.
 FROM python:3.11-slim
 
 RUN pip install --no-cache-dir uv==0.13.7
 
 WORKDIR /app
-ENV UV_FROZEN=1 UV_LINK_MODE=copy PATH="/app/.venv/bin:$PATH" PYTHONUNBUFFERED=1 \
+ENV UV_FROZEN=1 UV_LINK_MODE=copy UV_COMPILE_BYTECODE=1 PATH="/app/.venv/bin:$PATH" PYTHONUNBUFFERED=1 \
     DASHBOARD_DATA_DIR=/app/data/export
 
+# Bytecode is compiled here (UV_COMPILE_BYTECODE, compileall below): the packages belong to root and the
+# server runs as `app`, which cannot write .pyc files, so without this every start compiles them again.
 # Only what the dashboard needs: the main dependencies and the `dashboard` group (no dbt, no dev tools).
 COPY pyproject.toml uv.lock README.md ./
 RUN uv sync --no-dev --group dashboard --no-install-project
@@ -23,6 +26,13 @@ COPY .streamlit ./.streamlit
 # there: put ours in its place (see dashboard_icon.py)
 RUN cp dashboard/static/favicon.png "$(python -c 'import pathlib, streamlit; print(pathlib.Path(streamlit.__file__).parent / "static" / "favicon.png")')"
 COPY scripts/dashboard-start.sh ./scripts/dashboard-start.sh
+RUN python -m compileall -q src dashboard
+
+# The export as of this build, so that a start needs no download (the container is only a few
+# seconds of CPU on a small plan); it is refreshed in the background. No URL (a local build) or a
+# failed download is not an error here: the start script then fetches the data itself.
+ARG DASHBOARD_DATA_URL=""
+RUN DASHBOARD_DATA_URL="$DASHBOARD_DATA_URL" python -m jobmarket.dashboard_sync || echo "no data baked in"
 
 RUN useradd --create-home --uid 1000 app && mkdir -p /app/data/export && chown -R app:app /app/data
 USER app

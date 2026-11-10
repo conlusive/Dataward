@@ -250,12 +250,18 @@ Streamlit is a long-running server with WebSockets, so it needs a host that runs
 serverless platform such as Vercel). `render.yaml` is a Render Blueprint for the image of
 `Dockerfile.dashboard`:
 
-- **Data.** The image carries none. The nightly workflow (`publish-data` in `pipeline-daily.yml`, its
-  own job, the only one with a write token) force-pushes the *public* export, the artifact already
-  stripped of third-party listings, to the `data` branch. On start `scripts/dashboard-start.sh` runs
-  `jobmarket.dashboard_sync`, which downloads that branch as an archive and writes only the files the
-  archive's own `last_update.json` names (plus `status.json`); a running server repeats it every 6 hours.
-  A failed download keeps the old files. Set `DASHBOARD_DATA_URL` to the archive URL; unset, nothing is fetched.
+- **Data.** The nightly workflow (`publish-data` in `pipeline-daily.yml`, its own job, the only one
+  with a write token) force-pushes the *public* export, the artifact already stripped of third-party
+  listings, to the `data` branch. `jobmarket.dashboard_sync` downloads that branch as an archive and
+  writes only the files the archive's own `last_update.json` names (plus `status.json`). It runs at
+  build time, so the image holds the export of its build and a start needs no download; a running
+  server refreshes it a minute after the first visit and every 6 hours. A failed download keeps the old
+  files. `DASHBOARD_DATA_URL` is the archive URL (Render passes its env vars to the build as well);
+  unset, nothing is fetched, and `scripts/dashboard-start.sh` fetches only if the image has no data.
+- **Start time.** A cold start on the free plan (a tenth of a CPU) is mostly Python importing. The
+  packages belong to root and the server runs as `app`, which cannot write `.pyc` files, so the image
+  compiles bytecode at build time (`UV_COMPILE_BYTECODE`, `compileall`); without it every start compiled
+  streamlit, pandas and altair again. The file watcher is off.
 - **Profiles.** `DASHBOARD_PROFILE=session` keeps a visitor's profile (skills, saved vacancies,
   progress) in their session, because one file on a shared server would be one profile for everybody.
   It is gone when the tab closes, and the profile pages say so. Local runs still use the file.

@@ -25,7 +25,8 @@ STATUS: Final = "status.json"  # the run's health, shown on the "Стан сис
 URL_ENV: Final = "DASHBOARD_DATA_URL"
 REFRESH_SECONDS: Final = (
     6 * 3600
-)  # the data changes once a day; a sleeping host also re-fetches on start
+)  # the data changes once a day; a sleeping host re-fetches on start
+FIRST_REFRESH_SECONDS: Final = 60  # the image has the data of its build: refresh once it is calm
 MAX_BYTES: Final = 100 * 1024 * 1024
 TIMEOUT_SECONDS: Final = 30
 _TABLE_FILE: Final = re.compile(r"^[A-Za-z0-9_]+\.parquet$")
@@ -113,15 +114,23 @@ def sync_from_environment(directory: Path) -> int | None:
     return written
 
 
-def keep_fresh(directory: Path, every: float = REFRESH_SECONDS) -> threading.Thread | None:
-    """Refresh the data every ``every`` seconds in a background thread (``None``: no URL set)."""
+def keep_fresh(
+    directory: Path, every: float = REFRESH_SECONDS, first_after: float = FIRST_REFRESH_SECONDS
+) -> threading.Thread | None:
+    """Refresh the data ``first_after`` seconds from now, then every ``every`` seconds.
+
+    Runs in a background thread (``None``: no URL set). The first refresh is not immediate: the
+    image already holds the export of its build, and the first visitors should have the CPU.
+    """
     if not os.environ.get(URL_ENV):
         return None
     stop = threading.Event()
 
     def loop() -> None:
-        while not stop.wait(every):
+        wait = first_after
+        while not stop.wait(wait):
             sync_from_environment(directory)
+            wait = every
 
     thread = threading.Thread(target=loop, name="dashboard-data-refresh", daemon=True)
     thread.start()

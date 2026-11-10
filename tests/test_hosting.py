@@ -31,6 +31,24 @@ def test_a_public_host_reads_the_public_export_and_keeps_profiles_per_visitor() 
     assert env["DASHBOARD_DATA_URL"].endswith("/refs/heads/data")  # the public copy, not main
 
 
+def test_the_image_compiles_its_bytecode_and_bakes_the_data_in() -> None:
+    dockerfile = (ROOT / "Dockerfile.dashboard").read_text(encoding="utf-8")
+
+    # the server runs as `app` and cannot write .pyc files into root's site-packages
+    assert "UV_COMPILE_BYTECODE=1" in dockerfile
+    assert "python -m compileall -q src dashboard" in dockerfile
+    assert "ARG DASHBOARD_DATA_URL" in dockerfile  # Render passes its env vars to the build
+    bake = dockerfile.index("python -m jobmarket.dashboard_sync")
+    assert bake < dockerfile.index("chown -R app:app") < dockerfile.index("USER app")
+
+
+def test_a_start_fetches_data_only_when_the_image_has_none_and_does_not_watch_files() -> None:
+    script = (ROOT / "scripts" / "dashboard-start.sh").read_text(encoding="utf-8")
+
+    assert 'if [ ! -f "${DASHBOARD_DATA_DIR:-data/export}/last_update.json" ]' in script
+    assert "--server.fileWatcherType=none" in script
+
+
 def test_the_image_starts_through_the_script_that_fetches_data_and_honours_port() -> None:
     dockerfile = (ROOT / "Dockerfile.dashboard").read_text(encoding="utf-8")
     script = (ROOT / "scripts" / "dashboard-start.sh").read_text(encoding="utf-8")
