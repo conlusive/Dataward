@@ -378,11 +378,24 @@ def _opened(app: AppTest) -> str:
     return re.sub(r"<[^>]+>", "", leads[0]) if leads else ""
 
 
-def test_without_a_catalog_the_page_explains_why_and_how_to_get_one(export: Path) -> None:
+def test_without_a_catalog_the_page_says_how_to_build_one_locally(export: Path) -> None:
     app = _run("catalog")
 
-    assert any("навмисно" in i.value and "make pipeline" in i.value for i in app.info)
+    assert any("make pipeline" in i.value for i in app.info)
     assert not app.metric  # nothing to count
+
+
+@pytest.mark.parametrize("page", ["catalog", "fit", "learn"])
+def test_without_a_catalog_the_public_site_does_not_send_visitors_to_make(
+    export: Path, monkeypatch: pytest.MonkeyPatch, page: str
+) -> None:
+    monkeypatch.setenv("DASHBOARD_PROFILE", "session")
+
+    app = _run(page)
+
+    notes = [i.value for i in app.info if "належать іншим людям" in i.value]
+    assert notes, "the page must say why there is no catalog"
+    assert not any("make" in i.value for i in app.info)  # a visitor has no pipeline to run
 
 
 def test_the_catalog_opens_on_the_open_vacancies_newest_first(with_catalog: Path) -> None:

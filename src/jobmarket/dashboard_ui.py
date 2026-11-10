@@ -269,6 +269,26 @@ def keep_data_fresh() -> None:
     _fresh(str(dd.data_dir()))
 
 
+def no_catalog(subject: str) -> None:
+    """Say, in place of ``subject``, that this export has no vacancy catalog.
+
+    The catalog holds other people's listings, so the public export never has it. A visitor of the
+    public demo is told what the page needs and where to find it; whoever runs the dashboard
+    locally is told how to build it.
+    """
+    if session_profiles():
+        st.info(
+            f"{subject} Вакансії належать іншим людям, тому на публічному сайті їх немає: тут "
+            "доступна аналітика (ринок, навички, зарплати), профіль і практика. Повну версію з "
+            "каталогом можна запустити в себе (див. README)."
+        )
+    else:
+        st.info(
+            f"{subject} У цьому експорті каталогу немає: він локальний. Збудуйте його: "
+            "`make pipeline` (або `make dbt-build` і `make export` для вже наявної бази)."
+        )
+
+
 def demo_notice() -> None:
     """On a public demo: say where the profile lives, on the pages that keep one."""
     if session_profiles():

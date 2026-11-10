@@ -73,7 +73,7 @@ for skill in learning:
 # ---- what to learn next ----------------------------------------------------------------------
 ui.section("Що вчити далі")
 if catalog is None or ranked is None:
-    st.info("План береться з вакансій каталогу, якого в цьому експорті немає (`make pipeline`).")
+    ui.no_catalog("План береться з вакансій каталогу.")
 elif ranked.empty:
     st.info("За вашою ціллю немає відкритих вакансій, тож і плану немає: послабте ціль.")
 elif plan.empty:
