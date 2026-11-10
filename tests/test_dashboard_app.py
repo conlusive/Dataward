@@ -49,6 +49,12 @@ def _run(page: str) -> AppTest:
     return app
 
 
+def _open_tab(app: AppTest, key: str, label: str) -> AppTest:
+    """Open a tab of a page that builds only the open one (the tabs keep their label in state)."""
+    app.session_state[key] = label
+    return app.run()
+
+
 def _metrics(app: AppTest) -> dict[str, str]:
     return {m.label: m.value for m in app.metric}
 
@@ -247,6 +253,7 @@ def test_a_search_that_matches_nothing_says_so(export: Path) -> None:
 
 def test_the_skill_page_shows_demand_salary_and_relations(export: Path) -> None:
     app = _run("skills")
+    app = _open_tab(app, "skills_tab", "Навичка")
 
     app.selectbox(key="skill_name").select("Python").run()
 
@@ -258,6 +265,7 @@ def test_the_skill_page_shows_demand_salary_and_relations(export: Path) -> None:
 
 def test_a_skill_without_enough_salaries_says_so(export: Path) -> None:
     app = _run("skills")
+    app = _open_tab(app, "skills_tab", "Навичка")
 
     app.selectbox(key="skill_name").select("SQL").run()
 
@@ -266,6 +274,7 @@ def test_a_skill_without_enough_salaries_says_so(export: Path) -> None:
 
 def test_the_stacks_tab_has_a_slider_and_survives_moving_it(export: Path) -> None:
     app = _run("skills")
+    app = _open_tab(app, "skills_tab", "Стеки")
 
     app.slider(key="stack_npmi").set_value(0.9).run()
 
@@ -276,10 +285,27 @@ def test_a_threshold_that_keeps_a_link_draws_the_graph_without_the_empty_note(
     export: Path,
 ) -> None:
     app = _run("skills")
+    app = _open_tab(app, "skills_tab", "Стеки")
 
     app.slider(key="stack_npmi").set_value(0.95).run()  # django-docker (1.0) stays
 
     assert not app.exception and not any("зв'язків немає" in i.value for i in app.info)
+
+
+def test_a_vacancy_row_has_one_kind_of_fact_per_line() -> None:
+    from jobmarket import dashboard_ui as ui
+
+    row = {
+        "title": "Data Engineer", "company": "Acme", "seniority": "senior",
+        "salary_usd_min": 3000, "salary_usd_max": 4500,
+    }  # fmt: skip
+
+    lines = ui._row_label(row, 0.8).split("\n")
+    assert lines[0] == "**Data Engineer**" and lines[1] == "Acme · senior"
+    assert lines[2].startswith("`") and lines[2].endswith("*збіг 80%*")
+    bare = {**row, "company": None, "seniority": dd.NO_LEVEL, "salary_usd_min": None,
+            "salary_usd_max": None}  # fmt: skip
+    assert ui._row_label(bare, None) == "**Data Engineer**"  # no empty lines
 
 
 # ---- salary -----------------------------------------------------------------------------------

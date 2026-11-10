@@ -23,6 +23,12 @@
   ticking rows. "Стан і дані" is now **"Стан системи"** without a heading above it (the heading looked like
   a button that did nothing). The filter bar has more room, and its pills wrap.
 
+- **Smoother page changes**: the old per-element arrival (figures rising one after another, charts
+  wiped in) showed the page being built and read as jumping. Now the page body is hidden while it is
+  built and shown at once with one soft fade (`html.dw-hold`, then `html.dw-enter`); meters and the typed
+  subtitle stay. The "Навички" page builds only the open tab instead of all three (its tables and the
+  graph were drawn while hidden). Vacancy rows in the catalog have one fact per line: the title, the
+  company and level, then the pay (in the accent colour) and the fit.
 - **Arrival animations are back, once per page**: figures and tiles rise, charts are wiped in, meters grow,
   the subtitle types itself, but only when a page opens (`html.dw-enter` for 2.8 s), never after a click.
 - **Lighter on a small machine**: nothing animates on its own any more, the

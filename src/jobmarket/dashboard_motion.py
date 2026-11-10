@@ -1,8 +1,11 @@
-"""Page-enter motion: things arrive once when a page opens, and never again until the next page.
+"""Page-enter motion: a page is hidden while it is built and shown at once, with one soft fade.
 
-Streamlit redraws the page after every click, so an animation tied to an element would replay each
-time and read as lag. Instead the stylesheet animates only under ``html.dw-enter``, and this small
-script switches that class on for a moment whenever the address changes (and on the first load).
+Streamlit streams a page element by element and keeps the old one on screen until the new script
+has run. Animating each element (rising, staggered) made that building visible and read as jumping.
+So the script below hides the page body when the address changes (``html.dw-hold``), waits until
+the run has finished, then shows it with a single opacity fade and starts the small one-off
+animations (``html.dw-enter``: the typed line, the growing meters). A rerun on the same page
+changes nothing: no hold, no replay.
 """
 
 import json
@@ -11,29 +14,62 @@ from typing import Final
 ENTER_MS: Final = (
     2800  # long enough for the slowest arrival (the typed line), short enough to be over
 )
+MIN_HOLD_MS: Final = 250  # the run has not even been marked busy yet before this
+MAX_HOLD_MS: Final = 1600  # never keep the page hidden longer, whatever the run is doing
 
 _SCRIPT: Final = """
 (cfg) => {
   if (window.__dwMotion) window.__dwMotion();
   const root = document.documentElement;
-  let timer = null;
-  const enter = () => {
+  const calm = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  let poll = null;
+  const busy = () => !!document.querySelector(
+    '[data-stale="true"], [data-testid="stStatusWidget"]');
+  const reveal = () => {
+    clearInterval(poll);
+    root.classList.remove('dw-hold');
     root.classList.add('dw-enter');
-    clearTimeout(timer);
-    timer = setTimeout(() => root.classList.remove('dw-enter'), cfg.ms);
+    clearTimeout(window.__dwEnter);
+    window.__dwEnter = setTimeout(() => root.classList.remove('dw-enter'), cfg.ms);
+  };
+  // show the page once the run is over (nothing stale, no "running" widget) on two checks in a row
+  const settle = () => {
+    clearInterval(poll);
+    const started = Date.now();
+    let still = 0;
+    poll = setInterval(() => {
+      const age = Date.now() - started;
+      still = busy() ? 0 : still + 1;
+      if (age > cfg.cap || (age >= cfg.min && still >= 2)) reveal();
+    }, 100);
   };
   // a second run of this script on the same page (a rerun) must not start the arrival again
-  const watch = () => {
-    if (window.__dwPath !== location.pathname) { window.__dwPath = location.pathname; enter(); }
+  const begin = () => {
+    if (window.__dwPath === location.pathname) return;
+    window.__dwPath = location.pathname;
+    if (!calm) root.classList.add('dw-hold');
+    settle();
   };
-  watch();
-  const id = setInterval(watch, 150);
-  window.__dwMotion = () => { clearInterval(id); clearTimeout(timer); };
+  // Streamlit changes the address with pushState: catch it at once, before the new page arrives
+  if (!history.__dwWrapped) {
+    const original = history.pushState;
+    history.pushState = function () {
+      const result = original.apply(this, arguments);
+      if (window.__dwNav) window.__dwNav();
+      return result;
+    };
+    history.__dwWrapped = true;
+  }
+  window.__dwNav = begin;
+  begin();
+  if (root.classList.contains('dw-hold') && !poll) settle();  // a rerun in the middle of a hold
+  const watch = setInterval(begin, 200);  // back and forward buttons, links the wrapper missed
+  window.__dwMotion = () => { clearInterval(poll); clearInterval(watch); window.__dwNav = null; };
 }
 """
 
 
 def script() -> str:
     """The code to inject once per page load."""
-    data = json.dumps({"ms": ENTER_MS})
+    data = json.dumps({"ms": ENTER_MS, "min": MIN_HOLD_MS, "cap": MAX_HOLD_MS})
     return f"<script>({_SCRIPT})({data});</script>"

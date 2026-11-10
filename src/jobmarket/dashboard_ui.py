@@ -140,6 +140,13 @@ def kpi(
     )
 
 
+def keep(*keys: str) -> None:
+    """Keep the values of widgets that are not drawn on this run (the ones in a closed tab)."""
+    for key in keys:
+        if key in st.session_state:
+            st.session_state[key] = st.session_state[key]
+
+
 def chart(figure: Any) -> None:
     """An Altair chart in the dashboard's look (the chart carries its own colours)."""
     st.altair_chart(figure, theme=None, width="stretch")
@@ -423,13 +430,19 @@ def _plain(text: object) -> str:
 
 
 def _row_label(row: Any, score: float | None) -> str:
-    """Two lines on a row: the title, then the company, level, salary and how well it fits you."""
+    """Up to three short lines on a row: the title, the company and level, then pay and fit.
+
+    Each kind of fact has its own line (and the theme its own colour), so a row reads at a glance
+    instead of being one long string that wraps.
+    """
     level = "" if row["seniority"] == dd.NO_LEVEL else str(row["seniority"])
-    pay = dd.salary_label(row["salary_usd_min"], row["salary_usd_max"])
     company = str(row["company"]) if _has(row["company"]) else ""
+    pay = dd.salary_label(row["salary_usd_min"], row["salary_usd_max"])
     fit = f"збіг {score:.0%}" if score is not None else ""
-    second = " · ".join(_plain(x) for x in (company, level, pay, fit) if x)
-    return f"**{_plain(row['title'])}**\n{second}" if second else f"**{_plain(row['title'])}**"
+    who = " · ".join(_plain(x) for x in (company, level) if x)
+    # the pay sits in a code span: the theme colours it, and nothing in it needs escaping
+    numbers = " · ".join(x for x in (f"`{pay}`" if pay else "", f"*{fit}*" if fit else "") if x)
+    return "\n".join(x for x in (f"**{_plain(row['title'])}**", who, numbers) if x)
 
 
 def vacancy_list(

@@ -188,21 +188,21 @@ button[kind], [data-testid="stDownloadButton"] button, [data-testid="stLinkButto
 _MOTION = """
 /* motion: all of it stops for reduced motion */
 @keyframes dw-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
-/* arrival: once, when a page opens (html.dw-enter is on for a moment, see dashboard_motion.py). A
-   rerun after a click redraws the page, so nothing may animate on its own: that would replay each
-   time and read as lag. Only a state (the frog, a running pulse) moves by itself. */
-@keyframes dw-rise { from { opacity: 0; transform: translateY(8px); }
-  to { opacity: 1; transform: none; } }
-@keyframes dw-wipe { from { clip-path: inset(0 100% 0 0); } to { clip-path: inset(0 0 0 0); } }
+/* arrival: once, when a page opens (see dashboard_motion.py). The page body is hidden while the
+   page is built (html.dw-hold) and then shown with one fade (html.dw-enter): nothing rises or is
+   staggered, so the building of the page is never seen. The fade moves only opacity and the
+   meters only a transform, so the layout never shifts. A rerun after a click plays nothing. If
+   the script ever fails, the body shows itself after 2 s. */
+@keyframes dw-fade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes dw-unhide { to { opacity: 1; } }
 @keyframes dw-type { from { width: 0; } to { width: var(--chars); } }
 @keyframes dw-caret { 50% { border-right-color: transparent; } }
-@keyframes dw-grow { from { width: 0; } }
-html.dw-enter :is([data-testid="stMetric"], .dw-stat, .dw-dir, .dw-vac, .dw-hero, .dw-todo,
-  .dw-ring) { animation: dw-rise 0.38s cubic-bezier(0.2, 0.7, 0.2, 1) both;
-  animation-delay: calc(var(--i, 0) * 45ms); }
-html.dw-enter :is([data-testid="stVegaLiteChart"], [data-testid="stArrowVegaLiteChart"]) {
-  animation: dw-wipe 0.7s cubic-bezier(0.3, 0.6, 0.2, 1) both; }
-html.dw-enter .dw-meter span { animation: dw-grow 0.6s cubic-bezier(0.3, 0.6, 0.2, 1) both; }
+@keyframes dw-grow { from { transform: scaleX(0); } }
+html.dw-hold [data-testid="stMainBlockContainer"] { opacity: 0;
+  animation: dw-unhide 0s 2s forwards; }
+html.dw-enter [data-testid="stMainBlockContainer"] { animation: dw-fade 0.3s ease-out both; }
+html.dw-enter .dw-meter span { transform-origin: left;
+  animation: dw-grow 0.6s cubic-bezier(0.3, 0.6, 0.2, 1) 0.15s both; }
 .dw-typed { display: inline-block; }
 html.dw-enter .dw-typed { overflow: hidden; white-space: nowrap; width: var(--chars);
   border-right: 2px solid var(--accent);
@@ -370,14 +370,22 @@ _WORKSPACE = """
 .st-key-dw_scripts { position: absolute; width: 0; height: 0; overflow: hidden; }
 
 .st-key-cat_rows, .st-key-mkt_rows { display: flex; flex-direction: column; gap: var(--s2); }
-.st-key-cat_rows button, .st-key-mkt_rows button { height: auto; min-height: 3.4rem;
-  padding: var(--s2) var(--s3); justify-content: flex-start; text-align: left;
-  white-space: pre-line; background: var(--card); border: 2px solid var(--line);
-  border-left-width: 4px; border-radius: 0; }
-.st-key-cat_rows button p, .st-key-mkt_rows button p { text-align: left; margin: 0;
-  font-size: var(--fs-sm); color: var(--ink-3); line-height: 1.45; }
+.st-key-cat_rows button, .st-key-mkt_rows button { height: auto; min-height: 4.6rem;
+  padding: var(--s2) var(--s3); justify-content: flex-start; align-items: flex-start;
+  text-align: left; white-space: pre-line; background: var(--card);
+  border: 2px solid var(--line); border-left-width: 4px; border-radius: 0; }
+.st-key-cat_rows button > div, .st-key-mkt_rows button > div,
+.st-key-cat_rows button p, .st-key-mkt_rows button p { min-width: 0; width: 100%;
+  text-align: left; margin: 0; }
+.st-key-cat_rows button p, .st-key-mkt_rows button p { font-size: var(--fs-sm);
+  color: var(--ink-3); line-height: 1.5; }
+/* the title keeps one line (an ellipsis, not a wrap), so every row has the same height */
 .st-key-cat_rows button p strong, .st-key-mkt_rows button p strong { color: var(--ink);
-  font-size: var(--fs-md); display: block; }
+  font-size: var(--fs-md); display: block; overflow: hidden; text-overflow: ellipsis;
+  white-space: nowrap; }
+.st-key-cat_rows button p code, .st-key-mkt_rows button p code { background: none; padding: 0;
+  color: var(--accent); font-family: inherit; font-size: var(--fs-sm); }
+.st-key-cat_rows button p em, .st-key-mkt_rows button p em { font-style: normal; }
 .st-key-cat_rows button:hover, .st-key-mkt_rows button:hover { border-color: var(--accent); }
 .st-key-cat_rows button[kind="primary"], .st-key-mkt_rows button[kind="primary"] {
   background: rgba(170, 168, 255, 0.14); border-color: var(--accent); }

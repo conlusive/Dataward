@@ -141,12 +141,17 @@ is shown as a tag too.
   static terracotta full stop; the sidebar icon and the favicon are the bars and the stop. `dashboard_logo.py` draws them from a glyph
   table (`python -m jobmarket.dashboard_logo` rewrites `dashboard/static/`), and a test keeps the committed
   files equal to its output.
-- **Motion**: things arrive **once, when a page opens**: figures, tiles and actions rise one after another
-  (about 0.4 s, 45 ms apart), charts are wiped in, the meters grow, the subtitle of the home page types
-  itself. A rerun after a click plays none of it again, which would read as lag. The stylesheet animates
-  only under `html.dw-enter`, and `dashboard_motion.py` switches that class on for 2.8 s whenever the
-  address changes (a test refuses an arrival animation outside that class). Only a state moves by itself:
-  the frog, the newest pipeline square and the title cursor. All of it stops for `prefers-reduced-motion`.
+- **Motion**: a page arrives **once, as a whole**. When the address changes, `dashboard_motion.py` hides
+  the page body (`html.dw-hold`), waits until the run has finished (nothing stale, no "running" widget;
+  at most 1.6 s, and the stylesheet frees the body after 2 s even if the script fails) and shows it with
+  one 0.3 s fade, then switches `html.dw-enter` on for 2.8 s: the meters grow and the subtitle of the
+  home page types itself. Nothing rises or is staggered per element, so the building of a page is never
+  seen. A rerun after a click plays none of it (a test refuses an arrival animation outside
+  `html.dw-enter`). Only a state moves by itself: the frog, the newest pipeline square and the title
+  cursor. All of it stops for `prefers-reduced-motion`.
+- **Tabs build only the open one** (the page "Навички"): `st.tabs(..., on_change="rerun")` and
+  `if tab.open:`, so a hidden table or graph is never drawn. Their widgets keep their values through
+  `ui.keep(...)`, because Streamlit forgets a widget it did not draw.
 - **Colour by part of the product**: vacancies teal, learning (Розвиток) violet, analytics red, the state of
   the system yellow; they colour the heading marks, the menu bars and the actions (`DOMAINS` in the theme;
   a test keeps the hues). These are not the chart series colours.

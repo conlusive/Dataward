@@ -266,7 +266,7 @@ def test_skill_rows_mark_required_known_and_unknown_share() -> None:
 
 def test_an_arrival_animation_only_plays_while_the_page_is_entering() -> None:
     css = t.css()
-    arrivals = ("dw-rise", "dw-wipe", "dw-type", "dw-grow")
+    arrivals = ("dw-fade", "dw-type", "dw-grow")
     rules = re.findall(r"([^{}]+)\{([^{}]*animation:[^{}]*)\}", css)
     arriving = [(sel.strip(), body) for sel, body in rules if any(a in body for a in arrivals)]
 
@@ -274,6 +274,19 @@ def test_an_arrival_animation_only_plays_while_the_page_is_entering() -> None:
     # ... but never on their own: a rerun after a click would play them again and read as lag
     assert all(sel.startswith("html.dw-enter") for sel, _ in arriving)
     assert 'stVerticalBlockBorderWrapper"]:has(' not in css  # :has() over every wrapper is slow
+
+
+def test_nothing_moves_per_element_on_arrival() -> None:
+    css = t.css()
+
+    # a staggered rise or a wipe shows the page being built, which read as jumping
+    assert "dw-rise" not in css and "dw-wipe" not in css and "animation-delay" not in css
+
+
+def test_a_held_page_shows_itself_even_if_the_script_never_releases_it() -> None:
+    css = t.css()
+
+    assert re.search(r"html\.dw-hold [^{]*\{[^}]*opacity: 0;[^}]*dw-unhide 0s 2s forwards", css)
 
 
 def test_the_toolbar_of_tables_and_charts_is_hidden_everywhere() -> None:
