@@ -61,3 +61,13 @@ def test_the_drawer_script_is_valid_javascript(tmp_path: Path) -> None:
     result = subprocess.run(["node", "--check", str(source)], capture_output=True, text=True)
 
     assert result.returncode == 0, result.stderr
+
+
+def test_the_typed_line_is_plain_text_on_a_phone() -> None:
+    css = t.css()
+    phone = css[css.index("a phone: Streamlit") :]
+
+    # it is nowrap and wider than the screen while it types; the phone rule must turn that off
+    assert re.search(
+        r"html\.dw-enter \.dw-typed \{[^}]*white-space: normal;[^}]*animation: none;", phone
+    )
