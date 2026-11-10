@@ -338,6 +338,11 @@ _PHONE = """
 @media (max-width: 640px) {
   .block-container { padding-top: 3.2rem; padding-bottom: 3rem; }
 
+  /* the typed line is one line of fixed width: on a phone it ran past the edge while it typed (up
+     to 590 px on a 384 px screen) and snapped back when it was done. Here it is plain text. */
+  html.dw-enter .dw-typed { display: inline; width: auto; white-space: normal; border-right: 0;
+    animation: none; }
+
   /* figures in pairs, not one tall tile under another */
   [data-testid="stHorizontalBlock"]:has(> [data-testid="stColumn"] [data-testid="stMetric"])
     > [data-testid="stColumn"] { min-width: calc(50% - 8px) !important;
