@@ -411,10 +411,12 @@ _WORKSPACE = """
 .dw-section::before, .dw-eyebrow, .dw-stat i, .dw-card-title::before { color: var(--dom,
   var(--accent)); }
 .dw-section b { color: var(--dom, var(--accent)); }
-[data-testid="stSidebarNavItems"] > div:nth-child(2) { --dom: var(--d-jobs); }
-[data-testid="stSidebarNavItems"] > div:nth-child(3) { --dom: var(--d-grow); }
-[data-testid="stSidebarNavItems"] > div:nth-child(4) { --dom: var(--d-market); }
-[data-testid="stSidebarNavItems"] > div:nth-child(5) { --dom: var(--d-system); }
+/* a group takes its colour from a page inside it, not from its place: the public copy has fewer
+   groups, and a position would paint "Аналітика" in the colour of the vacancies */
+[data-testid="stSidebarNavItems"] > div:has(a[href$="catalog"]) { --dom: var(--d-jobs); }
+[data-testid="stSidebarNavItems"] > div:has(a[href$="learn"]) { --dom: var(--d-grow); }
+[data-testid="stSidebarNavItems"] > div:has(a[href$="market"]) { --dom: var(--d-market); }
+[data-testid="stSidebarNavItems"] > div:has(a[href$="system"]) { --dom: var(--d-system); }
 [data-testid="stNavSectionHeader"] { border-left: 4px solid var(--dom, var(--line));
   padding-left: 0.5rem; }
 [data-testid="stSidebarNavItems"] a[aria-current="page"] {
@@ -429,10 +431,11 @@ _WORKSPACE = """
 [data-testid="stNavSectionHeader"] { margin-top: 0.3rem; padding-top: 0;
   padding-bottom: 0; min-height: 0; }
 [data-testid="stNavSectionHeader"]:empty { display: none; }
-[data-testid="stSidebarNavItems"] > div:nth-child(5) [data-testid="stNavSectionHeader"] {
+[data-testid="stSidebarNavItems"] > div:has(a[href$="system"]) [data-testid="stNavSectionHeader"] {
   display: none; }
 /* the item has no heading to carry the colour of its group, so the item itself carries it */
-[data-testid="stSidebarNavItems"] > div:nth-child(5) a { border-left: 4px solid var(--dom); }
+[data-testid="stSidebarNavItems"] > div:has(a[href$="system"]) a {
+  border-left: 4px solid var(--dom); }
 [data-testid="stSidebarHeader"] { padding-top: 0.6rem; padding-bottom: 0.2rem; }
 [data-testid="stSidebarNav"] { padding-bottom: 0; }
 [data-testid="stSidebarUserContent"] { padding-bottom: 0 !important; }

@@ -323,4 +323,13 @@ def test_a_ring_is_bounded_labelled_and_coloured_by_its_domain() -> None:
 def test_the_single_system_item_carries_its_own_colour_since_it_has_no_heading() -> None:
     css = t.css()
 
-    assert "div:nth-child(5) a { border-left: 4px solid var(--dom); }" in css
+    assert 'has(a[href$="system"]) a {\n  border-left: 4px solid var(--dom); }' in css
+
+
+def test_a_menu_group_takes_its_colour_from_its_page_not_from_its_place() -> None:
+    css = t.css()
+
+    assert "div:nth-child(2) { --dom" not in css  # a position breaks when a group is missing
+    for page, domain in (("catalog", "jobs"), ("learn", "grow"), ("market", "market"),
+                         ("system", "system")):  # fmt: skip
+        assert f'div:has(a[href$="{page}"]) {{ --dom: var(--d-{domain}); }}' in css

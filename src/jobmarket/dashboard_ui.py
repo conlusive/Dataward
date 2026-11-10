@@ -54,6 +54,8 @@ def _catalog(directory: str) -> pd.DataFrame | None:
 
 def catalog() -> pd.DataFrame | None:
     """The vacancy catalog, or None when this export has none (it is local-only data)."""
+    if public_demo():
+        return None  # never serve third-party listings from a public host, even if a file is there
     try:
         return _catalog(str(dd.data_dir()))
     except dd.DataError as error:
@@ -223,7 +225,7 @@ def avatar_card() -> None:
 def scripts() -> None:
     """Install the shortcuts, page motion, phone drawer and tab icon; they show nothing."""
     with st.container(key="dw_scripts"):
-        st.html(dk.script(), unsafe_allow_javascript=True)
+        st.html(dk.script(public=public_demo()), unsafe_allow_javascript=True)
         st.html(dm.script(), unsafe_allow_javascript=True)
         st.html(dmo.script(), unsafe_allow_javascript=True)
         st.html(dic.script(), unsafe_allow_javascript=True)
@@ -243,6 +245,16 @@ def session_profiles() -> bool:
     is gone when the tab is closed).
     """
     return os.environ.get("DASHBOARD_PROFILE") == "session"
+
+
+def public_demo() -> bool:
+    """The hosted public copy: it shows the market, not a person.
+
+    Vacancies belong to other people and a profile belongs to you, so neither is served to a
+    visitor: no catalog, no profile, no trainer, no avatar. Whoever runs the dashboard on their own
+    machine gets all of it. (It is the same switch as ``session_profiles``.)
+    """
+    return session_profiles()
 
 
 def _load() -> pr.Profile:

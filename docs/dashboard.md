@@ -258,17 +258,20 @@ serverless platform such as Vercel). `render.yaml` is a Render Blueprint for the
   server refreshes it a minute after the first visit and every 6 hours. A failed download keeps the old
   files. `DASHBOARD_DATA_URL` is the archive URL (Render passes its env vars to the build as well);
   unset, nothing is fetched, and `scripts/dashboard-start.sh` fetches only if the image has no data.
-- **No catalog.** The catalog is other people's listings and is never in the public export, so the
-  catalog, "Для мене", the plan on "Навчання" and the vacancy list of "Ринок" show `ui.no_catalog`:
-  on the public demo (`DASHBOARD_PROFILE=session`) a plain note, locally the `make pipeline` hint.
+- **The public copy shows the market, not a person.** On Render (`DASHBOARD_PROFILE=session`) the menu is
+  Головна, Аналітика (Ринок, Навички, Зарплати) and Стан системи. The pages about vacancies (Каталог, Для
+  мене, Збережені) and about you (Профіль, Навчання, Практика), the avatar, the undo bar and the "Сьогодні"
+  block do not exist there: they are not hidden but not registered, so their URLs do not open, and the
+  shortcuts and the palette do not offer them. The catalog is other people's listings and is never in
+  the public export; even if a file were present, `ui.catalog()` returns nothing on the public copy. Run it
+  on your own machine for the whole product.
 - **Start time.** A cold start on the free plan (a tenth of a CPU) is mostly Python importing. The
   packages belong to root and the server runs as `app`, which cannot write `.pyc` files, so the image
   compiles bytecode at build time (`UV_COMPILE_BYTECODE`, `compileall`); without it every start compiled
   streamlit, pandas and altair again. The file watcher is off.
-- **Profiles.** `DASHBOARD_PROFILE=session` keeps a visitor's profile (skills, saved vacancies,
-  progress) in their session, because one file on a shared server would be one profile for everybody.
-  It is gone when the tab closes, and the profile pages say so. Local runs still use the file.
-- **The catalog is not there**, by design (see above); the pages that need it say so.
+- **Profiles.** `DASHBOARD_PROFILE=session` is also the storage rule: should a profile ever be created on
+  the public copy it lives in the visitor's session and never in the server's file, because one file on a
+  shared server would be one profile for everybody. Today nothing on the public copy creates one.
 - **Free plan.** The service sleeps after about 15 minutes without a visit and wakes in under a
   minute; it has 512 MB of memory.
 

@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+### Changed (the public site)
+- The public copy now shows **the market, not a person**: Головна, Ринок, Навички, Зарплати and Стан
+  системи. The pages about vacancies and about you (Каталог, Для мене, Збережені, Профіль, Навчання,
+  Практика), the avatar, the undo bar and the "Сьогодні" block are not registered there, so no visitor meets
+  a dead end ("run make pipeline") or a profile that is not theirs. Everything stays on your own machine.
+- Menu colours follow the page a group holds, not its position, so the shorter public menu is coloured right.
+
 ### Changed (public site)
 - Where the vacancy catalog is missing (the public export never has it: the listings belong to others),
   the **public demo** says so plainly and names what it does have (market, skills, salaries, profile,

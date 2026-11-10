@@ -68,3 +68,20 @@ def test_z_clicks_the_undo_button_and_the_help_lists_it() -> None:
 
     assert "KeyZ" in code and "st-key-dw_undo_btn" in code
     assert any(k.startswith("Z") for k, _ in keys.OTHER)
+
+
+def test_the_public_copy_is_offered_no_key_that_leads_nowhere() -> None:
+    public = keys.config(public=True)
+    titles = {p["title"] for p in public["pages"]}
+
+    assert titles == {"Головна", "Ринок", "Навички", "Зарплати", "Стан системи"}
+    assert not titles & keys.PERSONAL
+    assert not {"Space", "1 · 2 · 3", "Z"} & {o["keys"] for o in public["other"]}
+    assert "Каталог" not in keys.script(public=True)  # not even in the palette's data
+
+
+def test_your_own_copy_is_offered_everything() -> None:
+    config = keys.config()
+
+    assert len(config["pages"]) == len(keys.PAGES) and len(config["other"]) == len(keys.OTHER)
+    assert {title for title, _ in keys.PAGES} >= keys.PERSONAL  # no stale title in the filter

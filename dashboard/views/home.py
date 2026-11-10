@@ -52,39 +52,48 @@ if len(totals) < 2:
         "Реальні нові й закриті з'являться з другого дня."
     )
 
+
 # ---- today: what to do now, and where you stand ------------------------------------------------
-mine = ui.profile()
-ui.section("Сьогодні", domain="grow")
-state = ui.pet_state(mine, TODAY)
-ranked = pr.rank_vacancies(vacancies, mine) if vacancies is not None and mine.known() else None
-fit = pr.readiness(ranked) if ranked is not None else None
-plan = pr.learning_plan(ranked, mine.known(), top=1) if ranked is not None else None
-top = plan.iloc[0] if plan is not None and not plan.empty else None
-steps = pg.next_steps(
-    mine,
-    state["counts"],
-    TODAY,
-    top_skill=str(top["skill"]) if top is not None else None,
-    unlocks=int(top["unlocks"]) if top is not None else 0,
-)
-left, right = st.columns([3, 2])
-with left:
-    if steps:
-        for step in steps[:3]:
-            kind, domain = WHERE.get(step.page, ("Далі", "grow"))
-            ui.html(theme.todo(kind, step.text, domain))
-            st.page_link(step.page, label="Відкрити →")
-    else:
-        st.success("На сьогодні все: ціль виконано, повторювати нічого.")
-with right, ui.card("Ваш прогрес", "ціль дня і готовність до вакансій"):
-    goal_ring, fit_ring = st.columns(2)
-    done = min(state["today"] / max(mine.goal, 1), 1.0)
-    with goal_ring:
-        ui.html(theme.ring(done, f"ціль дня: {state['today']}/{mine.goal}", "grow"))
-    with fit_ring:
-        ui.html(
-            theme.ring(fit or 0.0, "готовність" if fit is not None else "додайте навички", "jobs")
-        )
+def today() -> None:
+    """What to do now and where you stand: about a person, so not on the public copy."""
+    mine = ui.profile()
+    ui.section("Сьогодні", domain="grow")
+    state = ui.pet_state(mine, TODAY)
+    ranked = pr.rank_vacancies(vacancies, mine) if vacancies is not None and mine.known() else None
+    fit = pr.readiness(ranked) if ranked is not None else None
+    plan = pr.learning_plan(ranked, mine.known(), top=1) if ranked is not None else None
+    top = plan.iloc[0] if plan is not None and not plan.empty else None
+    steps = pg.next_steps(
+        mine,
+        state["counts"],
+        TODAY,
+        top_skill=str(top["skill"]) if top is not None else None,
+        unlocks=int(top["unlocks"]) if top is not None else 0,
+    )
+    left, right = st.columns([3, 2])
+    with left:
+        if steps:
+            for step in steps[:3]:
+                kind, domain = WHERE.get(step.page, ("Далі", "grow"))
+                ui.html(theme.todo(kind, step.text, domain))
+                st.page_link(step.page, label="Відкрити →")
+        else:
+            st.success("На сьогодні все: ціль виконано, повторювати нічого.")
+    with right, ui.card("Ваш прогрес", "ціль дня і готовність до вакансій"):
+        goal_ring, fit_ring = st.columns(2)
+        done = min(state["today"] / max(mine.goal, 1), 1.0)
+        with goal_ring:
+            ui.html(theme.ring(done, f"ціль дня: {state['today']}/{mine.goal}", "grow"))
+        with fit_ring:
+            ui.html(
+                theme.ring(
+                    fit or 0.0, "готовність" if fit is not None else "додайте навички", "jobs"
+                )
+            )
+
+
+if not ui.public_demo():
+    today()
 
 # ---- the breakdown panel: a metric split by source, level or direction -----------------------
 ui.section("Ринок зараз", domain="market")
