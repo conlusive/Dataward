@@ -210,6 +210,7 @@ def test_the_market_breakdown_follows_the_chosen_metric_and_cut(export: Path) ->
 
 def test_the_market_table_lists_the_filtered_rows(export: Path) -> None:
     app = _run("market")
+    app = _open_tab(app, "market_tab", "Таблиця")
 
     app.session_state["mk_sources"] = ["djinni"]
     app.run()
@@ -1106,9 +1107,27 @@ def test_the_undo_bar_is_only_there_when_there_is_something_to_take_back(export:
 
 def test_the_market_has_the_same_list_in_its_own_tab(with_catalog: Path) -> None:
     app = _run("market")
+    assert _titles(app, "mkt") == []  # a closed tab builds nothing
+
+    app = _open_tab(app, "market_tab", "Вакансії")
 
     assert any(t.label == "Вакансії" for t in app.tabs) and not app.exception
     assert _titles(app, "mkt") and _opened(app)
+
+
+def test_only_the_open_tab_of_the_market_is_built_and_its_selectors_are_kept(
+    export: Path,
+) -> None:
+    app = _run("market")
+    assert len(app.selectbox) >= 2 and not app.dataframe  # the first tab: charts, no table
+
+    app.selectbox(key="mk_split").select(list(dd.BREAKDOWNS)[1]).run()
+    chosen = app.session_state["mk_split"]
+    app = _open_tab(app, "market_tab", "Таблиця")
+    assert app.dataframe and not any(b.key == "mk_split" for b in app.selectbox)  # not drawn now
+    app = _open_tab(app, "market_tab", "Динаміка")
+
+    assert app.session_state["mk_split"] == chosen  # kept while its tab was closed
 
 
 def test_the_pages_do_not_print_the_shortcuts_the_question_mark_shows_them(export: Path) -> None:

@@ -98,87 +98,105 @@ if selected["date"].max() == market["date"].min():
 
 st.write("")
 dynamics, vacancies_tab, categories_tab, levels_tab, table_tab = st.tabs(
-    ["Динаміка", "Вакансії", "Напрямки", "Рівні", "Таблиця"]
+    ["Динаміка", "Вакансії", "Напрямки", "Рівні", "Таблиця"], on_change="rerun", key="market_tab"
 )
+# only the open tab is built, so the charts of the closed ones cost nothing; Streamlit forgets a
+# widget it did not draw, so the selectors of a closed tab are kept by hand
+ui.keep("mk_metric", "mk_split", "mkt_sort")
 
 with dynamics:
+    if dynamics.open:
 
-    @st.fragment
-    def breakdown_panel() -> None:
-        """Only this panel reruns when a selector changes."""
-        with ui.card("Розріз за днями", "тонкий стовпчик — один день; кольори — частини розрізу."):
-            pick_metric, pick_split = st.columns(2)
-            metric = pick_metric.selectbox("Показник", list(dd.METRICS), key="mk_metric")
-            split = pick_split.selectbox("Розріз", list(dd.BREAKDOWNS), key="mk_split")
-            daily, order = dd.daily_breakdown(selected, dd.METRICS[metric], dd.BREAKDOWNS[split])
-            names, colours = charts.series_domain(order, keep_order=True)
-            ui.html(theme.legend(names, colours))
-            ui.chart(charts.stacked_bars(daily, order=order, unit=metric))
+        @st.fragment
+        def breakdown_panel() -> None:
+            """Only this panel reruns when a selector changes."""
+            title = "Розріз за днями"
+            with ui.card(title, "тонкий стовпчик — один день; кольори — частини розрізу."):
+                pick_metric, pick_split = st.columns(2)
+                metric = pick_metric.selectbox("Показник", list(dd.METRICS), key="mk_metric")
+                split = pick_split.selectbox("Розріз", list(dd.BREAKDOWNS), key="mk_split")
+                daily, order = dd.daily_breakdown(
+                    selected, dd.METRICS[metric], dd.BREAKDOWNS[split]
+                )
+                names, colours = charts.series_domain(order, keep_order=True)
+                ui.html(theme.legend(names, colours))
+                ui.chart(charts.stacked_bars(daily, order=order, unit=metric))
 
-    breakdown_panel()
-    flow = totals.melt(
-        id_vars="date", value_vars=["new_vacancies", "closed_vacancies"], var_name="series"
-    ).replace({"new_vacancies": "Нові", "closed_vacancies": "Закриті"})
-    started = selected["date"].min() == market["date"].min() and len(totals) > 1
-    flow_note = "скільки вакансій з'явилося і скільки зникло з сайтів."
-    if started:
-        flow_note += " Перші дні завищують «нові»: збір почався з порожньої бази."
-    with ui.card("Нові й закриті за днями", flow_note):
-        ui.html(theme.legend(["Нові", "Закриті"], list(theme.SERIES[:2])))
-        ui.chart(charts.grouped_columns(flow, order=["Нові", "Закриті"]))
+        breakdown_panel()
+        flow = totals.melt(
+            id_vars="date", value_vars=["new_vacancies", "closed_vacancies"], var_name="series"
+        ).replace({"new_vacancies": "Нові", "closed_vacancies": "Закриті"})
+        started = selected["date"].min() == market["date"].min() and len(totals) > 1
+        flow_note = "скільки вакансій з'явилося і скільки зникло з сайтів."
+        if started:
+            flow_note += " Перші дні завищують «нові»: збір почався з порожньої бази."
+        with ui.card("Нові й закриті за днями", flow_note):
+            ui.html(theme.legend(["Нові", "Закриті"], list(theme.SERIES[:2])))
+            ui.chart(charts.grouped_columns(flow, order=["Нові", "Закриті"]))
 
 with vacancies_tab:
-    vacancies = ui.catalog()
-    if vacancies is None:
-        st.info(
-            "Список вакансій береться з каталогу, а його в цьому експорті немає: він локальний "
-            "(`make pipeline`)."
-        )
-    else:
-        demand, skill_table = ui.table("fct_skill_demand_monthly"), ui.table("dim_skill")
-        st.caption(
-            "Вакансії за вашими фільтрами ринку. Клікніть рядок: відкрийте оголошення, порівняйте "
-            "з ринком і збережіть; відмічайте кілька, щоб зберегти разом."
-        )
-        ui.vacancy_list(
-            dd.filter_catalog(
-                vacancies, categories=categories, levels=levels, sources=sources, only_open=True
-            ),
-            key="mkt", profile=ui.profile(), catalog=vacancies,
-            shares=dd.skill_shares(demand, skill_table, month=dd.latest_month(demand)),
-        )  # fmt: skip
+    if vacancies_tab.open:
+        vacancies = ui.catalog()
+        if vacancies is None:
+            st.info(
+                "Список вакансій береться з каталогу, а його в цьому експорті немає: він "
+                "локальний (`make pipeline`)."
+            )
+        else:
+            demand, skill_table = ui.table("fct_skill_demand_monthly"), ui.table("dim_skill")
+            st.caption(
+                "Вакансії за вашими фільтрами ринку. Клікніть рядок: відкрийте оголошення, "
+                "порівняйте з ринком і збережіть; відмічайте кілька, щоб зберегти разом."
+            )
+            ui.vacancy_list(
+                dd.filter_catalog(
+                    vacancies, categories=categories, levels=levels, sources=sources,
+                    only_open=True,
+                ),
+                key="mkt", profile=ui.profile(), catalog=vacancies,
+                shares=dd.skill_shares(demand, skill_table, month=dd.latest_month(demand)),
+            )  # fmt: skip
 
-by_category = dd.open_by_category(selected, top=15)
-with categories_tab, ui.card("Напрямки", "відкриті вакансії на останній день, найбільші зверху."):
-    ui.chart(
-        charts.ranked_bars(
-            by_category.rename(columns={"category": "label", "open_vacancies": "value"}),
-            unit="Відкритих вакансій",
-        )
-    )
+with categories_tab:
+    if categories_tab.open:
+        by_category = dd.open_by_category(selected, top=15)
+        with ui.card("Напрямки", "відкриті вакансії на останній день, найбільші зверху."):
+            ui.chart(
+                charts.ranked_bars(
+                    by_category.rename(columns={"category": "label", "open_vacancies": "value"}),
+                    unit="Відкритих вакансій",
+                )
+            )
 
 with levels_tab:
-    by_level = dd.open_by_seniority(selected)
-    with ui.card("Рівні", "відкриті вакансії на останній день."):
-        ui.chart(
-            charts.ranked_bars(
-                by_level.rename(columns={"seniority": "label", "open_vacancies": "value"}),
-                unit="Відкритих вакансій",
+    if levels_tab.open:
+        by_level = dd.open_by_seniority(selected)
+        with ui.card("Рівні", "відкриті вакансії на останній день."):
+            ui.chart(
+                charts.ranked_bars(
+                    by_level.rename(columns={"seniority": "label", "open_vacancies": "value"}),
+                    unit="Відкритих вакансій",
+                )
             )
-        )
 
 with table_tab:
-    shown = selected.sort_values(["date", "open_vacancies"], ascending=[False, False]).rename(
-        columns={
-            "date": "Дата", "source": "Джерело", "category": "Напрямок", "seniority": "Рівень",
-            "open_vacancies": "Відкриті", "new_vacancies": "Нові", "closed_vacancies": "Закриті",
-        }
-    )  # fmt: skip
-    st.caption(f"{len(shown):,} рядків за вибраними фільтрами; клік по заголовку сортує колонку.")
-    st.dataframe(shown, hide_index=True, height=420)
-    st.download_button(
-        "Завантажити CSV",
-        shown.to_csv(index=False).encode("utf-8"),
-        file_name="dataward_market.csv",
-        mime="text/csv",
-    )
+    if table_tab.open:
+        shown = selected.sort_values(
+            ["date", "open_vacancies"], ascending=[False, False]
+        ).rename(
+            columns={
+                "date": "Дата", "source": "Джерело", "category": "Напрямок",
+                "seniority": "Рівень", "open_vacancies": "Відкриті", "new_vacancies": "Нові",
+                "closed_vacancies": "Закриті",
+            }
+        )  # fmt: skip
+        st.caption(
+            f"{len(shown):,} рядків за вибраними фільтрами; клік по заголовку сортує колонку."
+        )
+        st.dataframe(shown, hide_index=True, height=420)
+        st.download_button(
+            "Завантажити CSV",
+            shown.to_csv(index=False).encode("utf-8"),
+            file_name="dataward_market.csv",
+            mime="text/csv",
+        )
