@@ -19,6 +19,9 @@ RUN uv sync --no-dev --group dashboard
 
 COPY dashboard ./dashboard
 COPY .streamlit ./.streamlit
+# the page links Streamlit's own favicon.png before any script runs, and Safari keeps what it finds
+# there: put ours in its place (see dashboard_icon.py)
+RUN cp dashboard/static/favicon.png "$(python -c 'import pathlib, streamlit; print(pathlib.Path(streamlit.__file__).parent / "static" / "favicon.png")')"
 COPY scripts/dashboard-start.sh ./scripts/dashboard-start.sh
 
 RUN useradd --create-home --uid 1000 app && mkdir -p /app/data/export && chown -R app:app /app/data

@@ -30,6 +30,10 @@ metricValueFontSize = "1.75rem"
 metricValueFontWeight = 500
 chartCategoricalColors = ["#8481F5", "#E5603B", "#26A08F", "#B58A1F"]
 
+[server]
+# dashboard/static (the logo and the tab icons) is served at /app/static, see dashboard_icon.py
+enableStaticServing = true
+
 [client]
 toolbarMode = "minimal"
 

@@ -14,7 +14,6 @@ STATIC = Path(__file__).parent / "static"  # the pixel logo and the favicon (das
 
 st.set_page_config(
     page_title="Dataward · ринок праці в ІТ України",
-    page_icon=str(STATIC / "favicon.png"),
     layout="wide",
     initial_sidebar_state="expanded",
 )

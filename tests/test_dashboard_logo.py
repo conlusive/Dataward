@@ -82,5 +82,16 @@ def test_the_assets_can_be_rewritten(tmp_path: Path) -> None:
 
     written = logo.write_assets(tmp_path)
 
-    assert sorted(p.name for p in written) == ["favicon.png", "icon.svg", "logo.svg"]
+    assert sorted(p.name for p in written) == [
+        "apple-touch-icon.png", "favicon.png", "icon.svg", "logo.svg",
+    ]  # fmt: skip
     assert (tmp_path / "logo.svg").read_text(encoding="utf-8") == logo.wordmark_svg()
+
+
+def test_the_committed_png_icons_are_what_the_generator_writes() -> None:
+    pytest.importorskip("PIL.Image")
+
+    assert (logo.STATIC / "favicon.png").read_bytes() == logo.favicon_png()
+    assert (logo.STATIC / "apple-touch-icon.png").read_bytes() == logo.favicon_png(
+        logo.APPLE_TOUCH_SIZE
+    )
