@@ -89,6 +89,9 @@ def icon_svg() -> str:
     return _svg(dot_x + DOT + 1, HEIGHT + 1, body)
 
 
+APPLE_TOUCH_SIZE = 180  # what Safari asks for (start page, favourites, home screen)
+
+
 def favicon_png(size: int = 64) -> bytes:
     """A square tab icon: the rising bars and the stop on the dashboard surface."""
     from PIL import Image, ImageDraw  # Pillow comes with Streamlit; only this function needs it
@@ -114,12 +117,13 @@ def favicon_png(size: int = 64) -> bytes:
 
 
 def write_assets(directory: Path = STATIC) -> list[Path]:
-    """Write ``logo.svg``, ``icon.svg`` and ``favicon.png``; returns the paths."""
+    """Write ``logo.svg``, ``icon.svg``, ``favicon.png`` and ``apple-touch-icon.png``."""
     directory.mkdir(parents=True, exist_ok=True)
     files = {
         "logo.svg": wordmark_svg().encode("utf-8"),
         "icon.svg": icon_svg().encode("utf-8"),
         "favicon.png": favicon_png(),
+        "apple-touch-icon.png": favicon_png(APPLE_TOUCH_SIZE),
     }
     paths = []
     for name, content in files.items():

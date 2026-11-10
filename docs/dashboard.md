@@ -159,6 +159,11 @@ is shown as a tag too.
   row, the filter bar of the catalog is two columns wide, the pills wrap. On the list of vacancies a tapped
   row gives its "back" button the key `*_close_open`, and the stylesheet lays the card (`:has()` on that
   key, phone only) over the screen; the card itself keeps its key, so a click does not mount it anew.
+- **The tab icon** (`dashboard_icon.py`): the page ships Streamlit's own `favicon.png` and swaps it for
+  `page_icon` after load, as a JPEG; Chrome follows, Safari keeps what it read at load. So the container
+  image overwrites Streamlit's `favicon.png` with ours (`Dockerfile.dashboard`), and a script does the
+  same for a local run: it removes the icon links and adds a PNG one and an `apple-touch-icon` from
+  `/app/static` (`enableStaticServing`). The address carries a hash of the icon. `page_icon` is not set.
 - **Colour by part of the product**: vacancies teal, learning (Розвиток) violet, analytics red, the state of
   the system yellow; they colour the heading marks, the menu bars and the actions (`DOMAINS` in the theme;
   a test keeps the hues). These are not the chart series colours.

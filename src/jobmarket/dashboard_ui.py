@@ -13,6 +13,7 @@ import pandas as pd
 import streamlit as st
 
 from jobmarket import dashboard_data as dd
+from jobmarket import dashboard_icon as dic
 from jobmarket import dashboard_interview as iv
 from jobmarket import dashboard_keys as dk
 from jobmarket import dashboard_mascot as mascot
@@ -220,11 +221,12 @@ def avatar_card() -> None:
 
 
 def scripts() -> None:
-    """Install the shortcuts, the page-enter motion and the phone drawer; they show nothing."""
+    """Install the shortcuts, page motion, phone drawer and tab icon; they show nothing."""
     with st.container(key="dw_scripts"):
         st.html(dk.script(), unsafe_allow_javascript=True)
         st.html(dm.script(), unsafe_allow_javascript=True)
         st.html(dmo.script(), unsafe_allow_javascript=True)
+        st.html(dic.script(), unsafe_allow_javascript=True)
 
 
 def go_practice(skill: str) -> None:
