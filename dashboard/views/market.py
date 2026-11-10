@@ -9,6 +9,7 @@ ui.header(
     "Ринок",
     "Скільки вакансій відкрито, скільки з'являється і зникає, в яких напрямках і для якого рівня.",
     eyebrow="аналітика / ринок",
+    domain="market",
 )
 
 market = ui.table("fct_market_daily")
@@ -27,7 +28,7 @@ level_names = {dd.NO_LEVEL: "не вказано"}
 
 ui.section("Фільтри")
 with st.container(border=True):
-    one, two, three = st.columns([2, 4, 4])
+    one, two, three = st.columns([2, 5, 3])
     with one:
         ui.html('<div class="dw-fl">Джерело</div>')
         sources = st.pills(
@@ -96,8 +97,8 @@ if selected["date"].max() == market["date"].min():
     )
 
 st.write("")
-dynamics, categories_tab, levels_tab, table_tab = st.tabs(
-    ["Динаміка", "Напрямки", "Рівні", "Таблиця"]
+dynamics, vacancies_tab, categories_tab, levels_tab, table_tab = st.tabs(
+    ["Динаміка", "Вакансії", "Напрямки", "Рівні", "Таблиця"]
 )
 
 with dynamics:
@@ -125,6 +126,27 @@ with dynamics:
     with ui.card("Нові й закриті за днями", flow_note):
         ui.html(theme.legend(["Нові", "Закриті"], list(theme.SERIES[:2])))
         ui.chart(charts.grouped_columns(flow, order=["Нові", "Закриті"]))
+
+with vacancies_tab:
+    vacancies = ui.catalog()
+    if vacancies is None:
+        st.info(
+            "Список вакансій береться з каталогу, а його в цьому експорті немає: він локальний "
+            "(`make pipeline`)."
+        )
+    else:
+        demand, skill_table = ui.table("fct_skill_demand_monthly"), ui.table("dim_skill")
+        st.caption(
+            "Вакансії за вашими фільтрами ринку. Клікніть рядок: відкрийте оголошення, порівняйте "
+            "з ринком і збережіть; відмічайте кілька, щоб зберегти разом."
+        )
+        ui.vacancy_list(
+            dd.filter_catalog(
+                vacancies, categories=categories, levels=levels, sources=sources, only_open=True
+            ),
+            key="mkt", profile=ui.profile(), catalog=vacancies,
+            shares=dd.skill_shares(demand, skill_table, month=dd.latest_month(demand)),
+        )  # fmt: skip
 
 by_category = dd.open_by_category(selected, top=15)
 with categories_tab, ui.card("Напрямки", "відкриті вакансії на останній день, найбільші зверху."):

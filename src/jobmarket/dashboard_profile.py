@@ -197,6 +197,17 @@ def save_vacancy(
     return True
 
 
+def save_vacancies(profile: Profile, rows: list[dict[str, str]], today: date) -> int:
+    """Bookmark several vacancies (dicts with id, title, company, url); returns the new ones."""
+    return sum(
+        save_vacancy(
+            profile, row["id"], title=row["title"], company=row["company"], url=row["url"],
+            today=today,
+        )
+        for row in rows
+    )  # fmt: skip
+
+
 def update_saved(profile: Profile, vacancy_id: str, *, status: str, note: str) -> None:
     entry = profile.saved.get(vacancy_id)
     if entry is None:

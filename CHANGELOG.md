@@ -2,6 +2,62 @@
 
 ## Unreleased
 
+### Changed (workspace)
+- The **filters of the catalog moved out of the sidebar** into a bar above the list (search, direction,
+  skills, level, source, and a "Ще фільтри" popover), so the menu no longer scrolls. The profile is the
+  **avatar at the foot of the sidebar** (the whole card is a link) and no longer appears in the menu twice.
+- The **home page** answers "what to do today": up to three coloured actions, rings for the daily goal and
+  readiness, the market as rings by source, level and direction beside the daily breakdown, four
+  directions, three fresh vacancies and the state of the pipeline (DQ checks, SLOs, rows in silver).
+- Parts of the product have a colour (vacancies teal, learning violet, analytics red, system yellow) in the
+  headings, markers and the menu.
+
+- The vacancy list is **paged** (15 a page) with few columns that fit without a sideways scroll; the
+  full set of columns stays in the card and the CSV. The header chips that flew off the home page are
+  gone: the pipeline state sits in its own block at the end. The menu scrolls on its own and the avatar
+  is pinned below it, so no menu item is out of reach on a short window. The filter bar has a label of one
+  height above every control, so the rows line up.
+
+- The vacancy list is no longer a table you click into: **rows on the left and the vacancy already open on
+  the right** (the first one at once, a click on a row opens another). "Save the whole page" replaces
+  ticking rows. "Стан і дані" is now **"Стан системи"** without a heading above it (the heading looked like
+  a button that did nothing). The filter bar has more room, and its pills wrap.
+
+- **Public hosting on Render**: `render.yaml`, a start script that serves on `$PORT`, and a data path that
+  needs no volume. The nightly workflow publishes the public export (no third-party listings) to the `data`
+  branch from a job of its own; the container downloads it on start and every 6 hours
+  (`dashboard_sync.py`, only whitelisted files named by the archive's manifest). With
+  `DASHBOARD_PROFILE=session` a visitor's profile lives in their tab instead of one shared file. An error
+  about missing data names the file, not the server's path.
+- **A phone**: the menu is a drawer that starts closed (the buttons that hide it are now only hidden on a
+  desktop; before, an open menu covered the page and could not be closed). Figures sit in pairs, the
+  catalog filter bar is about half as tall, the pills wrap, the sort and the pager share two rows. A
+  tapped vacancy opens as a full-screen card with a "← До списку" button (below the list it was a page
+  away). Targets are at least 44 px on a touch screen.
+- **Smoother page changes**: the old per-element arrival (figures rising one after another, charts
+  wiped in) showed the page being built and read as jumping. Now the page body is hidden while it is
+  built and shown at once, with no fade (no `html.dw-go`, then `html.dw-enter`); meters and the typed
+  subtitle stay. The "Навички" page builds only the open tab instead of all three (its tables and the
+  graph were drawn while hidden). Vacancy rows in the catalog have one fact per line: the title, the
+  company and level, then the pay (in the accent colour) and the fit.
+- **Arrival animations are back, once per page**: figures and tiles rise, charts are wiped in, meters grow,
+  the subtitle types itself, but only when a page opens (`html.dw-enter` for 2.8 s), never after a click.
+- **Lighter on a small machine**: nothing animates on its own any more, the
+  `:has()` rule over all wrappers is gone, progress rings are CSS, home draws one chart of the market at a
+  time instead of three. The toolbar over tables and charts (full screen, search, download) is hidden
+  everywhere. On a short window the menu drops its headings (the group colour stays) so "Стан системи"
+  is never below the fold.
+
+### Added (workspace)
+- **Undo** for every hand-made change of the profile: a bar with "Скасувати" (and `z` / `Ctrl Z`), the newest
+  action first, 20 actions, three minutes.
+- A **vacancy list** shared by the catalog and a new "Вакансії" tab of the market page: sort, pick one row
+  for a card with an analysis against the market (each skill's share, salary against the direction's
+  median, days listed), pick several to save them together, CSV.
+- **Keyboard**: `g` + a letter to go to a page, `/` for the search, `Ctrl K` for a palette, `?` for the
+  list, `Space` and `1`-`3` in the trainer. Not printed on the pages.
+- Charts: **donut**, **ring** and a 20-week **activity grid** (profile).
+
 ### Changed (proportions)
 - Headings and figures are set in **Tektur** (technical, no longer pixelated; Tiny5 is gone).
 - **One type scale** of six steps (0.75, 0.85, 1, 1.25, 1.75, 2.5 rem) replaces twenty-one ad-hoc sizes, one

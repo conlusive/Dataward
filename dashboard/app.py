@@ -20,10 +20,11 @@ st.set_page_config(
 )
 st.logo(str(STATIC / "logo.svg"), size="large", icon_image=str(STATIC / "icon.svg"))
 ui.setup()
+ui.keep_data_fresh()  # a hosted copy re-fetches the nightly export (no-op without a URL)
 
 navigation = st.navigation(
     {
-        "Огляд": [
+        "": [  # no heading: the home page is the root of the menu
             st.Page("views/home.py", title="Головна", icon=":material/home:", default=True),
         ],
         "Вакансії": [
@@ -41,11 +42,13 @@ navigation = st.navigation(
             st.Page("views/skills.py", title="Навички", icon=":material/psychology:"),
             st.Page("views/salary.py", title="Зарплати", icon=":material/payments:"),
         ],
-        "Система": [
-            st.Page("views/system.py", title="Стан і дані", icon=":material/health_and_safety:"),
+        "\u200b": [  # no visible heading: a heading over one item looked like a button
+            st.Page("views/system.py", title="Стан системи", icon=":material/health_and_safety:"),
         ],
     },
     expanded=True,  # every item visible, never behind "View more"
 )
-ui.pet_card()  # the frog sits under the menu on every page
+ui.undo_bar()  # a slim bar while the last action can be taken back (also `z`)
+ui.scripts()  # shortcuts (`?` lists them, pages do not print them) and the page-enter motion
+ui.avatar_card()  # you, at the foot of the sidebar, on every page
 navigation.run()

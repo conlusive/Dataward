@@ -1,5 +1,9 @@
 """Streamlit helpers shared by the dashboard pages: cached loading and error handling."""
 
+import copy
+import os
+import re
+import time
 from datetime import date
 from html import escape
 from pathlib import Path
@@ -10,10 +14,14 @@ import streamlit as st
 
 from jobmarket import dashboard_data as dd
 from jobmarket import dashboard_interview as iv
+from jobmarket import dashboard_keys as dk
 from jobmarket import dashboard_mascot as mascot
+from jobmarket import dashboard_mobile as dmo
+from jobmarket import dashboard_motion as dm
 from jobmarket import dashboard_profile as pr
 from jobmarket import dashboard_progress as pg
 from jobmarket import dashboard_resources as rs
+from jobmarket import dashboard_sync as sync
 from jobmarket import dashboard_theme as theme
 
 CACHE_SECONDS = 300  # the data changes once a day; five minutes keeps a deploy's new files visible
@@ -81,10 +89,12 @@ def header(
     eyebrow: str = "Dataward",
     pills: list[str] | None = None,
     typed: bool = False,
+    domain: str | None = None,
 ) -> None:
     """The page title: an <h1> with a small label above it and status chips on the right."""
     st.markdown(
-        theme.hero(eyebrow, title, subtitle, pills, typed_subtitle=typed), unsafe_allow_html=True
+        theme.hero(eyebrow, title, subtitle, pills, typed_subtitle=typed, domain=domain),
+        unsafe_allow_html=True,
     )
 
 
@@ -99,8 +109,8 @@ def open_with(page: str, key: str, value: object) -> None:
     st.switch_page(page)
 
 
-def section(label: str, number: int | None = None) -> None:
-    st.markdown(theme.section(label, number), unsafe_allow_html=True)
+def section(label: str, number: int | None = None, domain: str | None = None) -> None:
+    st.markdown(theme.section(label, number, domain), unsafe_allow_html=True)
 
 
 def kpi(
@@ -132,6 +142,13 @@ def kpi(
         chart_data=history if history and len(history) > 1 else None,
         chart_type="line",
     )
+
+
+def keep(*keys: str) -> None:
+    """Keep the values of widgets that are not drawn on this run (the ones in a closed tab)."""
+    for key in keys:
+        if key in st.session_state:
+            st.session_state[key] = st.session_state[key]
 
 
 def chart(figure: Any) -> None:
@@ -176,29 +193,38 @@ def pet_state(profile: pr.Profile, today: date | None = None) -> dict[str, Any]:
     }  # fmt: skip
 
 
-def pet_card() -> None:
-    """The frog in the sidebar: it grows with what you do and tells you what waits."""
-    profile = pr.load()
+def avatar_card() -> None:
+    """You, at the foot of the sidebar: the frog in a frame, a name, a level, what waits."""
+    profile = _load()
     state = pet_state(profile)
-    info = state["level"]
-    notes = []
-    if state["streak"]:
-        notes.append(f"серія: {state['streak']} дн.")
-    notes.append(f"сьогодні: {state['today']} з {profile.goal}")
-    st.sidebar.markdown(
-        theme.pet(
-            mascot.frog_svg(state["stage"].key, state["mood"], label=state["stage"].name),
-            state["stage"].name,
-            info.level,
-            info.ratio,
-            f"{info.into} / {info.need} XP",
-            notes,
-        ),
-        unsafe_allow_html=True,
-    )
+    info, stage = state["level"], state["stage"]
+    notes = [f"серія {state['streak']} дн."] if state["streak"] else []
+    notes.append(f"сьогодні {state['today']}/{profile.goal}")
     due = state["counts"]["due"]
-    if due:
-        st.sidebar.page_link("views/practice.py", label=f"Повторити питань: {due} →")
+    with st.sidebar.container(key="dw_avatar"):
+        st.markdown(
+            theme.avatar(
+                mascot.frog_svg(stage.key, state["mood"], label=stage.name),
+                profile.name or "Гість",
+                info.level,
+                stage.name,
+                info.ratio,
+                notes,
+            ),  # fmt: skip
+            unsafe_allow_html=True,
+        )
+        with st.container(key="dw_avatar_open"):
+            st.page_link("views/profile.py", label="Мій профіль")
+        if due:
+            st.page_link("views/practice.py", label=f"Повторити питань: {due} →")
+
+
+def scripts() -> None:
+    """Install the shortcuts, the page-enter motion and the phone drawer; they show nothing."""
+    with st.container(key="dw_scripts"):
+        st.html(dk.script(), unsafe_allow_javascript=True)
+        st.html(dm.script(), unsafe_allow_javascript=True)
+        st.html(dmo.script(), unsafe_allow_javascript=True)
 
 
 def go_practice(skill: str) -> None:
@@ -207,19 +233,113 @@ def go_practice(skill: str) -> None:
     st.switch_page("views/practice.py")
 
 
-def profile() -> pr.Profile:
-    """The saved profile (an empty one on a fresh machine)."""
+def session_profiles() -> bool:
+    """A public demo (``DASHBOARD_PROFILE=session``): one server, many visitors, no shared file.
+
+    A profile on disk belongs to one person on one machine. On a public host every visitor would
+    read and change the same file, so there the profile lives in the visitor's session instead (it
+    is gone when the tab is closed).
+    """
+    return os.environ.get("DASHBOARD_PROFILE") == "session"
+
+
+def _load() -> pr.Profile:
+    """The current profile; always a copy, because the callers change it in place."""
+    if session_profiles():
+        return copy.deepcopy(st.session_state.get("_profile") or pr.Profile())
     return pr.load()
 
 
-def persist(profile: pr.Profile) -> bool:
-    """Write the profile; a failure is a message on the page, not a stack trace."""
-    try:
+def _store(profile: pr.Profile) -> None:
+    if session_profiles():
+        st.session_state["_profile"] = copy.deepcopy(profile)
+    else:
         pr.save(profile)
+
+
+@st.cache_resource(show_spinner=False)
+def _fresh(directory: str) -> bool:
+    return sync.keep_fresh(Path(directory)) is not None
+
+
+def keep_data_fresh() -> None:
+    """On a host with ``DASHBOARD_DATA_URL``: re-fetch the export in the background (once)."""
+    _fresh(str(dd.data_dir()))
+
+
+def demo_notice() -> None:
+    """On a public demo: say where the profile lives, on the pages that keep one."""
+    if session_profiles():
+        st.caption(
+            "Демо-версія: профіль живе лише в цій вкладці й зникне, коли ви її закриєте. "
+            "Повну версію з постійним профілем можна запустити в себе (див. README)."
+        )
+
+
+def profile() -> pr.Profile:
+    """The saved profile (an empty one on a fresh machine)."""
+    return _load()
+
+
+UNDO_SECONDS = 180  # how long a done action can be taken back
+UNDO_LIMIT = 20
+
+
+def persist(profile: pr.Profile, what: str | None = None) -> bool:
+    """Write the profile; a failure is a message on the page, not a stack trace.
+
+    With ``what`` (a short phrase: "Збережено вакансію") the state before the write is kept, so the
+    action can be taken back with ``undo``. Routine writes, like a trainer answer, pass nothing.
+    """
+    before = _load() if what else None  # the stored copy is still as it was before this action
+    try:
+        _store(profile)
     except OSError as error:
         st.error(f"Не вдалося зберегти профіль у {pr.default_path()}: {error}")
         return False
+    if what and before is not None and before != profile:
+        stack = st.session_state.setdefault("_undo", [])
+        stack.append((what, before, time.time()))
+        del stack[:-UNDO_LIMIT]
     return True
+
+
+def _undoable() -> list[tuple[str, pr.Profile, float]]:
+    """The actions that can still be taken back, the newest last; old ones are forgotten."""
+    stack: list[tuple[str, pr.Profile, float]] = st.session_state.get("_undo", [])
+    stack[:] = [item for item in stack if time.time() - item[2] < UNDO_SECONDS]
+    return stack
+
+
+def undo() -> None:
+    """A button callback: put the profile back as it was before the last action."""
+    stack = _undoable()
+    if not stack:
+        return
+    what, before, stamp = stack.pop()
+    try:
+        _store(before)
+    except OSError as error:
+        stack.append((what, before, stamp))
+        st.error(f"Не вдалося скасувати: {error}")
+        return
+    st.toast(f"Скасовано: {what[:1].lower()}{what[1:]}", icon=":material/undo:")
+
+
+def undo_bar() -> None:
+    """A slim bar above the page while there is something to take back (also `z`)."""
+    stack = _undoable()
+    if not stack:
+        return
+    with st.container(key="dw_undo"):
+        text, button = st.columns([7, 2], vertical_alignment="center")
+        extra = f" (ще {len(stack) - 1} до цього)" if len(stack) > 1 else ""
+        text.markdown(
+            f'<div class="dw-undo">↶ {escape(stack[-1][0])}{extra}</div>', unsafe_allow_html=True
+        )
+        button.button(
+            "Скасувати", key="dw_undo_btn", on_click=undo, icon=":material/undo:", width="stretch"
+        )
 
 
 def flash(message: str) -> None:
@@ -235,13 +355,13 @@ def show_flash() -> None:
 
 def _save_vacancy(row: Any) -> None:
     """A button callback: keep the vacancy in the profile."""
-    current = pr.load()
+    current = _load()
     added = pr.save_vacancy(
         current, str(row["vacancy_id"]), title=str(row["title"]), company=str(row["company"]),
         url=str(row["url"]), today=date.today(),
     )  # fmt: skip
-    if added and persist(current):
-        flash("Вакансію збережено в профілі: етап «збережено».")
+    if added and persist(current, "Збережено вакансію"):
+        st.toast("Вакансію збережено в профілі.", icon=":material/bookmark_added:")
 
 
 def _has(value: Any) -> bool:
@@ -296,3 +416,183 @@ def vacancy_card(row: Any, *, profile: pr.Profile | None = None) -> None:
         "✓ У профілі" if saved else "★ Зберегти у профіль",
         key=f"save_{row['vacancy_id']}", disabled=saved, on_click=_save_vacancy, args=(row,),
     )  # fmt: skip
+
+
+# ---- a list of vacancies you can act on ---------------------------------------------------------
+def _turn(key: str, step: int) -> None:
+    """A pager button: one page forward or back (the page is clamped when it is drawn)."""
+    st.session_state[f"{key}_page"] = st.session_state.get(f"{key}_page", 0) + step
+
+
+def _save_picked(key: str) -> None:
+    """A button callback: keep every selected vacancy of the list ``key`` in the profile."""
+    rows = st.session_state.get(f"{key}_picked", [])
+    current = _load()
+    added = pr.save_vacancies(current, rows, date.today())
+    if added and persist(current, f"Збережено вакансій: {added}"):
+        st.toast(f"Збережено вакансій: {added}", icon=":material/bookmark_added:")
+    elif not added:
+        st.toast("Усі вибрані вакансії вже в профілі.")
+
+
+def analysis_block(row: Any, analysis: dict[str, Any], mine: set[str]) -> None:
+    """One vacancy next to the market: its skills by how common they are, pay, age, rivals."""
+    items = [{**item, "mine": item["skill"] in mine} for item in analysis["skills"]]
+    st.markdown(
+        theme.card_title("Аналіз проти ринку", "частка вакансій ринку, що просять навичку; "
+                         "бірюзовим обов'язкові, ✓ у вас є"),
+        unsafe_allow_html=True,
+    )  # fmt: skip
+    if items:
+        st.markdown(theme.skill_rows(items), unsafe_allow_html=True)
+    salary = analysis["salary"]
+    lines = []
+    if salary["mid"] is not None and salary["peer_median"]:
+        delta = salary["mid"] / salary["peer_median"] - 1
+        lines.append(
+            f"Зарплата вакансії {dd.fmt_int(salary['mid'])} $ — {abs(delta):.0%} "
+            f"{'вище' if delta >= 0 else 'нижче'} за медіану напрямку "
+            f"({dd.fmt_int(salary['peer_median'])} $, вакансій із вилкою: {salary['peers']})."
+        )
+    elif salary["mid"] is not None:
+        lines.append(f"Зарплата вакансії {dd.fmt_int(salary['mid'])} $; порівняти з напрямком "
+                     "нічим: замало вакансій із вилкою.")  # fmt: skip
+    else:
+        lines.append("Зарплату не вказано: порівнювати нічого.")
+    if analysis["days_listed"] is not None:
+        lines.append(
+            f"На сайті {analysis['days_listed']} дн.; схожих відкритих: {analysis['similar']}."
+        )
+    for line in lines:
+        st.caption(line)
+
+
+def _open(key: str, vacancy_id: str) -> None:
+    """A row button: show this vacancy on the right."""
+    st.session_state[f"{key}_shown"] = vacancy_id
+
+
+def _close(key: str) -> None:
+    """The "back to the list" button of the card on a phone: forget the tapped vacancy."""
+    st.session_state.pop(f"{key}_shown", None)
+
+
+def _plain(text: object) -> str:
+    """Text for a button label, which is markdown: a title with `*`, `_` or `$` stays as typed."""
+    return re.sub(r"([\\`*_\[\]$~<>])", r"\\\1", str(text))
+
+
+def _row_label(row: Any, score: float | None) -> str:
+    """Up to three short lines on a row: the title, the company and level, then pay and fit.
+
+    Each kind of fact has its own line (and the theme its own colour), so a row reads at a glance
+    instead of being one long string that wraps.
+    """
+    level = "" if row["seniority"] == dd.NO_LEVEL else str(row["seniority"])
+    company = str(row["company"]) if _has(row["company"]) else ""
+    pay = dd.salary_label(row["salary_usd_min"], row["salary_usd_max"])
+    fit = f"збіг {score:.0%}" if score is not None else ""
+    who = " · ".join(_plain(x) for x in (company, level) if x)
+    # the pay sits in a code span: the theme colours it, and nothing in it needs escaping
+    numbers = " · ".join(x for x in (f"`{pay}`" if pay else "", f"*{fit}*" if fit else "") if x)
+    return "\n".join(x for x in (f"**{_plain(row['title'])}**", who, numbers) if x)
+
+
+def vacancy_list(
+    frame: pd.DataFrame,
+    *,
+    key: str,
+    profile: pr.Profile,
+    catalog: pd.DataFrame,
+    shares: dict[str, float],
+) -> None:
+    """Vacancies as a list with the chosen one already open beside it (no clicking into a table).
+
+    Rows on the left, 15 to a page; the vacancy on the right with its facts, skills, links, the
+    comparison with the market and a save button. The first one is open at once; a click on a row
+    opens another. It is a fragment, so a click redraws only the list and the card.
+    """
+    if frame.empty:
+        st.info("За цими умовами вакансій немає.")
+        return
+    mine = profile.known()
+
+    @st.fragment
+    def view() -> None:
+        with st.container(key=f"{key}_bar"):  # on a phone: the sort on one row, the pager below
+            sorting, back, forward, where = st.columns([4, 1, 1, 3], vertical_alignment="bottom")
+            sort = sorting.selectbox("Сортування", list(dd.SORTS), key=f"{key}_sort")
+        ordered = dd.sort_catalog(frame, sort).reset_index(drop=True)
+        signature = (sort, len(ordered), str(ordered.iloc[0]["vacancy_id"]))
+        if st.session_state.get(f"{key}_sig") != signature:  # other filters or order: page one
+            st.session_state[f"{key}_sig"] = signature
+            st.session_state[f"{key}_page"] = 0
+            st.session_state.pop(f"{key}_shown", None)
+        page, first, last = dd.page_of(
+            len(ordered), st.session_state.get(f"{key}_page", 0), dd.PAGE_SIZE
+        )
+        st.session_state[f"{key}_page"] = page
+        pages = max(1, -(-len(ordered) // dd.PAGE_SIZE))
+        back.button(
+            "←", key=f"{key}_back", on_click=_turn, args=(key, -1), disabled=page == 0,
+            width="stretch", help="Попередня сторінка",
+        )  # fmt: skip
+        forward.button(
+            "→", key=f"{key}_next", on_click=_turn, args=(key, 1), disabled=page >= pages - 1,
+            width="stretch", help="Наступна сторінка",
+        )  # fmt: skip
+        where.markdown(
+            f'<div class="dw-pager">{first + 1}–{last} з {dd.fmt_int(len(ordered))}</div>',
+            unsafe_allow_html=True,
+        )
+        shown = ordered.iloc[first:last].reset_index(drop=True)
+        ids = shown["vacancy_id"].astype(str).tolist()
+        opened = st.session_state.get(f"{key}_shown")
+        if opened not in ids:  # nothing chosen yet, or it is on another page: open the first
+            opened = ids[0]
+        listing, detail = st.columns([5, 6], gap="medium")
+        with listing, st.container(key=f"{key}_rows"):
+            for vacancy_id, (_, row) in zip(ids, shown.iterrows(), strict=True):
+                score = (
+                    pr.match(list(row["skills"]), list(row["skills_required"]), mine)[0]
+                    if mine
+                    else None
+                )
+                st.button(
+                    _row_label(row, score if mine else None), key=f"{key}_row_{vacancy_id}",
+                    type="primary" if vacancy_id == opened else "secondary",
+                    on_click=_open, args=(key, vacancy_id), width="stretch",
+                )  # fmt: skip
+        # a tapped row changes the key of the "back" button, and only of it: on a phone the
+        # stylesheet then lays the card over the whole screen (below the list it would be a page
+        # away). The card itself keeps its key, so a click does not mount it anew
+        tapped = f"{key}_shown" in st.session_state
+        with detail, st.container(border=True, key=f"{key}_detail"):
+            st.button(
+                "← До списку",
+                key=f"{key}_close{'_open' if tapped else ''}",
+                on_click=_close,
+                args=(key,),
+                width="stretch",
+            )  # fmt: skip  (shown on a phone only)
+            row = shown.iloc[ids.index(opened)]
+            vacancy_card(row, profile=profile)
+            analysis_block(row, dd.vacancy_analysis(row, catalog, shares), mine)
+        st.session_state[f"{key}_picked"] = [
+            {
+                "id": str(r["vacancy_id"]), "title": str(r["title"]),
+                "company": str(r["company"]), "url": str(r["url"]),
+            }
+            for _, r in shown.iterrows()
+        ]  # fmt: skip
+        save, csv = st.columns([1, 1])
+        save.button(
+            f"★ Зберегти всі на сторінці ({len(shown)})", key=f"{key}_save",
+            on_click=_save_picked, args=(key,),
+        )  # fmt: skip
+        csv.download_button(
+            "Завантажити CSV (усе)", dd.catalog_table(ordered).to_csv(index=False).encode("utf-8"),
+            file_name=f"dataward_{key}.csv", mime="text/csv", key=f"{key}_csv",
+        )  # fmt: skip
+
+    view()

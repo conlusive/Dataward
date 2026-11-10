@@ -10,6 +10,7 @@ large fills, so it is used for text, lines and highlights, and the charts use th
 """
 
 from html import escape
+from typing import Any
 
 BG = "#303032"
 CARD = "#28282A"
@@ -26,6 +27,14 @@ ACCENT = "#AAA8FF"
 SERIES = ("#8481F5", "#E5603B", "#26A08F", "#B58A1F")
 SOURCE_ORDER = ("dou", "djinni")  # the sources always wear the first two colours in this order
 MARK = SERIES[0]  # one-series bars and lines
+# Each part of the product has its own colour, so a glance says where you are: vacancies are teal,
+# growth (profile, learning, practice) amber, the market lilac, the system terracotta.
+DOMAINS = {  # a colour per part of the product
+    "jobs": "#26A08F",  # vacancies: teal
+    "grow": "#8481F5",  # learning: violet
+    "market": "#F0605A",  # analytics: red
+    "system": "#E2B93B",  # state of the system: yellow
+}  # fmt: skip
 MUTED_MARK = "#7A7A82"  # context marks next to an emphasised one (3:1 on the card)
 
 FONT_BODY = "'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace"
@@ -48,13 +57,27 @@ _STYLE = """
 h1, h2, h3, h4 { font-family: var(--display) !important; }
 
 /* stepped (pixel) corners: the clip removes the four corner squares of the border */
-[data-testid="stMetric"], .dw-pill, .dw-card-box, .dw-facts-box,
-[data-testid="stVerticalBlockBorderWrapper"]:has(> div > [data-testid="stVerticalBlock"]) {
+[data-testid="stVerticalBlockBorderWrapper"] { border-radius: 0 !important; }
+[data-testid="stMetric"], .dw-pill, .dw-card-box, .dw-facts-box {
   border-radius: 0 !important;
   clip-path: polygon(0 4px, 4px 4px, 4px 0, calc(100% - 4px) 0, calc(100% - 4px) 4px,
     100% 4px, 100% calc(100% - 4px), calc(100% - 4px) calc(100% - 4px),
     calc(100% - 4px) 100%, 4px 100%, 4px calc(100% - 4px), 0 calc(100% - 4px));
 }
+
+/* no toolbar over tables and charts: full screen and the table's own search or download only get
+   in the way (there are explicit download buttons where a download makes sense) */
+[data-testid="stElementToolbar"], button[title*="ullscreen"] { display: none !important; }
+
+/* a ring (progress): a conic gradient, so there is no chart to draw */
+.dw-ring { position: relative; width: 6rem; height: 6rem; margin: var(--s2) auto var(--s2);
+  border-radius: 50%; display: grid; place-items: center;
+  background: conic-gradient(var(--dom, var(--accent)) calc(var(--p) * 1%), var(--line) 0); }
+.dw-ring::before { content: ""; position: absolute; inset: 0.9rem; border-radius: 50%;
+  background: var(--card); }
+.dw-ring b { position: relative; font-family: var(--display); font-size: var(--fs-md);
+  color: var(--ink); }
+.dw-ring-cap { text-align: center; font-size: var(--fs-xs); color: var(--ink-3); }
 
 /* sidebar */
 [data-testid="stSidebar"] { background: var(--card); border-right: 2px solid var(--line); }
@@ -163,20 +186,28 @@ button[kind], [data-testid="stDownloadButton"] button, [data-testid="stLinkButto
 """
 
 _MOTION = """
-/* motion: things arrive in steps (pixel style), never glide; all of it stops for reduced motion */
-@keyframes dw-rise { from { opacity: 0; transform: translateY(6px); }
-  to { opacity: 1; transform: none; } }
-@keyframes dw-wipe { from { clip-path: inset(0 100% 0 0); } to { clip-path: inset(0 0 0 0); } }
-@keyframes dw-type { from { width: 0; } to { width: var(--chars); } }
+/* motion: all of it stops for reduced motion */
 @keyframes dw-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
-[data-testid="stMetric"], .dw-stat, .dw-dir, .dw-vac, .dw-hero {
-  animation: dw-rise 0.4s steps(5) both; animation-delay: calc(var(--i, 0) * 50ms);
-}
-[data-testid="stVegaLiteChart"] { animation: dw-wipe 1.1s steps(28) both; }
-.dw-typed { display: inline-block; overflow: hidden; white-space: nowrap;
-  border-right: 2px solid var(--accent); width: var(--chars);
-  animation: dw-type 1.6s steps(var(--steps)) both, dw-caret 0.9s steps(1) 1.6s 3; }
+/* arrival: once, when a page opens (see dashboard_motion.py). The page body is hidden from the
+   start and until the page is built (no html.dw-go), then shown at once, with no fade: a fade
+   promotes the whole page to its own layer, and the repaint when it ends showed as a flicker.
+   Nothing rises or is staggered, so the building of the page is never seen. Only the meters (a
+   transform) and the typed line (html.dw-enter) move. A rerun after a click plays nothing. If the
+   script ever fails, the body shows itself after 2 s. Under reduced motion it is never hidden. */
+@keyframes dw-unhide { to { opacity: 1; } }
+@keyframes dw-type { from { width: 0; } to { width: var(--chars); } }
 @keyframes dw-caret { 50% { border-right-color: transparent; } }
+@keyframes dw-grow { from { transform: scaleX(0); } }
+@media (prefers-reduced-motion: no-preference) {
+  html:not(.dw-go) [data-testid="stMainBlockContainer"] { opacity: 0;
+    animation: dw-unhide 0s 2s forwards; }
+}
+html.dw-enter .dw-meter span { transform-origin: left;
+  animation: dw-grow 0.6s cubic-bezier(0.3, 0.6, 0.2, 1) 0.15s both; }
+.dw-typed { display: inline-block; }
+html.dw-enter .dw-typed { overflow: hidden; white-space: nowrap; width: var(--chars);
+  border-right: 2px solid var(--accent);
+  animation: dw-type 1.2s steps(var(--steps)) both, dw-caret 0.7s steps(1) 1.2s 2; }
 .dw-pulse span:last-child { animation: dw-pulse 1.6s steps(2) infinite; }
 .dw-dir, .dw-vac, [data-testid="stMetric"] { transition: transform 0.12s steps(2),
   border-color 0.12s steps(2); }
@@ -192,7 +223,6 @@ _MOTION = """
 .dw-lid { animation: dw-blink-lid 4.2s steps(1) infinite; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; }
-  .dw-typed { width: auto; border-right: 0; }
 }
 """
 
@@ -226,9 +256,13 @@ _BLOCKS = """
 [data-testid="stNavSectionHeader"] { pointer-events: none; cursor: default; }
 [data-testid="stNavSectionHeader"] [data-testid="stIconMaterial"] { display: none; }
 
-/* the sidebar is part of the layout, not a drawer: it cannot be collapsed */
-[data-testid="stSidebarCollapseButton"], [data-testid="stSidebarCollapsedControl"],
-[data-testid="stExpandSidebarButton"], button[kind="headerNoPadding"] { display: none !important; }
+/* on a desktop the sidebar is part of the layout, not a drawer: it cannot be collapsed. On a
+   phone it is a drawer (closed at the start, see dashboard_mobile.py), so its buttons stay */
+@media (min-width: 769px) {
+  [data-testid="stSidebarCollapseButton"], [data-testid="stSidebarCollapsedControl"],
+  [data-testid="stExpandSidebarButton"], button[kind="headerNoPadding"] {
+    display: none !important; }
+}
 
 /* a rerun must not dim the page: the old content stays, then is replaced in place */
 [data-stale="true"] { opacity: 1 !important; transition: none !important; }
@@ -259,9 +293,7 @@ _BLOCKS = """
   line-height: 1.1; margin: 0.2rem 0; }
 .dw-dir-count small { font-size: var(--fs-sm); color: var(--ink-3); margin-left: 0.4rem; }
 .dw-meter { height: 8px; background: var(--line); margin: 0.4rem 0 0.7rem; }
-.dw-meter span { display: block; height: 100%; background: var(--accent);
-  animation: dw-grow 0.9s steps(16) both; }
-@keyframes dw-grow { from { width: 0; } }
+.dw-meter span { display: block; height: 100%; background: var(--accent); }
 .dw-dir { height: 12rem; overflow: hidden; }
 .dw-vac { height: 11rem; overflow: hidden; }
 .dw-vac-title { font-family: var(--display); font-size: var(--fs-lg); color: var(--ink);
@@ -299,6 +331,216 @@ button[kind="pills"], button[kind="pillsActive"],
   background: var(--accent); color: #1B1B1D; text-align: center; font-size: var(--fs-xs); }
 """
 
+_PHONE = """
+/* a phone: Streamlit puts every column on its own row below 640 px, and sets the sidebar as a
+   drawer below 768 px (see dashboard_mobile.py). The rules here only change what is too big or too
+   long for a narrow screen. Last in the stylesheet, so that they win over the desktop ones. */
+@media (max-width: 640px) {
+  .block-container { padding-top: 3.2rem; padding-bottom: 3rem; }
+
+  /* figures in pairs, not one tall tile under another */
+  [data-testid="stHorizontalBlock"]:has(> [data-testid="stColumn"] [data-testid="stMetric"])
+    > [data-testid="stColumn"] { min-width: calc(50% - 8px) !important;
+    flex: 1 1 calc(50% - 8px) !important; }
+  [data-testid="stMetric"] { min-height: 6.5rem; padding: var(--s3); }
+  [data-testid="stMetricLabel"] *, [data-testid="stMetricDelta"] * { white-space: normal !important;
+    overflow: visible !important; text-overflow: clip !important; }
+  [data-testid="stPills"], [data-testid="stPills"] > div { flex-wrap: wrap !important;
+    overflow: visible !important; }
+
+  /* the filter bar: search and the buttons on a row of their own, the two lists and the source
+     with the reset side by side, the pills wrap instead of scrolling sideways */
+  .st-key-cat_filters { padding: var(--s3); }
+  .st-key-cat_filters [data-testid="stHorizontalBlock"] { gap: var(--s3); }
+  .st-key-cat_filters [data-testid="stColumn"] { min-width: calc(100% - 8px) !important; }
+  .st-key-cat_filters [data-testid="stColumn"]:nth-child(2):nth-last-child(3),
+  .st-key-cat_filters [data-testid="stColumn"]:nth-child(3):nth-last-child(2),
+  .st-key-cat_filters [data-testid="stColumn"]:nth-child(2):nth-last-child(2),
+  .st-key-cat_filters [data-testid="stColumn"]:nth-child(3):nth-last-child(1) {
+    min-width: calc(50% - 8px) !important; }
+
+  /* the sort on a row, the pager (two arrows and the count) on the next one */
+  .st-key-cat_bar [data-testid="stColumn"], .st-key-mkt_bar [data-testid="stColumn"] {
+    min-width: 0 !important; flex: 1 1 0 !important; }
+  .st-key-cat_bar [data-testid="stColumn"]:first-child,
+  .st-key-mkt_bar [data-testid="stColumn"]:first-child { min-width: 100% !important; }
+  .st-key-cat_bar [data-testid="stColumn"]:last-child,
+  .st-key-mkt_bar [data-testid="stColumn"]:last-child { flex-grow: 2 !important; }
+
+  /* the card of a tapped vacancy (its "back" button has the key *_close_open) covers the screen;
+     a card nobody has tapped is hidden: below the list it would be a page away */
+  .st-key-cat_detail, .st-key-mkt_detail { display: none; }
+  .st-key-cat_detail:has(.st-key-cat_close_open), .st-key-mkt_detail:has(.st-key-mkt_close_open) {
+    display: flex; position: fixed; inset: 0; z-index: 1000000; overflow-y: auto;
+    border-radius: 0; background: var(--bg); padding: var(--s3); box-sizing: border-box; }
+  .st-key-cat_close_open, .st-key-mkt_close_open { display: block; position: sticky; top: 0;
+    z-index: 2; background: var(--bg); padding-bottom: var(--s2); }
+}
+
+/* touch: a finger needs a target of about 44 px */
+@media (pointer: coarse) {
+  button[kind], [data-testid="stDownloadButton"] button, [data-testid="stLinkButton"] a,
+  [data-baseweb="select"] > div, [data-baseweb="base-input"] { min-height: 2.75rem; }
+  [data-testid="stSidebarNavLink"] { min-height: 2.75rem !important; }
+}
+
+/* the drawer is as tall as the visible screen (100vh is taller than it on a phone) and keeps its
+   headings: it can scroll, unlike the sidebar of a short desktop window */
+@media (max-width: 768px) {
+  [data-testid="stSidebarContent"] { height: 100dvh; }
+  [data-testid="stNavSectionHeader"] { display: flex; }
+}
+"""
+
+_WORKSPACE = """
+.dw-skillrow { display: grid; grid-template-columns: 11rem 1fr 7.5rem; gap: var(--s3);
+  align-items: center; font-size: var(--fs-sm); margin: 0.25rem 0; }
+.dw-skillrow .dw-bar { height: 8px; background: var(--line); }
+.dw-skillrow .dw-bar span { display: block; height: 100%; background: var(--d-market); }
+.dw-skillrow.req .dw-bar span { background: var(--d-jobs); }
+.dw-skillrow .dw-pct { color: var(--ink-3); text-align: right; }
+.dw-skillrow .dw-name.mine::after { content: " ✓"; color: var(--d-jobs); }
+/* domains: a colour per part of the product, used for the label, the marker and the accent */
+.dw-d-jobs { --dom: var(--d-jobs); } .dw-d-grow { --dom: var(--d-grow); }
+.dw-d-market { --dom: var(--d-market); } .dw-d-system { --dom: var(--d-system); }
+.dw-section::before, .dw-eyebrow, .dw-stat i, .dw-card-title::before { color: var(--dom,
+  var(--accent)); }
+.dw-section b { color: var(--dom, var(--accent)); }
+[data-testid="stSidebarNavItems"] > div:nth-child(2) { --dom: var(--d-jobs); }
+[data-testid="stSidebarNavItems"] > div:nth-child(3) { --dom: var(--d-grow); }
+[data-testid="stSidebarNavItems"] > div:nth-child(4) { --dom: var(--d-market); }
+[data-testid="stSidebarNavItems"] > div:nth-child(5) { --dom: var(--d-system); }
+[data-testid="stNavSectionHeader"] { border-left: 4px solid var(--dom, var(--line));
+  padding-left: 0.5rem; }
+[data-testid="stSidebarNavItems"] a[aria-current="page"] {
+  border-left-color: var(--dom, var(--accent)) !important;
+  color: var(--dom, var(--accent)) !important; }
+
+/* the menu is compact so that it fits without a scrollbar; the profile is the avatar below */
+[data-testid="stSidebarNavLink"] { padding-top: 0.1rem !important;
+  padding-bottom: 0.1rem !important; min-height: 1.9rem !important; }
+[data-testid="stSidebarNavItems"] { gap: 0 !important; }
+[data-testid="stSidebarNavLink"][href$="profile"] { display: none; }
+[data-testid="stNavSectionHeader"] { margin-top: 0.3rem; padding-top: 0;
+  padding-bottom: 0; min-height: 0; }
+[data-testid="stNavSectionHeader"]:empty { display: none; }
+[data-testid="stSidebarNavItems"] > div:nth-child(5) [data-testid="stNavSectionHeader"] {
+  display: none; }
+/* the item has no heading to carry the colour of its group, so the item itself carries it */
+[data-testid="stSidebarNavItems"] > div:nth-child(5) a { border-left: 4px solid var(--dom); }
+[data-testid="stSidebarHeader"] { padding-top: 0.6rem; padding-bottom: 0.2rem; }
+[data-testid="stSidebarNav"] { padding-bottom: 0; }
+[data-testid="stSidebarUserContent"] { padding-bottom: 0 !important; }
+
+
+.st-key-dw_scripts { position: absolute; width: 0; height: 0; overflow: hidden; }
+
+.st-key-cat_rows, .st-key-mkt_rows { display: flex; flex-direction: column; gap: var(--s2); }
+.st-key-cat_rows button, .st-key-mkt_rows button { height: 5.2rem; min-height: 5.2rem;
+  box-sizing: border-box;
+  padding: var(--s2) var(--s3); justify-content: flex-start; align-items: flex-start;
+  text-align: left; background: var(--card); border: 2px solid var(--line);
+  border-left-width: 4px; border-radius: 0; }
+/* every box inside the button spans it and starts at the left (Streamlit centres them and lets
+   them shrink to their text, which put each line at a different offset) */
+.st-key-cat_rows button div, .st-key-mkt_rows button div { width: 100%; min-width: 0;
+  justify-content: flex-start; text-align: left; }
+/* the lines are separated by a newline in the label; one line each, cut with an ellipsis. Every
+   row has the same fixed height, so a row with two lines and one with three line up. The title is
+   bold text, not a block: a block followed by a newline would leave an empty line under it */
+.st-key-cat_rows button p, .st-key-mkt_rows button p { margin: 0; width: 100%;
+  white-space: pre; overflow: hidden; text-overflow: ellipsis; text-align: left;
+  font-size: var(--fs-sm); color: var(--ink-3); line-height: 1.4; }
+.st-key-cat_rows button p strong, .st-key-mkt_rows button p strong { color: var(--ink);
+  font-size: var(--fs-md); }
+.st-key-cat_rows button p code, .st-key-mkt_rows button p code { background: none; padding: 0;
+  color: var(--accent); font-family: inherit; font-size: var(--fs-sm); }
+.st-key-cat_rows button p em, .st-key-mkt_rows button p em { font-style: normal; }
+.st-key-cat_rows button:hover, .st-key-mkt_rows button:hover { border-color: var(--accent); }
+.st-key-cat_rows button[kind="primary"], .st-key-mkt_rows button[kind="primary"] {
+  background: rgba(170, 168, 255, 0.14); border-color: var(--accent); }
+.st-key-cat_detail, .st-key-mkt_detail { position: sticky; top: 3.5rem; }
+.st-key-cat_close, .st-key-mkt_close, .st-key-cat_close_open, .st-key-mkt_close_open {
+  display: none; }
+.st-key-dw_undo { border: 2px solid var(--accent); background: rgba(170, 168, 255, 0.10);
+  padding: var(--s2) var(--s3); margin-bottom: var(--s3); }
+.dw-undo { font-size: var(--fs-sm); color: var(--ink); }
+.dw-pager { text-align: right; font-size: var(--fs-sm); color: var(--ink-3);
+  padding-bottom: 0.6rem; }
+
+/* the filter bar sits above the list, not in the menu: every control has a label of one height
+   above it and the same height, so the rows line up */
+.st-key-cat_filters [data-testid="stHorizontalBlock"] { gap: var(--s4); align-items: flex-start; }
+.st-key-cat_filters .dw-fl { font-size: var(--fs-xs); height: 1.2rem; margin: 0 0 var(--s2);
+  line-height: 1.2rem; }
+.st-key-cat_filters button, .st-key-cat_filters [data-baseweb="select"] > div,
+.st-key-cat_filters input { min-height: 2.5rem; }
+.st-key-cat_filters [data-testid="stPills"] { min-height: 2.5rem; align-items: center;
+  flex-wrap: wrap; gap: var(--s2); }
+.st-key-cat_filters { border: 2px solid var(--line); background: var(--card);
+  padding: var(--s4) var(--s5); margin-bottom: var(--s4); }
+.st-key-cat_filters [data-testid="stVerticalBlock"] { gap: var(--s3); }
+
+/* the avatar sits at the bottom of the sidebar whatever else is above it */
+[data-testid="stSidebarContent"] { display: flex; flex-direction: column; height: 100vh;
+  overflow: hidden; }
+[data-testid="stSidebarNav"] { flex: 1 1 auto; min-height: 0; overflow-y: auto;
+  scrollbar-width: thin; scrollbar-color: var(--line) transparent; }
+[data-testid="stSidebarUserContent"] { flex: none; }
+.st-key-dw_avatar { position: relative; z-index: 5; background: var(--card);
+  border-top: 2px solid var(--line); padding: var(--s2) 0 var(--s1); }
+@media (max-height: 780px) {
+  [data-testid="stSidebarNavLink"] { min-height: 1.6rem !important;
+    border-left: 4px solid color-mix(in srgb, var(--dom, var(--line)) 55%, transparent); }
+  [data-testid="stNavSectionHeader"] { display: none; }
+  [data-testid="stSidebarNavItems"] > div { margin-top: var(--s2); }
+}
+/* the whole card opens the profile: the page link is stretched over it and left invisible */
+.st-key-dw_avatar { cursor: pointer; }
+.st-key-dw_avatar .st-key-dw_avatar_open { position: absolute; inset: 0; z-index: 2; }
+.st-key-dw_avatar .st-key-dw_avatar_open a { height: 100%; opacity: 0; }
+.st-key-dw_avatar:focus-within, .st-key-dw_avatar:hover { background: rgba(170, 168, 255, 0.08); }
+.dw-avatar { display: flex; gap: var(--s3); align-items: center; }
+.dw-avatar-pic { flex: none; width: 56px; height: 56px; background: var(--bg); overflow: hidden;
+  border: 2px solid var(--dom, var(--d-grow)); display: flex; align-items: center;
+  justify-content: center; }
+.dw-avatar-pic svg { width: 120%; height: auto; margin-top: 6px; }
+.dw-avatar-text { min-width: 0; flex: 1; font-size: var(--fs-xs); color: var(--ink-3);
+  line-height: 1.45; }
+.dw-avatar-name { font-family: var(--display); font-size: var(--fs-md); color: var(--ink);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.dw-avatar-name b { color: var(--d-grow); font-weight: 600; }
+.dw-kbd { display: inline-block; border: 2px solid var(--line); border-bottom-width: 4px;
+  padding: 0 0.4rem; font-size: var(--fs-xs); color: var(--ink-2); background: var(--bg);
+  font-family: var(--body); line-height: 1.5; margin: 0 0.15rem; }
+.dw-hint { font-size: var(--fs-xs); color: var(--ink-3); margin-top: var(--s2); }
+
+/* an action: what to do now, coloured by the part of the product it leads to */
+.dw-todo { background: var(--card); border: 2px solid var(--line);
+  border-left: 6px solid var(--dom);
+  padding: var(--s3) var(--s4); margin-bottom: var(--s2); }
+.dw-todo-kind { font-family: var(--display); font-size: var(--fs-xs); letter-spacing: 0.12em;
+  text-transform: uppercase; color: var(--dom); }
+.dw-todo-text { font-size: var(--fs-md); color: var(--ink); margin-top: 0.15rem; }
+
+/* a key chip row for the help overlay and the command palette (built by dashboard_keys) */
+#dw-overlay { position: fixed; inset: 0; z-index: 100000; background: rgba(20, 20, 22, 0.72);
+  display: flex; align-items: flex-start; justify-content: center; padding-top: 12vh; }
+#dw-overlay .dw-box { width: min(640px, 92vw); background: var(--card);
+  border: 2px solid var(--accent);
+  color: var(--ink); font-family: var(--body); max-height: 70vh; overflow: auto; }
+#dw-overlay input { width: 100%; box-sizing: border-box; padding: var(--s3) var(--s4);
+  font: inherit;
+  font-size: var(--fs-md); background: var(--bg); color: var(--ink); border: 0;
+  border-bottom: 2px solid var(--line); outline: none; }
+#dw-overlay .dw-row { display: flex; justify-content: space-between; gap: var(--s4);
+  padding: var(--s2) var(--s4); font-size: var(--fs-sm); cursor: pointer; }
+#dw-overlay .dw-row.on { background: rgba(170, 168, 255, 0.16); color: var(--accent); }
+#dw-overlay .dw-row span:last-child { color: var(--ink-3); }
+#dw-overlay h3 { margin: 0; padding: var(--s3) var(--s4); font-family: var(--display);
+  font-size: var(--fs-md); color: var(--accent); border-bottom: 2px solid var(--line); }
+"""
+
 
 def css() -> str:
     """The stylesheet, ready for a <style> tag."""
@@ -309,9 +551,10 @@ def css() -> str:
         f" --body: {FONT_BODY}; --display: {FONT_DISPLAY};"
         f" --fs-xs: 0.75rem; --fs-sm: 0.85rem; --fs-md: 1rem; --fs-lg: 1.25rem; --fs-xl: 1.75rem;"
         f" --fs-2xl: 2.5rem; --s1: 0.25rem; --s2: 0.5rem; --s3: 0.75rem; --s4: 1rem; --s5: 1.5rem;"
-        f" --s6: 2rem; }}"
+        f" --s6: 2rem; --d-jobs: {DOMAINS['jobs']}; --d-grow: {DOMAINS['grow']};"
+        f" --d-market: {DOMAINS['market']}; --d-system: {DOMAINS['system']}; }}"
     )
-    return f"<style>{variables}{_STYLE}{_MOTION}{_BLOCKS}</style>"
+    return f"<style>{variables}{_STYLE}{_MOTION}{_BLOCKS}{_WORKSPACE}{_PHONE}</style>"
 
 
 def pill(text: str, tone: str = "neutral") -> str:
@@ -327,6 +570,7 @@ def hero(
     pills: list[str] | None = None,
     *,
     typed_subtitle: bool = False,
+    domain: str | None = None,
 ) -> str:
     """The header of a page; ``pills`` are already-built chips (see ``pill``).
 
@@ -336,16 +580,20 @@ def hero(
     sub = f'<div class="dw-sub">{line}</div>' if subtitle else ""
     chips = f'<div class="dw-pills">{"".join(pills)}</div>' if pills else ""
     return (
-        '<div class="dw-hero"><div>'
+        f'<div class="dw-hero{_domain(domain)}"><div>'
         f'<div class="dw-eyebrow">{escape(eyebrow)}</div>'
         f'<h1 class="dw-title">{escape(title)}</h1>{sub}</div>{chips}</div>'
     )
 
 
-def section(label: str, number: int | None = None) -> str:
-    """A small uppercase label above a block, numbered like the cards of a control panel."""
+def _domain(domain: str | None) -> str:
+    return f" dw-d-{domain}" if domain in DOMAINS else ""
+
+
+def section(label: str, number: int | None = None, domain: str | None = None) -> str:
+    """A small uppercase label above a block; ``domain`` (jobs, grow, market, system) colours it."""
     mark = f"<b>{number:02d}</b>" if number is not None else ""
-    return f'<div class="dw-section">{mark}{escape(label)}</div>'
+    return f'<div class="dw-section{_domain(domain)}">{mark}{escape(label)}</div>'
 
 
 def card_title(title: str, note: str = "") -> str:
@@ -376,14 +624,14 @@ def facts(rows: list[tuple[str, str]]) -> str:
     return f'<dl class="dw-facts">{body}</dl>' if body else ""
 
 
-def stats(items: list[tuple[str, str]]) -> str:
+def stats(items: list[tuple[str, str]], domain: str | None = None) -> str:
     """Bracketed figures in a row: ``[ ВІДКРИТО: 6 710 ]``; they arrive one after another."""
     parts = "".join(
         f'<span class="dw-stat" style="--i:{n}"><i>[</i><em>{escape(label)}:</em>'
         f"<b>{escape(value)}</b><i>]</i></span>"
         for n, (label, value) in enumerate(items)
     )
-    return f'<div class="dw-stats">{parts}</div>'
+    return f'<div class="dw-stats{_domain(domain)}">{parts}</div>'
 
 
 def pulse(states: list[tuple[str, str]]) -> str:
@@ -479,3 +727,58 @@ def medals(items: list[tuple[str, str, bool]]) -> str:
 def pet_free(svg: str) -> str:
     """The frog on its own (no text), centred in its column."""
     return f'<div class="dw-pet" style="justify-content:center">{svg}</div>'
+
+
+def ring(ratio: float, caption: str, domain: str) -> str:
+    """One value from 0 to 1 as a ring with the percent inside and a caption below it."""
+    percent = round(min(max(float(ratio), 0.0), 1.0) * 100)
+    return (
+        f'<div class="dw-ring{_domain(domain)}" role="img" style="--p:{percent}" '
+        f'aria-label="{escape(caption)}: {percent}%"><b>{percent}%</b></div>'
+        f'<div class="dw-ring-cap">{escape(caption)}</div>'
+    )
+
+
+def todo(kind: str, text: str, domain: str) -> str:
+    """One thing to do now: a small label, the text, and the colour of where it leads."""
+    return (
+        f'<div class="dw-todo{_domain(domain)}"><div class="dw-todo-kind">{escape(kind)}</div>'
+        f'<div class="dw-todo-text">{escape(text)}</div></div>'
+    )
+
+
+def avatar(svg: str, name: str, level: int, stage: str, ratio: float, notes: list[str]) -> str:
+    """The user card for the foot of the sidebar: the frog in a frame, a name, a level bar."""
+    width = max(2, min(100, round(ratio * 100)))
+    lines = " · ".join(escape(note) for note in notes)
+    return (
+        f'<div class="dw-avatar dw-d-grow"><div class="dw-avatar-pic">{svg}</div>'
+        f'<div class="dw-avatar-text"><div class="dw-avatar-name">{escape(name)}</div>'
+        f"<div>{escape(stage)} · <b>рівень {level}</b></div>"
+        f'<div class="dw-xp" role="img" aria-label="{width}% до наступного рівня">'
+        f'<span style="width:{width}%"></span></div><div>{lines}</div></div></div>'
+    )
+
+
+def kbd(*keys: str) -> str:
+    """Key caps for a shortcut hint: ``kbd("g", "c")``."""
+    return "".join(f'<span class="dw-kbd">{escape(key)}</span>' for key in keys)
+
+
+def skill_rows(items: list[dict[str, Any]]) -> str:
+    """Skills of one vacancy against the market: a bar for the share of all vacancies asking for
+    each, required ones in teal, a tick on the ones you know. Items: skill, share (0-1 or None),
+    required, mine."""
+    top = max([float(i["share"] or 0) for i in items] + [0.01])
+    rows = []
+    for item in items:
+        share = float(item["share"] or 0)
+        width = max(2, round(share / top * 100)) if item["share"] else 0
+        pct = f"{share:.0%}" if item["share"] else "—"
+        rows.append(
+            f'<div class="dw-skillrow{" req" if item["required"] else ""}">'
+            f'<span class="dw-name{" mine" if item["mine"] else ""}">{escape(str(item["skill"]))}'
+            f'</span><span class="dw-bar"><span style="width:{width}%"></span></span>'
+            f'<span class="dw-pct">{pct} ринку</span></div>'
+        )
+    return "".join(rows)

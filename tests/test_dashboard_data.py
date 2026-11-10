@@ -713,3 +713,86 @@ def test_a_long_selection_is_shortened_for_a_tag() -> None:
     assert dd.short_list([]) == "" and dd.short_list(["a"]) == "a"
     assert dd.short_list(["a", "b"]) == "a, b" and dd.short_list(["a", "b", "c", "d"]) == "a, b +2"
     assert dd.short_list(["a", "b", "c", "d"], 3) == "a, b, c +1"
+
+
+# ---- the vacancy next to the market, parts of a whole, activity -------------------------
+def _market_frame() -> pd.DataFrame:
+    return pd.DataFrame(
+        {
+            "date": [date(2026, 11, 1)] * 2 + [date(2026, 11, 2)] * 6,
+            "source": ["dou", "djinni"] * 4,
+            "category": ["Python", "Python", "QA", "Java", "Go", "Rust", "C++", "PHP"],
+            "seniority": ["senior"] * 8,
+            "open_vacancies": [99, 99, 10, 9, 8, 7, 6, 5],
+        }
+    )
+
+
+def test_skill_shares_map_names_to_the_months_share() -> None:
+    frames = tables()
+
+    shares = dd.skill_shares(frames["fct_skill_demand_monthly"], frames["dim_skill"], month=NOV)
+
+    assert shares == {"Python": 0.6667, "Django": 0.6667, "Docker": 0.6667, "SQL": 0.3333}
+    other_month = date(2020, 1, 1)
+    assert (
+        dd.skill_shares(frames["fct_skill_demand_monthly"], frames["dim_skill"], month=other_month)
+        == {}
+    )
+
+
+def _loaded_catalog(tmp_path: Path) -> pd.DataFrame:
+    write_catalog(tmp_path)
+    loaded = dd.read_catalog(tmp_path)
+    assert loaded is not None
+    return loaded
+
+
+def test_a_vacancy_is_compared_with_the_skills_market_and_its_direction(tmp_path: Path) -> None:
+    vacancies = _loaded_catalog(tmp_path)
+    row = vacancies[vacancies["vacancy_id"] == "v1"].iloc[0]
+
+    result = dd.vacancy_analysis(row, vacancies, {"Python": 0.7, "Django": 0.2, "Docker": 0.4})
+
+    assert [s["skill"] for s in result["skills"]] == ["Python", "Docker", "Django"]  # by share
+    assert [s["required"] for s in result["skills"]] == [True, False, True]
+    assert result["salary"]["mid"] == 3750.0
+    assert result["salary"]["peer_median"] is None  # fewer than PEER_MIN salaries in the direction
+    assert result["similar"] == 0  # the vacancy itself is not its own neighbour
+
+
+def test_a_skill_the_market_does_not_know_has_no_share_and_sorts_last(tmp_path: Path) -> None:
+    vacancies = _loaded_catalog(tmp_path)
+    row = vacancies[vacancies["vacancy_id"] == "v1"].iloc[0]
+
+    result = dd.vacancy_analysis(row, vacancies, {"Python": 0.7})
+
+    assert result["skills"][0]["skill"] == "Python"
+    assert [s["share"] for s in result["skills"][1:]] == [None, None]
+
+
+def test_a_ring_has_at_most_top_plus_one_parts_and_folds_the_rest() -> None:
+    shares = dd.latest_shares(_market_frame(), "category", top=4)
+
+    assert shares["label"].tolist() == ["QA", "Java", "Go", "Rust", dd.OTHER]
+    assert shares["value"].tolist() == [10, 9, 8, 7, 11]  # the first day is not counted
+    assert shares["share"].sum() == pytest.approx(1.0)
+    assert dd.latest_shares(_market_frame().iloc[0:0], "category").empty
+
+
+def test_the_activity_grid_ends_today_and_levels_follow_the_steps() -> None:
+    today = date(2026, 11, 10)  # a Tuesday
+    grid = dd.activity_grid({"2026-11-10": 3, "2026-11-09": 1, "2026-11-08": 0}, today, weeks=2)
+
+    assert grid["date"].iloc[-1] == today and grid["week"].max() == 1
+    assert grid["weekday"].iloc[0] == 0 and len(grid) == 7 + 2  # a Monday, one week and Mon-Tue
+    by_day = dict(zip(grid["date"], grid["level"], strict=True))
+    assert by_day[today] == 2 and by_day[date(2026, 11, 9)] == 1 and by_day[date(2026, 11, 8)] == 0
+
+
+def test_a_page_stays_inside_the_list() -> None:
+    assert dd.page_of(40, 0, 15) == (0, 0, 15)
+    assert dd.page_of(40, 2, 15) == (2, 30, 40)  # the last page is the short one
+    assert dd.page_of(40, 9, 15) == (2, 30, 40)  # past the end: the last page
+    assert dd.page_of(40, -3, 15) == (0, 0, 15)
+    assert dd.page_of(0, 0, 15) == (0, 0, 0)  # an empty list has one empty page

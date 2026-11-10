@@ -160,8 +160,7 @@ def test_a_count_badge_is_empty_for_zero() -> None:
 def test_the_motion_has_a_way_out_and_filters_have_an_active_look() -> None:
     css = t.css()
 
-    assert "@keyframes dw-wipe" in css and "prefers-reduced-motion" in css
-    assert "animation: none !important" in css
+    assert "prefers-reduced-motion" in css and "animation: none !important" in css
     assert 'button[kind="pillsActive"]' in css and 'has([data-baseweb="tag"])' in css
 
 
@@ -219,3 +218,109 @@ def test_cards_in_a_row_are_as_tall_as_the_tallest_and_the_menu_sections_cannot_
         '[data-testid="stNavSectionHeader"] [data-testid="stIconMaterial"] { display: none; }'
         in css
     )
+
+
+# ---- colours per part of the product, the avatar, a to-do, key caps, a vacancy's skills ------
+def test_a_section_and_stats_wear_the_colour_of_their_domain() -> None:
+    assert 'class="dw-section dw-d-jobs"' in t.section("Вакансії", domain="jobs")
+    assert "dw-d-" not in t.section("Без розділу")
+    assert "dw-d-" not in t.section("Вигадане", domain="nowhere")  # unknown: no class at all
+    assert "dw-d-market" in t.stats([("Відкрито", "1")], "market")
+    assert set(t.DOMAINS) == {"jobs", "grow", "market", "system"}
+
+
+def test_a_todo_says_where_it_leads_and_escapes_the_text() -> None:
+    html = t.todo("Практика", "<b>5</b> відповідей", "grow")
+
+    assert "dw-d-grow" in html and "Практика" in html
+    assert "<b>5</b>" not in html and "&lt;b&gt;5&lt;/b&gt;" in html
+
+
+def test_the_avatar_shows_the_name_level_and_a_bounded_bar() -> None:
+    low = t.avatar("<svg></svg>", "Ярослав", 3, "Жабеня", 0.0, ["серія 2 дн."])
+    high = t.avatar("<svg></svg>", "<i>x</i>", 3, "Жабеня", 7.0, [])
+
+    assert "Ярослав" in low and "рівень 3" in low and "серія 2 дн." in low
+    assert 'style="width:2%"' in low  # an empty bar still shows a sliver
+    assert 'style="width:100%"' in high and "<i>x</i>" not in high
+
+
+def test_key_caps_are_one_per_key_and_escaped() -> None:
+    html = t.kbd("g", "<")
+
+    assert html.count('class="dw-kbd"') == 2 and "&lt;" in html
+
+
+def test_skill_rows_mark_required_known_and_unknown_share() -> None:
+    html = t.skill_rows(
+        [
+            {"skill": "Python", "share": 0.5, "required": True, "mine": True},
+            {"skill": "Rust", "share": None, "required": False, "mine": False},
+        ]
+    )
+
+    assert html.count("dw-skillrow") == 2 and html.count(" req") == 1
+    assert 'class="dw-name mine">Python' in html and "50% ринку" in html
+    assert "— ринку" in html and 'style="width:0%"' in html  # no share: no bar, an honest dash
+
+
+def test_an_arrival_animation_only_plays_while_the_page_is_entering() -> None:
+    css = t.css()
+    arrivals = ("dw-type", "dw-grow")
+    rules = re.findall(r"([^{}]+)\{([^{}]*animation:[^{}]*)\}", css)
+    arriving = [(sel.strip(), body) for sel, body in rules if any(a in body for a in arrivals)]
+
+    assert arriving  # the arrivals exist ...
+    # ... but never on their own: a rerun after a click would play them again and read as lag
+    assert all(sel.startswith("html.dw-enter") for sel, _ in arriving)
+    assert 'stVerticalBlockBorderWrapper"]:has(' not in css  # :has() over every wrapper is slow
+
+
+def test_nothing_moves_per_element_on_arrival() -> None:
+    css = t.css()
+
+    # a staggered rise or a wipe shows the page being built, which read as jumping
+    assert "dw-rise" not in css and "dw-wipe" not in css and "animation-delay" not in css
+
+
+def test_a_held_page_shows_itself_even_if_the_script_never_releases_it() -> None:
+    css = t.css()
+
+    assert re.search(
+        r"html:not\(\.dw-go\) [^{]*\{[^}]*opacity: 0;[^}]*dw-unhide 0s 2s forwards", css
+    )
+
+
+def test_the_toolbar_of_tables_and_charts_is_hidden_everywhere() -> None:
+    css = t.css()
+
+    assert '[data-testid="stElementToolbar"]' in css and "display: none !important" in css
+
+
+def test_the_parts_of_the_product_have_the_colours_asked_for() -> None:
+    import colorsys
+
+    def hue(name: str) -> float:
+        colour = t.DOMAINS[name].lstrip("#")
+        red, green, blue = (int(colour[i : i + 2], 16) / 255 for i in (0, 2, 4))
+        return colorsys.rgb_to_hsv(red, green, blue)[0] * 360
+
+    assert 235 <= hue("grow") <= 265  # learning: violet
+    assert hue("market") <= 12 or hue("market") >= 350  # analytics: red
+    assert 40 <= hue("system") <= 52  # the state of the system: yellow
+    assert len({t.DOMAINS[name] for name in t.DOMAINS}) == 4  # four parts, four colours
+
+
+def test_a_ring_is_bounded_labelled_and_coloured_by_its_domain() -> None:
+    low, high = t.ring(-1.0, "ціль", "grow"), t.ring(7.0, "<b>x</b>", "jobs")
+
+    assert '--p:0"' in low and "0%" in low and "dw-d-grow" in low
+    assert '--p:100"' in high and "dw-d-jobs" in high
+    assert "<b>x</b>" not in high and "&lt;b&gt;x&lt;/b&gt;" in high
+    assert 'role="img"' in high and "aria-label" in high  # a reader gets the figure as text
+
+
+def test_the_single_system_item_carries_its_own_colour_since_it_has_no_heading() -> None:
+    css = t.css()
+
+    assert "div:nth-child(5) a { border-left: 4px solid var(--dom); }" in css

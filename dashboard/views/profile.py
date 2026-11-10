@@ -2,6 +2,8 @@ from datetime import date
 
 import streamlit as st
 
+from jobmarket import dashboard_charts as charts
+from jobmarket import dashboard_data as dd
 from jobmarket import dashboard_mascot as mascot
 from jobmarket import dashboard_profile as pr
 from jobmarket import dashboard_progress as pg
@@ -25,7 +27,9 @@ ui.header(
     "Ваша жабка росте разом із вами: відповідайте на питання, проходьте матеріали, шукайте "
     "вакансії. Усе лежить у файлі на цьому комп'ютері.",
     eyebrow="розвиток / профіль",
+    domain="grow",
 )
+ui.demo_notice()
 ui.show_flash()
 
 # ---- the frog, the numbers and what to do next ------------------------------------------------
@@ -51,6 +55,10 @@ ui.html(
         ]
     )
 )
+
+ui.section("Активність", domain="grow")
+with ui.card("Відповіді за 20 тижнів", "кожна клітинка — один день; світліша — більше відповідей"):
+    ui.chart(charts.activity_grid(dd.activity_grid(profile.activity, TODAY), cell=22))
 
 ui.section("Далі для вас")
 top = plan.iloc[0] if plan is not None and not plan.empty else None
@@ -113,6 +121,6 @@ if submitted:
     profile.min_salary, profile.remote, profile.goal = int(min_salary), bool(remote), int(goal)
     pr.set_skills(profile, know, learning)
     profile.skills.update(outside)  # a skill the taxonomy no longer lists is not thrown away
-    if ui.persist(profile):
+    if ui.persist(profile, "Змінено профіль"):
         ui.flash("Профіль збережено.")
         st.rerun()

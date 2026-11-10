@@ -189,3 +189,37 @@ def test_stacked_bars_get_thinner_as_days_pile_up_and_thin_their_labels() -> Non
 
     assert spec["mark"]["size"] == 5
     assert len(spec["encoding"]["x"]["axis"]["values"]) <= 14
+
+
+# ---- rings and the activity grid ----------------------------------------------------------------
+def _spec(chart: Any) -> dict[str, Any]:
+    spec: dict[str, Any] = chart.to_dict()
+    return spec
+
+
+def test_a_donut_keeps_the_order_of_the_parts_and_greys_the_folded_tail() -> None:
+    frame = pd.DataFrame({"label": ["dou", "djinni", charts.OTHER], "value": [60, 30, 10]})
+
+    spec = _spec(charts.donut(frame))
+    scale = _colour_scale(spec, layer=0)
+
+    assert scale["domain"] == ["dou", "djinni", charts.OTHER]
+    assert scale["range"] == [t.SERIES[0], t.SERIES[1], t.MUTED_MARK]
+    assert spec["height"] == spec["width"]  # a ring is square, whatever the page width is
+
+
+def test_the_activity_grid_is_one_cell_per_day_in_five_levels() -> None:
+    frame = pd.DataFrame(
+        {
+            "date": [date(2026, 11, 2), date(2026, 11, 3)],
+            "week": [0, 0],
+            "weekday": [0, 1],
+            "count": [0, 4],
+            "level": [0, 2],
+        }
+    )
+
+    spec = _spec(charts.activity_grid(frame, cell=15))
+
+    assert _colour_scale(spec)["range"] == list(charts.HEAT)
+    assert spec["height"] == 7 * 15 and spec["width"] == 15  # a single week so far

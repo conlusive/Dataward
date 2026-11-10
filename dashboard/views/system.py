@@ -12,10 +12,11 @@ update = ui.document("last_update.json")
 tone, headline, detail = dd.health(status)
 
 ui.header(
-    "Стан і дані",
+    "Стан системи",
     "Чи здорові дані: цілі якості, перевірки, запуски пайплайну, скрапінг, і звідки все береться.",
     eyebrow="Система",
     pills=[theme.pill(f"станом на {dd.stamp(status['generated_at'])}"), theme.pill(headline, tone)],
+    domain="system",
 )
 
 state_tab, checks_tab, scrape_tab, about_tab = st.tabs(
