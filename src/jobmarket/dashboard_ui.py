@@ -1,5 +1,7 @@
 """Streamlit helpers shared by the dashboard pages: cached loading and error handling."""
 
+import copy
+import os
 import re
 import time
 from datetime import date
@@ -19,6 +21,7 @@ from jobmarket import dashboard_motion as dm
 from jobmarket import dashboard_profile as pr
 from jobmarket import dashboard_progress as pg
 from jobmarket import dashboard_resources as rs
+from jobmarket import dashboard_sync as sync
 from jobmarket import dashboard_theme as theme
 
 CACHE_SECONDS = 300  # the data changes once a day; five minutes keeps a deploy's new files visible
@@ -192,7 +195,7 @@ def pet_state(profile: pr.Profile, today: date | None = None) -> dict[str, Any]:
 
 def avatar_card() -> None:
     """You, at the foot of the sidebar: the frog in a frame, a name, a level, what waits."""
-    profile = pr.load()
+    profile = _load()
     state = pet_state(profile)
     info, stage = state["level"], state["stage"]
     notes = [f"серія {state['streak']} дн."] if state["streak"] else []
@@ -230,9 +233,52 @@ def go_practice(skill: str) -> None:
     st.switch_page("views/practice.py")
 
 
+def session_profiles() -> bool:
+    """A public demo (``DASHBOARD_PROFILE=session``): one server, many visitors, no shared file.
+
+    A profile on disk belongs to one person on one machine. On a public host every visitor would
+    read and change the same file, so there the profile lives in the visitor's session instead (it
+    is gone when the tab is closed).
+    """
+    return os.environ.get("DASHBOARD_PROFILE") == "session"
+
+
+def _load() -> pr.Profile:
+    """The current profile; always a copy, because the callers change it in place."""
+    if session_profiles():
+        return copy.deepcopy(st.session_state.get("_profile") or pr.Profile())
+    return pr.load()
+
+
+def _store(profile: pr.Profile) -> None:
+    if session_profiles():
+        st.session_state["_profile"] = copy.deepcopy(profile)
+    else:
+        pr.save(profile)
+
+
+@st.cache_resource(show_spinner=False)
+def _fresh(directory: str) -> bool:
+    return sync.keep_fresh(Path(directory)) is not None
+
+
+def keep_data_fresh() -> None:
+    """On a host with ``DASHBOARD_DATA_URL``: re-fetch the export in the background (once)."""
+    _fresh(str(dd.data_dir()))
+
+
+def demo_notice() -> None:
+    """On a public demo: say where the profile lives, on the pages that keep one."""
+    if session_profiles():
+        st.caption(
+            "Демо-версія: профіль живе лише в цій вкладці й зникне, коли ви її закриєте. "
+            "Повну версію з постійним профілем можна запустити в себе (див. README)."
+        )
+
+
 def profile() -> pr.Profile:
     """The saved profile (an empty one on a fresh machine)."""
-    return pr.load()
+    return _load()
 
 
 UNDO_SECONDS = 180  # how long a done action can be taken back
@@ -245,9 +291,9 @@ def persist(profile: pr.Profile, what: str | None = None) -> bool:
     With ``what`` (a short phrase: "Збережено вакансію") the state before the write is kept, so the
     action can be taken back with ``undo``. Routine writes, like a trainer answer, pass nothing.
     """
-    before = pr.load() if what else None  # the file is still as it was before this action
+    before = _load() if what else None  # the stored copy is still as it was before this action
     try:
-        pr.save(profile)
+        _store(profile)
     except OSError as error:
         st.error(f"Не вдалося зберегти профіль у {pr.default_path()}: {error}")
         return False
@@ -272,7 +318,7 @@ def undo() -> None:
         return
     what, before, stamp = stack.pop()
     try:
-        pr.save(before)
+        _store(before)
     except OSError as error:
         stack.append((what, before, stamp))
         st.error(f"Не вдалося скасувати: {error}")
@@ -309,7 +355,7 @@ def show_flash() -> None:
 
 def _save_vacancy(row: Any) -> None:
     """A button callback: keep the vacancy in the profile."""
-    current = pr.load()
+    current = _load()
     added = pr.save_vacancy(
         current, str(row["vacancy_id"]), title=str(row["title"]), company=str(row["company"]),
         url=str(row["url"]), today=date.today(),
@@ -381,7 +427,7 @@ def _turn(key: str, step: int) -> None:
 def _save_picked(key: str) -> None:
     """A button callback: keep every selected vacancy of the list ``key`` in the profile."""
     rows = st.session_state.get(f"{key}_picked", [])
-    current = pr.load()
+    current = _load()
     added = pr.save_vacancies(current, rows, date.today())
     if added and persist(current, f"Збережено вакансій: {added}"):
         st.toast(f"Збережено вакансій: {added}", icon=":material/bookmark_added:")

@@ -12,6 +12,7 @@ ui.header(
     eyebrow="вакансії / збережені",
     domain="jobs",
 )
+ui.demo_notice()
 ui.show_flash()
 
 counts = pr.status_counts(profile)

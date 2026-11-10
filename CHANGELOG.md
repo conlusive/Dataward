@@ -23,6 +23,12 @@
   ticking rows. "Стан і дані" is now **"Стан системи"** without a heading above it (the heading looked like
   a button that did nothing). The filter bar has more room, and its pills wrap.
 
+- **Public hosting on Render**: `render.yaml`, a start script that serves on `$PORT`, and a data path that
+  needs no volume. The nightly workflow publishes the public export (no third-party listings) to the `data`
+  branch from a job of its own; the container downloads it on start and every 6 hours
+  (`dashboard_sync.py`, only whitelisted files named by the archive's manifest). With
+  `DASHBOARD_PROFILE=session` a visitor's profile lives in their tab instead of one shared file. An error
+  about missing data names the file, not the server's path.
 - **A phone**: the menu is a drawer that starts closed (the buttons that hide it are now only hidden on a
   desktop; before, an open menu covered the page and could not be closed). Figures sit in pairs, the
   catalog filter bar is about half as tall, the pills wrap, the sort and the pager share two rows. A

@@ -1143,3 +1143,27 @@ def test_changing_a_filter_takes_the_list_back_to_page_one(
     app.multiselect(key="cat_dirs").set_value(["Python"]).run()
 
     assert any("1–" in m.value and "dw-pager" in m.value for m in app.markdown)
+
+
+def test_on_a_public_demo_a_profile_lives_in_the_session_and_never_on_disk(
+    with_catalog: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setenv("DASHBOARD_PROFILE", "session")  # many visitors, one server
+    app = _run("catalog")
+    first = next(b for b in app.button if b.key and b.key.startswith("save_"))
+
+    first.click().run()
+
+    assert not app.exception
+    assert pr.load().saved == {}  # the shared file stays empty ...
+    assert len(app.session_state["_profile"].saved) == 1  # ... the visitor's own copy has it
+    next(b for b in app.button if b.key == "dw_undo_btn").click().run()  # and it can be taken back
+    assert app.session_state["_profile"].saved == {}
+
+
+def test_a_demo_says_where_the_profile_lives(export: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("DASHBOARD_PROFILE", "session")
+
+    app = _run("profile")
+
+    assert any("Демо-версія" in c.value for c in app.caption)

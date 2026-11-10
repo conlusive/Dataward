@@ -1,6 +1,8 @@
 # The dashboard image: Streamlit reading the parquet files of the pipeline's export (never the database).
 # Build:  docker build -f Dockerfile.dashboard -t jobmarket-dashboard .
 # Run:    docker run --rm -p 8501:8501 -v "$PWD/data/export:/app/data/export:ro" jobmarket-dashboard
+# Hosted (see render.yaml): no volume; DASHBOARD_DATA_URL points at the published export, the start
+# script fetches it, and the server listens on $PORT. DASHBOARD_PROFILE=session keeps profiles per visitor.
 FROM python:3.11-slim
 
 RUN pip install --no-cache-dir uv==0.13.7
@@ -17,10 +19,10 @@ RUN uv sync --no-dev --group dashboard
 
 COPY dashboard ./dashboard
 COPY .streamlit ./.streamlit
+COPY scripts/dashboard-start.sh ./scripts/dashboard-start.sh
 
 RUN useradd --create-home --uid 1000 app && mkdir -p /app/data/export && chown -R app:app /app/data
 USER app
 EXPOSE 8501
 
-CMD ["streamlit", "run", "dashboard/app.py", "--server.address=0.0.0.0", "--server.port=8501", \
-     "--server.headless=true", "--browser.gatherUsageStats=false"]
+CMD ["sh", "scripts/dashboard-start.sh"]

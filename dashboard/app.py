@@ -20,6 +20,7 @@ st.set_page_config(
 )
 st.logo(str(STATIC / "logo.svg"), size="large", icon_image=str(STATIC / "icon.svg"))
 ui.setup()
+ui.keep_data_fresh()  # a hosted copy re-fetches the nightly export (no-op without a URL)
 
 navigation = st.navigation(
     {

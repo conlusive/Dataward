@@ -99,7 +99,7 @@ def data_dir() -> Path:
 def read_table(directory: Path, name: str) -> pd.DataFrame:
     path = directory / f"{name}.parquet"
     if not path.exists():
-        raise DataError(f"{path} not found: run the pipeline (`make pipeline`) to create it")
+        raise DataError(f"{path.name} not found: run the pipeline (`make pipeline`) to create it")
     frame = duckdb.connect().execute("SELECT * FROM read_parquet(?)", [str(path)]).df()
     missing = REQUIRED.get(name, set()) - set(frame.columns)
     if missing:
@@ -110,7 +110,7 @@ def read_table(directory: Path, name: str) -> pd.DataFrame:
 def read_json(directory: Path, name: str) -> dict[str, Any]:
     path = directory / name
     if not path.exists():
-        raise DataError(f"{path} not found: run the pipeline (`make pipeline`) to create it")
+        raise DataError(f"{path.name} not found: run the pipeline (`make pipeline`) to create it")
     loaded: dict[str, Any] = json.loads(path.read_text(encoding="utf-8"))
     return loaded
 

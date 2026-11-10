@@ -100,3 +100,34 @@ jobs:
           path: data/export_public
           retention-days: 14
           if-no-files-found: ignore
+
+  # The public export goes to the `data` branch, which the hosted dashboard downloads (render.yaml).
+  # Its own job, so that only this step holds a token that can write; it publishes the copy that
+  # was already stripped of third-party listings (the artifact), never data/export.
+  publish-data:
+    needs: scrape
+    if: ${{ !cancelled() && github.ref == 'refs/heads/main' }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: gold-export
+          path: export
+        continue-on-error: true # nothing was exported (the run failed early): keep yesterday's data
+      - name: Push the export to the data branch
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if [ ! -f export/last_update.json ]; then
+            echo "no export in this run; the data branch stays as it is"
+            exit 0
+          fi
+          cd export
+          git init -q -b data
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -q -m "Public export of $(date -u +%F)"
+          git push -q --force "https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}.git" data

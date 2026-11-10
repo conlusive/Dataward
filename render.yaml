@@ -1,0 +1,18 @@
+# Render Blueprint: the public dashboard. New > Blueprint on Render, pick this repository.
+# Streamlit needs a long-running server with WebSockets, so it runs as a Docker web service.
+# The data is not in the image: the container fetches the public export (no third-party listings)
+# that the nightly workflow publishes to the `data` branch (scripts/dashboard-start.sh).
+services:
+  - type: web
+    name: dataward
+    runtime: docker
+    dockerfilePath: ./Dockerfile.dashboard
+    plan: free
+    branch: main
+    autoDeploy: true
+    healthCheckPath: /_stcore/health
+    envVars:
+      - key: DASHBOARD_DATA_URL
+        value: https://codeload.github.com/conlusive/Dataward/tar.gz/refs/heads/data
+      - key: DASHBOARD_PROFILE # one server, many visitors: a profile lives in the visitor's tab
+        value: session

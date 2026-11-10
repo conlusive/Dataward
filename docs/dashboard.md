@@ -239,9 +239,30 @@ the escaping and the contrast of the colour tokens, and `tests/test_dashboard_lo
 nightly export, which found two bugs the unit tests had not (a shadowed argument that emptied a chart,
 and repeating date labels).
 
+## Public hosting (Render)
+
+Streamlit is a long-running server with WebSockets, so it needs a host that runs a container (not a
+serverless platform such as Vercel). `render.yaml` is a Render Blueprint for the image of
+`Dockerfile.dashboard`:
+
+- **Data.** The image carries none. The nightly workflow (`publish-data` in `pipeline-daily.yml`, its
+  own job, the only one with a write token) force-pushes the *public* export, the artifact already
+  stripped of third-party listings, to the `data` branch. On start `scripts/dashboard-start.sh` runs
+  `jobmarket.dashboard_sync`, which downloads that branch as an archive and writes only the files the
+  archive's own `last_update.json` names (plus `status.json`); a running server repeats it every 6 hours.
+  A failed download keeps the old files. Set `DASHBOARD_DATA_URL` to the archive URL; unset, nothing is fetched.
+- **Profiles.** `DASHBOARD_PROFILE=session` keeps a visitor's profile (skills, saved vacancies,
+  progress) in their session, because one file on a shared server would be one profile for everybody.
+  It is gone when the tab closes, and the profile pages say so. Local runs still use the file.
+- **The catalog is not there**, by design (see above); the pages that need it say so.
+- **Free plan.** The service sleeps after about 15 minutes without a visit and wakes in under a
+  minute; it has 512 MB of memory.
+
+Set up once: merge to `main`, publish the first `data` branch (run the workflow, or push the public
+export yourself), then on Render: New > Blueprint > this repository.
+
 ## Not here yet
 
-- **Hosting.** Streamlit Community Cloud and the Hugging Face mirror need accounts. The data must reach
-  the app (the `data` branch or object storage); until then it runs locally or in the container.
+- **Other hosts**: Streamlit Community Cloud and the Hugging Face mirror (see "Public hosting" for Render).
 - **A public vacancy list**: the catalog is local on purpose (see above); publishing other people's listings needs a decision about the sites' terms.
 - **English UI**: only Ukrainian for now.

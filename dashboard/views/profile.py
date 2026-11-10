@@ -29,6 +29,7 @@ ui.header(
     eyebrow="розвиток / профіль",
     domain="grow",
 )
+ui.demo_notice()
 ui.show_flash()
 
 # ---- the frog, the numbers and what to do next ------------------------------------------------
