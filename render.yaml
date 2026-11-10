@@ -14,5 +14,5 @@ services:
     envVars:
       - key: DASHBOARD_DATA_URL
         value: https://codeload.github.com/conlusive/Dataward/tar.gz/refs/heads/data
-      - key: DASHBOARD_PROFILE # one server, many visitors: a profile lives in the visitor's tab
+      - key: DASHBOARD_PROFILE # the public copy: the market only, no catalog, no profile (a profile lives in the session)
         value: session

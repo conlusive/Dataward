@@ -142,15 +142,16 @@ with vacancies_tab:
         else:
             demand, skill_table = ui.table("fct_skill_demand_monthly"), ui.table("dim_skill")
             st.caption(
-                "Вакансії за вашими фільтрами ринку. Клікніть рядок: відкрийте оголошення, "
-                "порівняйте з ринком і збережіть; відмічайте кілька, щоб зберегти разом."
+                "Вакансії за фільтрами ринку. Перша вже відкрита праворуч, клік по рядку "
+                "відкриває іншу: оголошення, порівняння з ринком."
             )
+            ui.listing_note()
             ui.vacancy_list(
                 dd.filter_catalog(
                     vacancies, categories=categories, levels=levels, sources=sources,
                     only_open=True,
                 ),
-                key="mkt", profile=ui.profile(), catalog=vacancies,
+                key="mkt", profile=ui.owner_profile(), catalog=vacancies,
                 shares=dd.skill_shares(demand, skill_table, month=dd.latest_month(demand)),
             )  # fmt: skip
 

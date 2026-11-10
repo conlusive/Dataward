@@ -385,17 +385,29 @@ def test_without_a_catalog_the_page_says_how_to_build_one_locally(export: Path) 
     assert not app.metric  # nothing to count
 
 
-@pytest.mark.parametrize("page", ["catalog", "fit", "learn"])
-def test_without_a_catalog_the_public_site_does_not_send_visitors_to_make(
-    export: Path, monkeypatch: pytest.MonkeyPatch, page: str
+def _note_script() -> None:
+    from jobmarket import dashboard_ui as ui
+
+    ui.no_catalog("Тут був би список.")
+
+
+def test_the_missing_catalog_note_does_not_send_a_visitor_to_make(
+    export: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     monkeypatch.setenv("DASHBOARD_PROFILE", "session")
 
-    app = _run(page)
+    app = AppTest.from_function(_note_script).run()
 
-    notes = [i.value for i in app.info if "належать іншим людям" in i.value]
-    assert notes, "the page must say why there is no catalog"
+    assert any("нічного оновлення" in i.value for i in app.info)
     assert not any("make" in i.value for i in app.info)  # a visitor has no pipeline to run
+
+
+def test_on_your_own_machine_the_missing_catalog_note_says_how_to_build_it(
+    export: Path,
+) -> None:
+    app = AppTest.from_function(_note_script).run()
+
+    assert any("make pipeline" in i.value for i in app.info)
 
 
 def test_the_catalog_opens_on_the_open_vacancies_newest_first(with_catalog: Path) -> None:
@@ -1178,24 +1190,106 @@ def test_changing_a_filter_takes_the_list_back_to_page_one(
 
 
 def test_on_a_public_demo_a_profile_lives_in_the_session_and_never_on_disk(
-    with_catalog: Path, monkeypatch: pytest.MonkeyPatch
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     monkeypatch.setenv("DASHBOARD_PROFILE", "session")  # many visitors, one server
-    app = _run("catalog")
-    first = next(b for b in app.button if b.key and b.key.startswith("save_"))
+    app = _undo_app(tmp_path, monkeypatch)
 
-    first.click().run()
+    app.button(key="act_one").click().run()
 
     assert not app.exception
-    assert pr.load().saved == {}  # the shared file stays empty ...
-    assert len(app.session_state["_profile"].saved) == 1  # ... the visitor's own copy has it
+    assert not (tmp_path / "profile.json").exists()  # the shared file is never written ...
+    assert app.session_state["_profile"].name == "one"  # ... the visitor's own copy has it
     next(b for b in app.button if b.key == "dw_undo_btn").click().run()  # and it can be taken back
-    assert app.session_state["_profile"].saved == {}
+    assert app.session_state["_profile"].name == ""
 
 
-def test_a_demo_says_where_the_profile_lives(export: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+def _demo_notice_script() -> None:
+    from jobmarket import dashboard_ui as ui
+
+    ui.demo_notice()
+
+
+def test_a_demo_says_where_the_profile_lives(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv("DASHBOARD_PROFILE", "session")
 
-    app = _run("profile")
+    app = AppTest.from_function(_demo_notice_script).run()
 
     assert any("Демо-версія" in c.value for c in app.caption)
+
+
+# ---- the public copy shows the market, not a person -----------------------------------------
+def _public(monkeypatch: pytest.MonkeyPatch) -> AppTest:
+    monkeypatch.setenv("DASHBOARD_PROFILE", "session")
+    app = AppTest.from_file(str(ROOT / "app.py"), default_timeout=60).run()
+    assert not app.exception, app.exception
+    return app
+
+
+@pytest.mark.parametrize("page", ["fit", "saved", "profile", "learn", "practice"])
+def test_the_public_copy_has_no_personal_pages(
+    with_catalog: Path, monkeypatch: pytest.MonkeyPatch, page: str
+) -> None:
+    app = _public(monkeypatch)
+
+    with pytest.raises(ValueError, match="navigation page"):
+        app.switch_page(f"views/{page}.py")  # not in the menu, so not reachable at all
+
+
+@pytest.mark.parametrize("page", ["market", "skills", "salary", "system"])
+def test_the_public_copy_still_has_every_analytics_page(
+    with_catalog: Path, monkeypatch: pytest.MonkeyPatch, page: str
+) -> None:
+    app = _public(monkeypatch).switch_page(f"views/{page}.py").run()
+
+    assert not app.exception and not any("нічного оновлення" in i.value for i in app.info)
+
+
+def test_the_public_copy_has_no_avatar_undo_or_today_block(
+    with_catalog: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    app = _public(monkeypatch)
+
+    assert not any("dw-avatar" in m.value for m in app.sidebar.markdown)  # nobody to show
+    assert not any(b.key == "dw_undo_btn" for b in app.button)
+    html = _markdown(app)
+    assert "Сьогодні" not in html and "ціль дня" not in html  # that block is about a person
+
+
+def test_the_public_catalog_lists_the_vacancies_and_has_nowhere_to_save_them(
+    with_catalog: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    app = _public(monkeypatch).switch_page("views/catalog.py").run()
+
+    assert not app.exception and _titles(app) and _opened(app)  # a list, the first one open
+    assert not any(b.key == "cat_save" or (b.key or "").startswith("save_") for b in app.button)
+    assert "Збіг із вашим профілем" not in _markdown(app)  # nobody's profile to match against
+    assert "належать їхнім авторам" in " ".join(c.value for c in app.caption)  # whose they are
+
+
+def test_the_public_home_and_market_show_the_vacancies_too(
+    with_catalog: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    app = _public(monkeypatch)
+    assert "Свіжі вакансії" in _markdown(app)
+
+    market = _open_tab(app.switch_page("views/market.py").run(), "market_tab", "Вакансії")
+
+    assert not market.exception and _titles(market, "mkt")
+
+
+def test_without_a_catalog_the_public_pages_still_work(
+    export: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    app = _public(monkeypatch).switch_page("views/catalog.py").run()
+
+    assert not app.exception and any("нічного оновлення" in i.value for i in app.info)
+
+
+def test_your_own_machine_keeps_every_page(with_catalog: Path) -> None:
+    app = _run("home")
+
+    assert any("dw-avatar" in m.value for m in app.sidebar.markdown)
+    for page in ("catalog", "fit", "saved", "profile", "learn", "practice"):
+        app = app.switch_page(f"views/{page}.py").run()
+        assert not app.exception, page

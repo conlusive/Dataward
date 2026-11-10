@@ -2,9 +2,8 @@
 -- reader filters by: direction (category), level, salary, skills, when it was listed and whether it is
 -- still open on the last day of data.
 --
--- PRIVATE. These are third-party listings (titles, companies, links), so the table is exported for local
--- use only and kept out of the public CI artifact (`meta.private` in schema.yml). There is no description
--- text in it on purpose: the link leads to the original page.
+-- Public listings (titles, companies, links) that belong to their authors, so the table carries no
+-- description text and no contacts on purpose: the link leads to the original page.
 with last_day as (
 
     select max(date) as day from {{ ref('fct_vacancy_daily') }}

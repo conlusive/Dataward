@@ -143,6 +143,7 @@ with head:
         eyebrow="вакансії · каталог",
         domain="jobs",
     )
+    ui.listing_note()
 
 ui.html(theme.active_filters(active))
 
@@ -182,7 +183,7 @@ list_tab, skills_tab, companies_tab = st.tabs(["Вакансії", "Що вим�
 with list_tab:
     demand, skill_table = ui.table("fct_skill_demand_monthly"), ui.table("dim_skill")
     shares = dd.skill_shares(demand, skill_table, month=dd.latest_month(demand))
-    ui.vacancy_list(result, key="cat", profile=ui.profile(), catalog=catalog, shares=shares)
+    ui.vacancy_list(result, key="cat", profile=ui.owner_profile(), catalog=catalog, shares=shares)
 
 with skills_tab:
     counts = dd.skill_counts(result, top=15)

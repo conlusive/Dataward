@@ -35,26 +35,23 @@ topic into views. Filters live on the page, in a bar above the list, never in th
 | Зарплати | Калькулятор / Орієнтири DOU / За навичками / Тривалість вакансій | the model's p10-p50-p90 for a profile; the survey's median by year with its p25-p75 band; declared salaries by skill; how long a vacancy stays open | `salary_model_grid` (optional), `fct_salary_survey`, `fct_salary_by_skill`, `fct_vacancy_lifetime` |
 | Стан системи | Стан / Перевірки / Скрапінг / Про дані | health in one line, SLOs, recent runs, quality checks, scraping errors, volumes, the export's time and tables, sources and limitations | `status.json`, `last_update.json` |
 
-## The vacancy catalog is local on purpose
+## The vacancy catalog is public
 
 `fct_vacancy_catalog` has one row per real vacancy (the same job on DOU and Djinni is one row): title,
 company, direction (category), level, salary, place, skills (all, and the required ones), dates, open or
-closed, and the link to the original page. It has no description text.
+closed, and the link to the original page. It has **no description text and no contacts** on purpose: the
+listings belong to their authors, so the page shows only what is needed to find and filter them and the
+link leads to the original. The catalog page says so under its heading.
 
-These are other people's listings and the repository is public, so the table is marked `meta.private` in
-`warehouse/models/marts/schema.yml`. It is exported to `data/export` like every mart, but the nightly
-workflow first runs `jobmarket export-public`, which copies the export to `data/export_public` without
-the private tables (and without their entry in `last_update.json`), and uploads only that copy.
-`tests/test_export.py` tests the copy and fails if the workflow stops using it. So the catalog exists
-wherever you build the export yourself:
+It is published like every other mart: the nightly workflow runs `jobmarket export-public`, which copies
+the export to `data/export_public` without any table flagged `meta.private` in
+`warehouse/models/marts/schema.yml` (none is at the moment, and `tests/test_export.py` tests the copy
+with a synthetic one), and uploads only that copy; `publish-data` puts it on the `data` branch that the
+public site reads. An export from before the catalog was built says so on the page instead of failing
+(`make pipeline` locally builds it).
 
-```bash
-make pipeline          # scrape, parse, dbt and export: the whole nightly run, locally
-make dashboard         # the Каталог page now lists the vacancies
-```
-
-On an export without it (the CI artifact) the page says so instead of failing. Showing the catalog to other
-people is a separate decision about the sites' terms; nothing here publishes it.
+A vacancy that is gone from the source is marked closed and is hidden by the default "only open"
+filter; closed ones stay in the catalog (the market history needs them) with the same fields.
 
 ## The profile, the frog and learning
 
@@ -258,17 +255,20 @@ serverless platform such as Vercel). `render.yaml` is a Render Blueprint for the
   server refreshes it a minute after the first visit and every 6 hours. A failed download keeps the old
   files. `DASHBOARD_DATA_URL` is the archive URL (Render passes its env vars to the build as well);
   unset, nothing is fetched, and `scripts/dashboard-start.sh` fetches only if the image has no data.
-- **No catalog.** The catalog is other people's listings and is never in the public export, so the
-  catalog, "Для мене", the plan on "Навчання" and the vacancy list of "Ринок" show `ui.no_catalog`:
-  on the public demo (`DASHBOARD_PROFILE=session`) a plain note, locally the `make pipeline` hint.
+- **The public copy shows the market and the vacancies, not a person.** On Render
+  (`DASHBOARD_PROFILE=session`) the menu is Головна, Вакансії (Каталог), Аналітика (Ринок, Навички,
+  Зарплати) and Стан системи. The pages about you (Профіль, Навчання, Практика, Для мене, Збережені), the
+  avatar, the undo bar and the "Сьогодні" block do not exist there: they are not hidden but not registered,
+  so their URLs do not open, and the shortcuts and the palette do not offer them. The vacancy list is
+  there without a profile: no match with your skills and no save button. Run it on your own machine for
+  the whole product.
 - **Start time.** A cold start on the free plan (a tenth of a CPU) is mostly Python importing. The
   packages belong to root and the server runs as `app`, which cannot write `.pyc` files, so the image
   compiles bytecode at build time (`UV_COMPILE_BYTECODE`, `compileall`); without it every start compiled
   streamlit, pandas and altair again. The file watcher is off.
-- **Profiles.** `DASHBOARD_PROFILE=session` keeps a visitor's profile (skills, saved vacancies,
-  progress) in their session, because one file on a shared server would be one profile for everybody.
-  It is gone when the tab closes, and the profile pages say so. Local runs still use the file.
-- **The catalog is not there**, by design (see above); the pages that need it say so.
+- **Profiles.** `DASHBOARD_PROFILE=session` is also the storage rule: should a profile ever be created on
+  the public copy it lives in the visitor's session and never in the server's file, because one file on a
+  shared server would be one profile for everybody. Today nothing on the public copy creates one.
 - **Free plan.** The service sleeps after about 15 minutes without a visit and wakes in under a
   minute; it has 512 MB of memory.
 
@@ -278,5 +278,4 @@ export yourself), then on Render: New > Blueprint > this repository.
 ## Not here yet
 
 - **Other hosts**: Streamlit Community Cloud and the Hugging Face mirror (see "Public hosting" for Render).
-- **A public vacancy list**: the catalog is local on purpose (see above); publishing other people's listings needs a decision about the sites' terms.
 - **English UI**: only Ukrainian for now.

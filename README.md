@@ -107,8 +107,8 @@ the gold file as the list of what to add next.
   vacancies. A **profile** keeps your skills and target, ranks vacancies by how well you fit, plans what to learn,
   tracks saved applications, points to learning resources and drills interview questions with a pixel
   frog that grows with you (all stored in a local file). A dark
-  pixel-terminal "smoky lilac" theme with a pixel logo and stepped animations. The catalog lists other people's vacancies, so it is built locally and is not in the public
-  CI artifact.
+  pixel-terminal "smoky lilac" theme with a pixel logo and stepped animations. The catalog lists public vacancies (title, company, level, salary, skills, a link to the original) and is
+  published with the rest of the export; your profile and what is built on it stay on your machine.
   [docs/dashboard.md](docs/dashboard.md)
 - **Salary model** (CatBoost p10/p50/p90, MLflow): trained on the survey, because only a few hundred
   vacancies state a salary. Judged on the last survey year, which it never saw. [docs/ml.md](docs/ml.md)

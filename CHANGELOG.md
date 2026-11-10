@@ -2,6 +2,16 @@
 
 ## Unreleased
 
+### Changed (the public site)
+- The **vacancy catalog is public**: `fct_vacancy_catalog` is no longer `meta.private`, so the nightly
+  export carries it and the public site lists the vacancies (no description text, no contacts, a link to
+  the original, a note on whose listings they are). It shows up on the site after the next nightly run.
+- The public copy shows **the market and the vacancies, not a person**: Головна, Каталог, Ринок, Навички,
+  Зарплати and Стан системи. The pages about you (Для мене, Збережені, Профіль, Навчання, Практика), the
+  avatar, the undo bar and the "Сьогодні" block are not registered there, so no visitor meets a profile
+  that is not theirs. The list has no save button or fit there. Everything personal stays on your machine.
+- Menu colours follow the page a group holds, not its position, so the shorter public menu is coloured right.
+
 ### Changed (public site)
 - Where the vacancy catalog is missing (the public export never has it: the listings belong to others),
   the **public demo** says so plainly and names what it does have (market, skills, salaries, profile,

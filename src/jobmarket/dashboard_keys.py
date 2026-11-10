@@ -24,6 +24,14 @@ PAGES: Final[tuple[tuple[str, str], ...]] = (
     ("Стан системи", "d"),
 )
 
+# pages the public copy does not have: those about a person (the market and vacancies are public)
+PERSONAL: Final[frozenset[str]] = frozenset(
+    {"Для мене", "Збережені", "Профіль", "Навчання", "Практика"}
+)
+
+# shortcuts that act on a profile (the trainer, undo): not on the public copy either
+PERSONAL_KEYS: Final[frozenset[str]] = frozenset({"Space", "1 · 2 · 3", "Z"})
+
 # (keys, what it does) for the help overlay, after the "g" shortcuts
 OTHER: Final[tuple[tuple[str, str], ...]] = (
     ("/", "до пошуку на сторінці"),
@@ -154,15 +162,26 @@ _SCRIPT: Final = """
 """
 
 
-def config() -> dict[str, list[dict[str, str]]]:
-    """What the script needs: the pages with their keys and the other shortcuts for the help."""
+def config(*, public: bool = False) -> dict[str, list[dict[str, str]]]:
+    """What the script needs: the pages with their keys and the other shortcuts for the help.
+
+    On the public copy the personal pages are left out, so no key or palette entry leads nowhere.
+    """
     return {
-        "pages": [{"title": title, "key": key} for title, key in PAGES],
-        "other": [{"keys": keys, "what": what} for keys, what in OTHER],
+        "pages": [
+            {"title": title, "key": key}
+            for title, key in PAGES
+            if not (public and title in PERSONAL)
+        ],
+        "other": [
+            {"keys": keys, "what": what}
+            for keys, what in OTHER
+            if not (public and keys in PERSONAL_KEYS)
+        ],
     }
 
 
-def script() -> str:
+def script(*, public: bool = False) -> str:
     """The code to inject once per page load; running it again replaces the earlier listener."""
-    data = json.dumps(config(), ensure_ascii=False).replace("</", "<\\/")
+    data = json.dumps(config(public=public), ensure_ascii=False).replace("</", "<\\/")
     return f"<script>({_SCRIPT})({data});</script>"

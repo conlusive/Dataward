@@ -21,33 +21,36 @@ st.logo(str(STATIC / "logo.svg"), size="large", icon_image=str(STATIC / "icon.sv
 ui.setup()
 ui.keep_data_fresh()  # a hosted copy re-fetches the nightly export (no-op without a URL)
 
-navigation = st.navigation(
-    {
-        "": [  # no heading: the home page is the root of the menu
-            st.Page("views/home.py", title="Головна", icon=":material/home:", default=True),
-        ],
-        "Вакансії": [
-            st.Page("views/catalog.py", title="Каталог", icon=":material/list_alt:"),
-            st.Page("views/fit.py", title="Для мене", icon=":material/person_search:"),
-            st.Page("views/saved.py", title="Збережені", icon=":material/bookmark:"),
-        ],
-        "Розвиток": [
-            st.Page("views/profile.py", title="Профіль", icon=":material/account_circle:"),
-            st.Page("views/learn.py", title="Навчання", icon=":material/school:"),
-            st.Page("views/practice.py", title="Практика", icon=":material/quiz:"),
-        ],
-        "Аналітика": [
-            st.Page("views/market.py", title="Ринок", icon=":material/monitoring:"),
-            st.Page("views/skills.py", title="Навички", icon=":material/psychology:"),
-            st.Page("views/salary.py", title="Зарплати", icon=":material/payments:"),
-        ],
-        "\u200b": [  # no visible heading: a heading over one item looked like a button
-            st.Page("views/system.py", title="Стан системи", icon=":material/health_and_safety:"),
-        ],
-    },
-    expanded=True,  # every item visible, never behind "View more"
-)
-ui.undo_bar()  # a slim bar while the last action can be taken back (also `z`)
+personal = not ui.public_demo()  # a profile and what is built on it are for the owner only
+
+sections = {
+    "": [  # no heading: the home page is the root of the menu
+        st.Page("views/home.py", title="Головна", icon=":material/home:", default=True),
+    ],
+}
+sections["Вакансії"] = [st.Page("views/catalog.py", title="Каталог", icon=":material/list_alt:")]
+if personal:
+    sections["Вакансії"] += [
+        st.Page("views/fit.py", title="Для мене", icon=":material/person_search:"),
+        st.Page("views/saved.py", title="Збережені", icon=":material/bookmark:"),
+    ]
+    sections["Розвиток"] = [
+        st.Page("views/profile.py", title="Профіль", icon=":material/account_circle:"),
+        st.Page("views/learn.py", title="Навчання", icon=":material/school:"),
+        st.Page("views/practice.py", title="Практика", icon=":material/quiz:"),
+    ]
+sections["Аналітика"] = [
+    st.Page("views/market.py", title="Ринок", icon=":material/monitoring:"),
+    st.Page("views/skills.py", title="Навички", icon=":material/psychology:"),
+    st.Page("views/salary.py", title="Зарплати", icon=":material/payments:"),
+]
+sections["\u200b"] = [  # no visible heading: a heading over one item looked like a button
+    st.Page("views/system.py", title="Стан системи", icon=":material/health_and_safety:"),
+]
+navigation = st.navigation(sections, expanded=True)  # every item visible, never behind "View more"
+if personal:
+    ui.undo_bar()  # a slim bar while the last action can be taken back (also `z`)
 ui.scripts()  # shortcuts (`?` lists them, pages do not print them) and the page-enter motion
-ui.avatar_card()  # you, at the foot of the sidebar, on every page
+if personal:
+    ui.avatar_card()  # you, at the foot of the sidebar, on every page
 navigation.run()

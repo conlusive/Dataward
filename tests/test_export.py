@@ -145,11 +145,11 @@ models:
     ]
 
 
-def test_the_vacancy_catalog_is_private_and_the_workflow_uploads_only_the_public_copy() -> None:
-    """The repository is public: listings of other people must not reach the CI artifact."""
+def test_the_vacancy_catalog_is_published_and_the_workflow_uploads_only_the_public_copy() -> None:
+    """The catalog is public data and goes out; the copy step stays for a table flagged private."""
     workflow = Path(".github/workflows/pipeline-daily.yml").read_text(encoding="utf-8")
 
-    assert "fct_vacancy_catalog" in private_tables(SCHEMA_FILE)
+    assert "fct_vacancy_catalog" not in private_tables(SCHEMA_FILE)
     assert "uv run jobmarket export-public" in workflow
     upload = workflow[workflow.index("Upload gold export") :]
     assert "path: data/export_public" in upload and "path: data/export\n" not in upload
