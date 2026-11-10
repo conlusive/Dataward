@@ -186,11 +186,27 @@ button[kind], [data-testid="stDownloadButton"] button, [data-testid="stLinkButto
 """
 
 _MOTION = """
-/* motion: things arrive in steps (pixel style), never glide; all of it stops for reduced motion */
+/* motion: all of it stops for reduced motion */
 @keyframes dw-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
-/* nothing here plays on arrival: a rerun redraws the page after every click, and an entrance that
-   replays each time reads as lag; only a state (the frog, a running pulse) moves */
+/* arrival: once, when a page opens (html.dw-enter is on for a moment, see dashboard_motion.py). A
+   rerun after a click redraws the page, so nothing may animate on its own: that would replay each
+   time and read as lag. Only a state (the frog, a running pulse) moves by itself. */
+@keyframes dw-rise { from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: none; } }
+@keyframes dw-wipe { from { clip-path: inset(0 100% 0 0); } to { clip-path: inset(0 0 0 0); } }
+@keyframes dw-type { from { width: 0; } to { width: var(--chars); } }
+@keyframes dw-caret { 50% { border-right-color: transparent; } }
+@keyframes dw-grow { from { width: 0; } }
+html.dw-enter :is([data-testid="stMetric"], .dw-stat, .dw-dir, .dw-vac, .dw-hero, .dw-todo,
+  .dw-ring) { animation: dw-rise 0.38s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+  animation-delay: calc(var(--i, 0) * 45ms); }
+html.dw-enter :is([data-testid="stVegaLiteChart"], [data-testid="stArrowVegaLiteChart"]) {
+  animation: dw-wipe 0.7s cubic-bezier(0.3, 0.6, 0.2, 1) both; }
+html.dw-enter .dw-meter span { animation: dw-grow 0.6s cubic-bezier(0.3, 0.6, 0.2, 1) both; }
 .dw-typed { display: inline-block; }
+html.dw-enter .dw-typed { overflow: hidden; white-space: nowrap; width: var(--chars);
+  border-right: 2px solid var(--accent);
+  animation: dw-type 1.2s steps(var(--steps)) both, dw-caret 0.7s steps(1) 1.2s 2; }
 .dw-pulse span:last-child { animation: dw-pulse 1.6s steps(2) infinite; }
 .dw-dir, .dw-vac, [data-testid="stMetric"] { transition: transform 0.12s steps(2),
   border-color 0.12s steps(2); }
@@ -351,7 +367,7 @@ _WORKSPACE = """
 [data-testid="stSidebarUserContent"] { padding-bottom: 0 !important; }
 
 
-.st-key-dw_keys { position: absolute; width: 0; height: 0; overflow: hidden; }
+.st-key-dw_scripts { position: absolute; width: 0; height: 0; overflow: hidden; }
 
 .st-key-cat_rows, .st-key-mkt_rows { display: flex; flex-direction: column; gap: var(--s2); }
 .st-key-cat_rows button, .st-key-mkt_rows button { height: auto; min-height: 3.4rem;

@@ -23,7 +23,9 @@
   ticking rows. "Стан і дані" is now **"Стан системи"** without a heading above it (the heading looked like
   a button that did nothing). The filter bar has more room, and its pills wrap.
 
-- **Lighter on a small machine**: entrance animations that replayed after every click are gone, the
+- **Arrival animations are back, once per page**: figures and tiles rise, charts are wiped in, meters grow,
+  the subtitle types itself, but only when a page opens (`html.dw-enter` for 2.8 s), never after a click.
+- **Lighter on a small machine**: nothing animates on its own any more, the
   `:has()` rule over all wrappers is gone, progress rings are CSS, home draws one chart of the market at a
   time instead of three. The toolbar over tables and charts (full screen, search, download) is hidden
   everywhere. On a short window the menu drops its headings (the group colour stays) so "Стан системи"

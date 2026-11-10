@@ -264,11 +264,15 @@ def test_skill_rows_mark_required_known_and_unknown_share() -> None:
     assert "— ринку" in html and 'style="width:0%"' in html  # no share: no bar, an honest dash
 
 
-def test_nothing_replays_on_arrival_and_no_selector_rescans_every_wrapper() -> None:
+def test_an_arrival_animation_only_plays_while_the_page_is_entering() -> None:
     css = t.css()
+    arrivals = ("dw-rise", "dw-wipe", "dw-type", "dw-grow")
+    rules = re.findall(r"([^{}]+)\{([^{}]*animation:[^{}]*)\}", css)
+    arriving = [(sel.strip(), body) for sel, body in rules if any(a in body for a in arrivals)]
 
-    # a rerun redraws the page after each click: an entrance would replay each time (read as lag)
-    assert "dw-rise" not in css and "dw-wipe" not in css and "dw-grow" not in css
+    assert arriving  # the arrivals exist ...
+    # ... but never on their own: a rerun after a click would play them again and read as lag
+    assert all(sel.startswith("html.dw-enter") for sel, _ in arriving)
     assert 'stVerticalBlockBorderWrapper"]:has(' not in css  # :has() over every wrapper is slow
 
 

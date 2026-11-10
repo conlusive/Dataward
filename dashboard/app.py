@@ -48,6 +48,6 @@ navigation = st.navigation(
     expanded=True,  # every item visible, never behind "View more"
 )
 ui.undo_bar()  # a slim bar while the last action can be taken back (also `z`)
-ui.keys()  # shortcuts: `?` lists them, they are not printed on the pages
+ui.scripts()  # shortcuts (`?` lists them, pages do not print them) and the page-enter motion
 ui.avatar_card()  # you, at the foot of the sidebar, on every page
 navigation.run()

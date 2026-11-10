@@ -141,9 +141,12 @@ is shown as a tag too.
   static terracotta full stop; the sidebar icon and the favicon are the bars and the stop. `dashboard_logo.py` draws them from a glyph
   table (`python -m jobmarket.dashboard_logo` rewrites `dashboard/static/`), and a test keeps the committed
   files equal to its output.
-- **Motion**: only a state moves: the frog, the newest pipeline square and the title cursor. Nothing plays
-  on arrival, because a rerun redraws the page after every click and an entrance that replays each time
-  reads as lag. All of it stops for `prefers-reduced-motion`.
+- **Motion**: things arrive **once, when a page opens**: figures, tiles and actions rise one after another
+  (about 0.4 s, 45 ms apart), charts are wiped in, the meters grow, the subtitle of the home page types
+  itself. A rerun after a click plays none of it again, which would read as lag. The stylesheet animates
+  only under `html.dw-enter`, and `dashboard_motion.py` switches that class on for 2.8 s whenever the
+  address changes (a test refuses an arrival animation outside that class). Only a state moves by itself:
+  the frog, the newest pipeline square and the title cursor. All of it stops for `prefers-reduced-motion`.
 - **Colour by part of the product**: vacancies teal, learning (Розвиток) violet, analytics red, the state of
   the system yellow; they colour the heading marks, the menu bars and the actions (`DOMAINS` in the theme;
   a test keeps the hues). These are not the chart series colours.
@@ -187,6 +190,7 @@ after the very first update to this version.
 - `src/jobmarket/dashboard_charts.py`: the charts, each taking a frame with fixed column names: lines, ranked
   and stacked bars, **donut** and **ring** (parts of a whole, one value), the **activity grid**.
 - `src/jobmarket/dashboard_keys.py`: the shortcut table and the script generated from it.
+- `src/jobmarket/dashboard_motion.py`: the script that plays the arrival once per page.
 - `src/jobmarket/dashboard_ui.py`: cached loading (`st.cache_data`, 5 minutes), one place that turns a
   missing file or column into a message instead of a stack trace, and the tile/card helpers.
 - `dashboard/app.py` and `dashboard/views/*.py`: navigation and one script per page.
