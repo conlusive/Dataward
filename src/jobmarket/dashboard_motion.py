@@ -3,9 +3,9 @@
 Streamlit streams a page element by element and keeps the old one on screen until the new script
 has run. Animating each element (rising, staggered) made that building visible and read as jumping.
 So the script below hides the page body when the address changes (``html.dw-hold``), waits until
-the run has finished, then shows it with a single opacity fade and starts the small one-off
-animations (``html.dw-enter``: the typed line, the growing meters). A rerun on the same page
-changes nothing: no hold, no replay.
+the run has finished (the app's own script state), then shows it with a single opacity fade and
+starts the small one-off animations (``html.dw-enter``: the typed line, the growing meters). A
+rerun on the same page changes nothing: no hold, no replay.
 """
 
 import json
@@ -23,8 +23,14 @@ _SCRIPT: Final = """
   const root = document.documentElement;
   const calm = matchMedia('(prefers-reduced-motion: reduce)').matches;
   let poll = null;
-  const busy = () => !!document.querySelector(
-    '[data-stale="true"], [data-testid="stStatusWidget"]');
+  // the app says itself whether a script is running; stale elements and the "running" widget are
+  // a second opinion (the old page can be gone and the widget not shown while the new one builds)
+  const busy = () => {
+    const app = document.querySelector('[data-testid="stApp"]');
+    const state = app ? app.getAttribute('data-test-script-state') : null;
+    if (state && state !== 'notRunning') return true;
+    return !!document.querySelector('[data-stale="true"], [data-testid="stStatusWidget"]');
+  };
   const reveal = () => {
     clearInterval(poll);
     root.classList.remove('dw-hold');
