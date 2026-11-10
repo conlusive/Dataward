@@ -21,16 +21,16 @@ st.logo(str(STATIC / "logo.svg"), size="large", icon_image=str(STATIC / "icon.sv
 ui.setup()
 ui.keep_data_fresh()  # a hosted copy re-fetches the nightly export (no-op without a URL)
 
-personal = not ui.public_demo()  # a profile and other people's vacancies are for the owner only
+personal = not ui.public_demo()  # a profile and what is built on it are for the owner only
 
 sections = {
     "": [  # no heading: the home page is the root of the menu
         st.Page("views/home.py", title="Головна", icon=":material/home:", default=True),
     ],
 }
+sections["Вакансії"] = [st.Page("views/catalog.py", title="Каталог", icon=":material/list_alt:")]
 if personal:
-    sections["Вакансії"] = [
-        st.Page("views/catalog.py", title="Каталог", icon=":material/list_alt:"),
+    sections["Вакансії"] += [
         st.Page("views/fit.py", title="Для мене", icon=":material/person_search:"),
         st.Page("views/saved.py", title="Збережені", icon=":material/bookmark:"),
     ]

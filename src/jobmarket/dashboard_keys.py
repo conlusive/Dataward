@@ -24,9 +24,9 @@ PAGES: Final[tuple[tuple[str, str], ...]] = (
     ("Стан системи", "d"),
 )
 
-# pages the public copy does not have (it shows the market, not a person or other people's listings)
+# pages the public copy does not have: those about a person (the market and vacancies are public)
 PERSONAL: Final[frozenset[str]] = frozenset(
-    {"Каталог", "Для мене", "Збережені", "Профіль", "Навчання", "Практика"}
+    {"Для мене", "Збережені", "Профіль", "Навчання", "Практика"}
 )
 
 # shortcuts that act on a profile (the trainer, undo): not on the public copy either

@@ -398,7 +398,7 @@ def test_the_missing_catalog_note_does_not_send_a_visitor_to_make(
 
     app = AppTest.from_function(_note_script).run()
 
-    assert any("належать іншим людям" in i.value for i in app.info)
+    assert any("нічного оновлення" in i.value for i in app.info)
     assert not any("make" in i.value for i in app.info)  # a visitor has no pipeline to run
 
 
@@ -1226,8 +1226,8 @@ def _public(monkeypatch: pytest.MonkeyPatch) -> AppTest:
     return app
 
 
-@pytest.mark.parametrize("page", ["catalog", "fit", "saved", "profile", "learn", "practice"])
-def test_the_public_copy_has_no_personal_or_vacancy_pages(
+@pytest.mark.parametrize("page", ["fit", "saved", "profile", "learn", "practice"])
+def test_the_public_copy_has_no_personal_pages(
     with_catalog: Path, monkeypatch: pytest.MonkeyPatch, page: str
 ) -> None:
     app = _public(monkeypatch)
@@ -1242,7 +1242,7 @@ def test_the_public_copy_still_has_every_analytics_page(
 ) -> None:
     app = _public(monkeypatch).switch_page(f"views/{page}.py").run()
 
-    assert not app.exception and not any("належать іншим людям" in i.value for i in app.info)
+    assert not app.exception and not any("нічного оновлення" in i.value for i in app.info)
 
 
 def test_the_public_copy_has_no_avatar_undo_or_today_block(
@@ -1256,14 +1256,34 @@ def test_the_public_copy_has_no_avatar_undo_or_today_block(
     assert "Сьогодні" not in html and "ціль дня" not in html  # that block is about a person
 
 
-def test_the_public_copy_never_serves_other_peoples_listings_even_if_a_file_is_there(
+def test_the_public_catalog_lists_the_vacancies_and_has_nowhere_to_save_them(
+    with_catalog: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    app = _public(monkeypatch).switch_page("views/catalog.py").run()
+
+    assert not app.exception and _titles(app) and _opened(app)  # a list, the first one open
+    assert not any(b.key == "cat_save" or (b.key or "").startswith("save_") for b in app.button)
+    assert "Збіг із вашим профілем" not in _markdown(app)  # nobody's profile to match against
+    assert "належать їхнім авторам" in " ".join(c.value for c in app.caption)  # whose they are
+
+
+def test_the_public_home_and_market_show_the_vacancies_too(
     with_catalog: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     app = _public(monkeypatch)
+    assert "Свіжі вакансії" in _markdown(app)
 
-    assert "Свіжі вакансії" not in _markdown(app)  # the catalog file exists (with_catalog), unused
-    market = app.switch_page("views/market.py").run()
-    assert not any(b.key and b.key.startswith("mkt_row_") for b in market.button)
+    market = _open_tab(app.switch_page("views/market.py").run(), "market_tab", "Вакансії")
+
+    assert not market.exception and _titles(market, "mkt")
+
+
+def test_without_a_catalog_the_public_pages_still_work(
+    export: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    app = _public(monkeypatch).switch_page("views/catalog.py").run()
+
+    assert not app.exception and any("нічного оновлення" in i.value for i in app.info)
 
 
 def test_your_own_machine_keeps_every_page(with_catalog: Path) -> None:

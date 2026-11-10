@@ -74,10 +74,10 @@ def test_the_public_copy_is_offered_no_key_that_leads_nowhere() -> None:
     public = keys.config(public=True)
     titles = {p["title"] for p in public["pages"]}
 
-    assert titles == {"Головна", "Ринок", "Навички", "Зарплати", "Стан системи"}
+    assert titles == {"Головна", "Каталог", "Ринок", "Навички", "Зарплати", "Стан системи"}
     assert not titles & keys.PERSONAL
     assert not {"Space", "1 · 2 · 3", "Z"} & {o["keys"] for o in public["other"]}
-    assert "Каталог" not in keys.script(public=True)  # not even in the palette's data
+    assert "Профіль" not in keys.script(public=True)  # not even in the palette's data
 
 
 def test_your_own_copy_is_offered_everything() -> None:

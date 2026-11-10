@@ -275,10 +275,8 @@ models:
   - name: fct_vacancy_catalog
     description: >
       One row per real vacancy for the catalog page: direction, level, salary, skills, dates, open or
-      closed, and the link to the original page. Third-party listings, so it is exported for local use
-      only and never published (see meta.private).
-    meta:
-      private: true
+      closed, and the link to the original page. Public listings (no description text, no contacts):
+      published with the rest of the export, the link leads to the original page.
     config:
       contract: {enforced: true}
     columns:

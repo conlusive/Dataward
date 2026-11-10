@@ -53,9 +53,7 @@ def _catalog(directory: str) -> pd.DataFrame | None:
 
 
 def catalog() -> pd.DataFrame | None:
-    """The vacancy catalog, or None when this export has none (it is local-only data)."""
-    if public_demo():
-        return None  # never serve third-party listings from a public host, even if a file is there
+    """The vacancy catalog, or None when this export has none (one from before it was built)."""
     try:
         return _catalog(str(dd.data_dir()))
     except dd.DataError as error:
@@ -284,21 +282,33 @@ def keep_data_fresh() -> None:
 def no_catalog(subject: str) -> None:
     """Say, in place of ``subject``, that this export has no vacancy catalog.
 
-    The catalog holds other people's listings, so the public export never has it. A visitor of the
-    public demo is told what the page needs and where to find it; whoever runs the dashboard
-    locally is told how to build it.
+    On the public site it only means the nightly export has not carried the catalog yet (a visitor
+    can do nothing about it); whoever runs the dashboard locally is told how to build it.
     """
-    if session_profiles():
+    if public_demo():
         st.info(
-            f"{subject} Вакансії належать іншим людям, тому на публічному сайті їх немає: тут "
-            "доступна аналітика (ринок, навички, зарплати), профіль і практика. Повну версію з "
-            "каталогом можна запустити в себе (див. README)."
+            f"{subject} У цьому оновленні даних каталогу ще немає: він з'явиться після наступного "
+            "нічного оновлення. Аналітика (ринок, навички, зарплати) працює вже зараз."
         )
     else:
         st.info(
-            f"{subject} У цьому експорті каталогу немає: він локальний. Збудуйте його: "
+            f"{subject} У цьому експорті каталогу немає. Збудуйте його: "
             "`make pipeline` (або `make dbt-build` і `make export` для вже наявної бази)."
         )
+
+
+def listing_note() -> None:
+    """Where the vacancies come from and whose they are, under the heading of a vacancy list."""
+    st.caption(
+        "Оголошення зібрані з відкритих сторінок DOU і Djinni й належать їхнім авторам: тут лише "
+        "назва, компанія, рівень, зарплата, навички й дати, а кнопка «Відкрити оголошення» веде на "
+        "оригінал."
+    )
+
+
+def owner_profile() -> pr.Profile | None:
+    """Your profile, or None on the public site, which has nobody's profile to match or save to."""
+    return None if public_demo() else _load()
 
 
 def demo_notice() -> None:
@@ -536,7 +546,7 @@ def vacancy_list(
     frame: pd.DataFrame,
     *,
     key: str,
-    profile: pr.Profile,
+    profile: pr.Profile | None,
     catalog: pd.DataFrame,
     shares: dict[str, float],
 ) -> None:
@@ -549,7 +559,7 @@ def vacancy_list(
     if frame.empty:
         st.info("За цими умовами вакансій немає.")
         return
-    mine = profile.known()
+    mine = profile.known() if profile is not None else set()
 
     @st.fragment
     def view() -> None:
@@ -620,10 +630,11 @@ def vacancy_list(
             for _, r in shown.iterrows()
         ]  # fmt: skip
         save, csv = st.columns([1, 1])
-        save.button(
-            f"★ Зберегти всі на сторінці ({len(shown)})", key=f"{key}_save",
-            on_click=_save_picked, args=(key,),
-        )  # fmt: skip
+        if profile is not None:  # the public site has no profile to save into
+            save.button(
+                f"★ Зберегти всі на сторінці ({len(shown)})", key=f"{key}_save",
+                on_click=_save_picked, args=(key,),
+            )  # fmt: skip
         csv.download_button(
             "Завантажити CSV (усе)", dd.catalog_table(ordered).to_csv(index=False).encode("utf-8"),
             file_name=f"dataward_{key}.csv", mime="text/csv", key=f"{key}_csv",
