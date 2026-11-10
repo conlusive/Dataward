@@ -1,13 +1,13 @@
-"""Page-enter motion: a page is hidden while it is built and shown at once, with one soft fade.
+"""Page-enter motion: a page is hidden while it is built and shown at once, without a fade.
 
 Streamlit streams a page element by element and keeps the old one on screen until the new script
 has run. Animating each element (rising, staggered) made that building visible and read as jumping.
 The stylesheet therefore hides the page body from the start, until ``html.dw-go`` is set. This
 script takes ``dw-go`` away when the address changes, waits until the run has finished (the app's
 own script state) and the page has stopped changing (lazy widgets and charts mount after the run),
-then sets it again: the body is shown with a single opacity fade and the small
-one-off animations start (``html.dw-enter``: the typed line, the growing meters). A rerun on the
-same page changes nothing: no hold, no replay.
+then sets it again: the body is shown at once (a fade repainted the whole page and flickered)
+and the small one-off animations start (``html.dw-enter``: the typed line, the growing meters). A
+rerun on the same page changes nothing: no hold, no replay.
 """
 
 import json

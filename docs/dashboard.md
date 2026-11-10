@@ -143,9 +143,9 @@ is shown as a tag too.
   files equal to its output.
 - **Motion**: a page arrives **once, as a whole**. When the address changes, `dashboard_motion.py` hides
   the page body (`html.dw-go` is taken away; the stylesheet hides the body from the very first paint
-  too), waits until the run has finished (the app's own script state, nothing stale;
-  at most 1.6 s, and the stylesheet frees the body after 2 s even if the script fails) and shows it with
-  one 0.3 s fade, then switches `html.dw-enter` on for 2.8 s: the meters grow and the subtitle of the
+  too), waits until the run has finished (the app's own script state) and the page has stopped changing (lazy widgets and charts mount after
+  the run; at most 1.7 s, and the stylesheet frees the body after 2 s even if the script fails),
+  shows it at once with no fade (a fade made the whole page its own layer and flickered when it ended), then switches `html.dw-enter` on for 2.8 s: the meters grow and the subtitle of the
   home page types itself. Nothing rises or is staggered per element, so the building of a page is never
   seen. A rerun after a click plays none of it (a test refuses an arrival animation outside
   `html.dw-enter`). Only a state moves by itself: the frog, the newest pipeline square and the title

@@ -25,7 +25,7 @@
 
 - **Smoother page changes**: the old per-element arrival (figures rising one after another, charts
   wiped in) showed the page being built and read as jumping. Now the page body is hidden while it is
-  built and shown at once with one soft fade (no `html.dw-go`, then `html.dw-enter`); meters and the typed
+  built and shown at once, with no fade (no `html.dw-go`, then `html.dw-enter`); meters and the typed
   subtitle stay. The "Навички" page builds only the open tab instead of all three (its tables and the
   graph were drawn while hidden). Vacancy rows in the catalog have one fact per line: the title, the
   company and level, then the pay (in the accent colour) and the fit.

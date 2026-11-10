@@ -189,12 +189,11 @@ _MOTION = """
 /* motion: all of it stops for reduced motion */
 @keyframes dw-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
 /* arrival: once, when a page opens (see dashboard_motion.py). The page body is hidden from the
-   start and until the page is built (no html.dw-go), then shown with one fade (html.dw-enter):
-   nothing rises or is staggered, so the building of the page is never seen. The fade moves only
-   opacity and the meters only a transform, so the layout never shifts. A rerun after a click plays
-   nothing. If the script ever fails, the body shows itself after 2 s. Under reduced motion the
-   body is never hidden. */
-@keyframes dw-fade { from { opacity: 0; } to { opacity: 1; } }
+   start and until the page is built (no html.dw-go), then shown at once, with no fade: a fade
+   promotes the whole page to its own layer, and the repaint when it ends showed as a flicker.
+   Nothing rises or is staggered, so the building of the page is never seen. Only the meters (a
+   transform) and the typed line (html.dw-enter) move. A rerun after a click plays nothing. If the
+   script ever fails, the body shows itself after 2 s. Under reduced motion it is never hidden. */
 @keyframes dw-unhide { to { opacity: 1; } }
 @keyframes dw-type { from { width: 0; } to { width: var(--chars); } }
 @keyframes dw-caret { 50% { border-right-color: transparent; } }
@@ -203,7 +202,6 @@ _MOTION = """
   html:not(.dw-go) [data-testid="stMainBlockContainer"] { opacity: 0;
     animation: dw-unhide 0s 2s forwards; }
 }
-html.dw-enter [data-testid="stMainBlockContainer"] { animation: dw-fade 0.3s ease-out both; }
 html.dw-enter .dw-meter span { transform-origin: left;
   animation: dw-grow 0.6s cubic-bezier(0.3, 0.6, 0.2, 1) 0.15s both; }
 .dw-typed { display: inline-block; }

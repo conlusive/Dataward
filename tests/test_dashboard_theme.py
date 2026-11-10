@@ -266,7 +266,7 @@ def test_skill_rows_mark_required_known_and_unknown_share() -> None:
 
 def test_an_arrival_animation_only_plays_while_the_page_is_entering() -> None:
     css = t.css()
-    arrivals = ("dw-fade", "dw-type", "dw-grow")
+    arrivals = ("dw-type", "dw-grow")
     rules = re.findall(r"([^{}]+)\{([^{}]*animation:[^{}]*)\}", css)
     arriving = [(sel.strip(), body) for sel, body in rules if any(a in body for a in arrivals)]
 
