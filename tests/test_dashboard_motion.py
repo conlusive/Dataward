@@ -21,6 +21,7 @@ def test_the_page_is_held_while_it_is_built_and_shown_when_the_run_ends() -> Non
     assert "classList.remove('dw-go')" in code and "classList.add('dw-go')" in code
     assert "history.pushState" in code  # the hold starts with the address, not 150 ms later
     assert "data-test-script-state" in code and "notRunning" in code  # the app's own run state
+    assert "MutationObserver" in code and f'"quiet": {motion.QUIET_MS}' in code  # lazy widgets
     assert "data-stale" in code  # a second opinion: released once nothing is stale any more
     assert (
         f'"cap": {motion.MAX_HOLD_MS}' in code and motion.MAX_HOLD_MS <= 2000
