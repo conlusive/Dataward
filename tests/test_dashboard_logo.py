@@ -88,10 +88,17 @@ def test_the_assets_can_be_rewritten(tmp_path: Path) -> None:
     assert (tmp_path / "logo.svg").read_text(encoding="utf-8") == logo.wordmark_svg()
 
 
-def test_the_committed_png_icons_are_what_the_generator_writes() -> None:
+def _pixels(data: bytes) -> tuple[tuple[int, int], bytes]:
+    from PIL import Image
+
+    image = Image.open(io.BytesIO(data)).convert("RGB")
+    return image.size, image.tobytes()
+
+
+def test_the_committed_png_icons_are_what_the_generator_draws() -> None:
     pytest.importorskip("PIL.Image")
 
-    assert (logo.STATIC / "favicon.png").read_bytes() == logo.favicon_png()
-    assert (logo.STATIC / "apple-touch-icon.png").read_bytes() == logo.favicon_png(
-        logo.APPLE_TOUCH_SIZE
-    )
+    # the pixels, not the bytes: the compression of a PNG differs between machines
+    for name, size in (("favicon.png", 64), ("apple-touch-icon.png", logo.APPLE_TOUCH_SIZE)):
+        committed = _pixels((logo.STATIC / name).read_bytes())
+        assert committed == _pixels(logo.favicon_png(size)), name
