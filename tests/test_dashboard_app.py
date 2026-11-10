@@ -643,17 +643,20 @@ def test_home_asks_an_empty_profile_for_skills_and_then_tracks_the_day(export: P
 def test_home_shows_the_goal_of_the_day_as_a_ring(export: Path) -> None:
     app = _run("home")
 
-    assert any("ціль дня: 0/5" in c.value for c in app.caption)
+    assert "ціль дня: 0/5" in _markdown(app) and 'class="dw-ring dw-d-grow"' in _markdown(app)
 
 
-def test_home_shows_the_market_as_rings_per_source_level_and_direction(export: Path) -> None:
+def test_home_draws_one_ring_of_the_market_at_a_time_and_the_choice_changes_it(
+    export: Path,
+) -> None:
     app = _run("home")
 
-    assert [t.label for t in app.tabs if t.label in {"Джерела", "Рівні", "Напрямки"}] == [
-        "Джерела",
-        "Рівні",
-        "Напрямки",
-    ]
+    assert list(app.radio(key="home_share").options) == ["Джерела", "Рівні", "Напрямки"]
+    first = [e for e in app.get("arrow_vega_lite_chart")]
+    app.radio(key="home_share").set_value("Напрямки").run()
+
+    assert not app.exception
+    assert len(app.get("arrow_vega_lite_chart")) == len(first)  # still one ring, another split
 
 
 def test_home_shows_the_pipeline_behind_the_numbers(export: Path) -> None:

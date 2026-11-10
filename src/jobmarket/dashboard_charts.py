@@ -408,38 +408,6 @@ def donut(frame: pd.DataFrame, *, unit: str = "Вакансій", size: int = 19
     return _finish(alt.layer(arcs, middle), size, size)
 
 
-def ring(ratio: float, *, caption: str, colour: str = t.MARK, size: int = 110) -> Any:
-    """One value from 0 to 1 as a ring with the percent in the middle (progress, readiness)."""
-    ratio = min(max(float(ratio), 0.0), 1.0)
-    data = pd.DataFrame(
-        {"part": ["done", "rest"], "value": [ratio, 1 - ratio], "rank": [0, 1],
-         "caption": [caption, caption]}
-    )  # fmt: skip
-    arcs = (
-        alt.Chart(data)
-        .mark_arc(innerRadius=size * 0.34, outerRadius=size * 0.5, stroke=t.CARD, strokeWidth=2)
-        .encode(
-            theta=alt.Theta("value:Q", stack=True),
-            order=alt.Order("rank:Q"),
-            color=alt.Color(
-                "part:N",
-                scale=alt.Scale(domain=["done", "rest"], range=[colour, t.GRID]),
-                legend=None,
-            ),
-            tooltip=[
-                alt.Tooltip("caption:N", title="Показник"),
-                alt.Tooltip("value:Q", title="Частка", format=".0%"),
-            ],
-        )  # fmt: skip
-    )
-    middle = (
-        alt.Chart(pd.DataFrame({"text": [f"{ratio:.0%}"]}))
-        .mark_text(color=t.INK, font=FONT, fontSize=15, fontWeight="bold")
-        .encode(text="text:N")
-    )
-    return _finish(alt.layer(arcs, middle), size, size)
-
-
 def activity_grid(frame: pd.DataFrame, *, cell: int = 15) -> Any:
     """A week-by-weekday grid of answers per day. Columns: ``date``, ``week``, ``weekday``,
     ``count``, ``level`` (what ``dashboard_data.activity_grid`` returns). Square cells, one hue.

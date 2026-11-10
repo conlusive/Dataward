@@ -23,7 +23,7 @@ topic into views. Filters live on the page, in a bar above the list, never in th
 
 | Page | Tabs | Shows | Reads |
 |---|---|---|---|
-| Головна | - | a header with a typed line; four bracketed figures; **Сьогодні**: up to three things to do now (coloured by where they lead) and two rings, the daily goal and readiness; **Ринок зараз**: the breakdown panel (thin stacked bars per day) beside rings of the market by source, level and direction; the four biggest **directions** as tiles with a button that opens their vacancies; the top-10 skills and what changed; the three freshest vacancies (with a catalog); **Конвеєр даних**: the health chip, the last runs as squares, when the data was exported, DQ checks passed, SLOs kept, rows in silver | `fct_market_daily`, `fct_skill_demand_monthly`, `dim_skill`, `status.json`, `last_update.json`, the catalog |
+| Головна | - | a header with a typed line; four bracketed figures; **Сьогодні**: up to three things to do now (coloured by where they lead) and two rings, the daily goal and readiness; **Ринок зараз**: the breakdown panel (thin stacked bars per day) beside a ring of the market that you switch between source, level and direction; the four biggest **directions** as tiles with a button that opens their vacancies; the top-10 skills and what changed; the three freshest vacancies (with a catalog); **Конвеєр даних**: the health chip, the last runs as squares, when the data was exported, DQ checks passed, SLOs kept, rows in silver | `fct_market_daily`, `fct_skill_demand_monthly`, `dim_skill`, `status.json`, `last_update.json`, the catalog |
 | Каталог | Вакансії / Що вимагають / Компанії | **the vacancies themselves**: a filter bar (search, direction, skills, level and source as pills, and a "Ще фільтри" popover with all/any skills, only open, only with a salary, minimum salary, remote, when it appeared; the popover title counts what is changed), four tiles describing the selection, a **list with the vacancy already open beside it** (rows on the left, 15 a page with a pager, each row two lines: title, then company, level, salary and fit; the first vacancy is open at once and a click on a row opens another; no table to click into), the open vacancy's card with the market comparison and a save button, "save the whole page" (all skills, required ones marked, dates, both links when it is on both sites), what the selection asks for, which companies hire, a CSV download | `fct_vacancy_catalog` (local only) |
 | Для мене | - | the open vacancies that suit your target, ranked by how well your skills cover them (a required skill counts twice), with what you have and what is missing, a readiness figure, a minimum-match slider and a card with a save button | the catalog, the profile |
 | Збережені | - | saved vacancies by stage (збережено, відгукнувся, співбесіда, оффер, відмова) with a note, edited in a table | the profile |
@@ -141,9 +141,16 @@ is shown as a tag too.
   static terracotta full stop; the sidebar icon and the favicon are the bars and the stop. `dashboard_logo.py` draws them from a glyph
   table (`python -m jobmarket.dashboard_logo` rewrites `dashboard/static/`), and a test keeps the committed
   files equal to its output.
-- **Motion**: things arrive in steps, never glide: the figures and tiles rise one after another, charts
-  are wiped in, the meters grow, the subtitle of the home page types itself, the newest pipeline square
-  pulses and the title cursor blinks. All of it stops for `prefers-reduced-motion`.
+- **Motion**: only a state moves: the frog, the newest pipeline square and the title cursor. Nothing plays
+  on arrival, because a rerun redraws the page after every click and an entrance that replays each time
+  reads as lag. All of it stops for `prefers-reduced-motion`.
+- **Colour by part of the product**: vacancies teal, learning (Розвиток) violet, analytics red, the state of
+  the system yellow; they colour the heading marks, the menu bars and the actions (`DOMAINS` in the theme;
+  a test keeps the hues). These are not the chart series colours.
+- **Smooth on a small machine**: no selector that rescans every wrapper (`:has()` over all containers), no
+  entrance animation, progress rings are CSS (a conic gradient) instead of charts, one ring of the market
+  at a time (a radio, not three tabs that would all draw), and the toolbar over tables and charts (full
+  screen, search, download) is hidden everywhere. Where a download makes sense there is a button.
 - **Charts** (`dashboard_charts.py`, Altair) follow the dataviz rules in a pixel style: thin square-ended
   bars, two-pixel lines, square markers, a hairline grid, a tooltip on every mark, a legend only when two
   series share a chart. The four series colours (`#8481F5`, `#E5603B`, `#26A08F`, `#B58A1F`) were checked with the palette

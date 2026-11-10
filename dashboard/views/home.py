@@ -80,11 +80,11 @@ with right, ui.card("Ваш прогрес", "ціль дня і готовні�
     goal_ring, fit_ring = st.columns(2)
     done = min(state["today"] / max(mine.goal, 1), 1.0)
     with goal_ring:
-        ui.chart(charts.ring(done, caption="Ціль дня", colour=theme.DOMAINS["grow"]))
-        st.caption(f"ціль дня: {state['today']}/{mine.goal}")
+        ui.html(theme.ring(done, f"ціль дня: {state['today']}/{mine.goal}", "grow"))
     with fit_ring:
-        ui.chart(charts.ring(fit or 0.0, caption="Готовність", colour=theme.DOMAINS["jobs"]))
-        st.caption("готовність" if fit is not None else "додайте навички")
+        ui.html(
+            theme.ring(fit or 0.0, "готовність" if fit is not None else "додайте навички", "jobs")
+        )
 
 # ---- the breakdown panel: a metric split by source, level or direction -----------------------
 ui.section("Ринок зараз", domain="market")
@@ -109,11 +109,12 @@ def breakdown_panel() -> None:
 trend, shares = st.columns([3, 2])
 with trend:
     breakdown_panel()
+SPLITS = {"Джерела": "source", "Рівні": "seniority", "Напрямки": "category"}
 with shares, ui.card("Структура ринку", "відкриті вакансії на останній день"):
-    tabs = st.tabs(["Джерела", "Рівні", "Напрямки"])
-    for tab, by in zip(tabs, ("source", "seniority", "category"), strict=True):
-        with tab:
-            ui.chart(charts.donut(dd.latest_shares(market, by, top=4)[["label", "value"]]))
+    chosen = st.radio(
+        "Розріз", list(SPLITS), horizontal=True, key="home_share", label_visibility="collapsed"
+    )  # one chart at a time: tabs would draw all three on every rerun
+    ui.chart(charts.donut(dd.latest_shares(market, SPLITS[chosen], top=4)[["label", "value"]]))
 
 # ---- directions: the way into the catalog ---------------------------------------------------
 directions = dd.direction_stats(market, vacancies)

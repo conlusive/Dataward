@@ -160,8 +160,7 @@ def test_a_count_badge_is_empty_for_zero() -> None:
 def test_the_motion_has_a_way_out_and_filters_have_an_active_look() -> None:
     css = t.css()
 
-    assert "@keyframes dw-wipe" in css and "prefers-reduced-motion" in css
-    assert "animation: none !important" in css
+    assert "prefers-reduced-motion" in css and "animation: none !important" in css
     assert 'button[kind="pillsActive"]' in css and 'has([data-baseweb="tag"])' in css
 
 
@@ -263,3 +262,46 @@ def test_skill_rows_mark_required_known_and_unknown_share() -> None:
     assert html.count("dw-skillrow") == 2 and html.count(" req") == 1
     assert 'class="dw-name mine">Python' in html and "50% ринку" in html
     assert "— ринку" in html and 'style="width:0%"' in html  # no share: no bar, an honest dash
+
+
+def test_nothing_replays_on_arrival_and_no_selector_rescans_every_wrapper() -> None:
+    css = t.css()
+
+    # a rerun redraws the page after each click: an entrance would replay each time (read as lag)
+    assert "dw-rise" not in css and "dw-wipe" not in css and "dw-grow" not in css
+    assert 'stVerticalBlockBorderWrapper"]:has(' not in css  # :has() over every wrapper is slow
+
+
+def test_the_toolbar_of_tables_and_charts_is_hidden_everywhere() -> None:
+    css = t.css()
+
+    assert '[data-testid="stElementToolbar"]' in css and "display: none !important" in css
+
+
+def test_the_parts_of_the_product_have_the_colours_asked_for() -> None:
+    import colorsys
+
+    def hue(name: str) -> float:
+        colour = t.DOMAINS[name].lstrip("#")
+        red, green, blue = (int(colour[i : i + 2], 16) / 255 for i in (0, 2, 4))
+        return colorsys.rgb_to_hsv(red, green, blue)[0] * 360
+
+    assert 235 <= hue("grow") <= 265  # learning: violet
+    assert hue("market") <= 12 or hue("market") >= 350  # analytics: red
+    assert 40 <= hue("system") <= 52  # the state of the system: yellow
+    assert len({t.DOMAINS[name] for name in t.DOMAINS}) == 4  # four parts, four colours
+
+
+def test_a_ring_is_bounded_labelled_and_coloured_by_its_domain() -> None:
+    low, high = t.ring(-1.0, "ціль", "grow"), t.ring(7.0, "<b>x</b>", "jobs")
+
+    assert '--p:0"' in low and "0%" in low and "dw-d-grow" in low
+    assert '--p:100"' in high and "dw-d-jobs" in high
+    assert "<b>x</b>" not in high and "&lt;b&gt;x&lt;/b&gt;" in high
+    assert 'role="img"' in high and "aria-label" in high  # a reader gets the figure as text
+
+
+def test_the_single_system_item_carries_its_own_colour_since_it_has_no_heading() -> None:
+    css = t.css()
+
+    assert "div:nth-child(5) a { border-left: 4px solid var(--dom); }" in css

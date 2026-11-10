@@ -29,8 +29,11 @@ SOURCE_ORDER = ("dou", "djinni")  # the sources always wear the first two colour
 MARK = SERIES[0]  # one-series bars and lines
 # Each part of the product has its own colour, so a glance says where you are: vacancies are teal,
 # growth (profile, learning, practice) amber, the market lilac, the system terracotta.
-DOMAINS = {
-    "jobs": "#26A08F", "grow": "#B58A1F", "market": "#8481F5", "system": "#E5603B",
+DOMAINS = {  # a colour per part of the product
+    "jobs": "#26A08F",  # vacancies: teal
+    "grow": "#8481F5",  # learning: violet
+    "market": "#F0605A",  # analytics: red
+    "system": "#E2B93B",  # state of the system: yellow
 }  # fmt: skip
 MUTED_MARK = "#7A7A82"  # context marks next to an emphasised one (3:1 on the card)
 
@@ -54,13 +57,27 @@ _STYLE = """
 h1, h2, h3, h4 { font-family: var(--display) !important; }
 
 /* stepped (pixel) corners: the clip removes the four corner squares of the border */
-[data-testid="stMetric"], .dw-pill, .dw-card-box, .dw-facts-box,
-[data-testid="stVerticalBlockBorderWrapper"]:has(> div > [data-testid="stVerticalBlock"]) {
+[data-testid="stVerticalBlockBorderWrapper"] { border-radius: 0 !important; }
+[data-testid="stMetric"], .dw-pill, .dw-card-box, .dw-facts-box {
   border-radius: 0 !important;
   clip-path: polygon(0 4px, 4px 4px, 4px 0, calc(100% - 4px) 0, calc(100% - 4px) 4px,
     100% 4px, 100% calc(100% - 4px), calc(100% - 4px) calc(100% - 4px),
     calc(100% - 4px) 100%, 4px 100%, 4px calc(100% - 4px), 0 calc(100% - 4px));
 }
+
+/* no toolbar over tables and charts: full screen and the table's own search or download only get
+   in the way (there are explicit download buttons where a download makes sense) */
+[data-testid="stElementToolbar"], button[title*="ullscreen"] { display: none !important; }
+
+/* a ring (progress): a conic gradient, so there is no chart to draw */
+.dw-ring { position: relative; width: 6rem; height: 6rem; margin: var(--s2) auto var(--s2);
+  border-radius: 50%; display: grid; place-items: center;
+  background: conic-gradient(var(--dom, var(--accent)) calc(var(--p) * 1%), var(--line) 0); }
+.dw-ring::before { content: ""; position: absolute; inset: 0.9rem; border-radius: 50%;
+  background: var(--card); }
+.dw-ring b { position: relative; font-family: var(--display); font-size: var(--fs-md);
+  color: var(--ink); }
+.dw-ring-cap { text-align: center; font-size: var(--fs-xs); color: var(--ink-3); }
 
 /* sidebar */
 [data-testid="stSidebar"] { background: var(--card); border-right: 2px solid var(--line); }
@@ -170,19 +187,10 @@ button[kind], [data-testid="stDownloadButton"] button, [data-testid="stLinkButto
 
 _MOTION = """
 /* motion: things arrive in steps (pixel style), never glide; all of it stops for reduced motion */
-@keyframes dw-rise { from { opacity: 0; transform: translateY(6px); }
-  to { opacity: 1; transform: none; } }
-@keyframes dw-wipe { from { clip-path: inset(0 100% 0 0); } to { clip-path: inset(0 0 0 0); } }
-@keyframes dw-type { from { width: 0; } to { width: var(--chars); } }
 @keyframes dw-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
-[data-testid="stMetric"], .dw-stat, .dw-dir, .dw-vac, .dw-hero {
-  animation: dw-rise 0.4s steps(5) both; animation-delay: calc(var(--i, 0) * 50ms);
-}
-[data-testid="stVegaLiteChart"] { animation: dw-wipe 1.1s steps(28) both; }
-.dw-typed { display: inline-block; overflow: hidden; white-space: nowrap;
-  border-right: 2px solid var(--accent); width: var(--chars);
-  animation: dw-type 1.6s steps(var(--steps)) both, dw-caret 0.9s steps(1) 1.6s 3; }
-@keyframes dw-caret { 50% { border-right-color: transparent; } }
+/* nothing here plays on arrival: a rerun redraws the page after every click, and an entrance that
+   replays each time reads as lag; only a state (the frog, a running pulse) moves */
+.dw-typed { display: inline-block; }
 .dw-pulse span:last-child { animation: dw-pulse 1.6s steps(2) infinite; }
 .dw-dir, .dw-vac, [data-testid="stMetric"] { transition: transform 0.12s steps(2),
   border-color 0.12s steps(2); }
@@ -198,7 +206,6 @@ _MOTION = """
 .dw-lid { animation: dw-blink-lid 4.2s steps(1) infinite; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; }
-  .dw-typed { width: auto; border-right: 0; }
 }
 """
 
@@ -265,9 +272,7 @@ _BLOCKS = """
   line-height: 1.1; margin: 0.2rem 0; }
 .dw-dir-count small { font-size: var(--fs-sm); color: var(--ink-3); margin-left: 0.4rem; }
 .dw-meter { height: 8px; background: var(--line); margin: 0.4rem 0 0.7rem; }
-.dw-meter span { display: block; height: 100%; background: var(--accent);
-  animation: dw-grow 0.9s steps(16) both; }
-@keyframes dw-grow { from { width: 0; } }
+.dw-meter span { display: block; height: 100%; background: var(--accent); }
 .dw-dir { height: 12rem; overflow: hidden; }
 .dw-vac { height: 11rem; overflow: hidden; }
 .dw-vac-title { font-family: var(--display); font-size: var(--fs-lg); color: var(--ink);
@@ -339,6 +344,8 @@ _WORKSPACE = """
 [data-testid="stNavSectionHeader"]:empty { display: none; }
 [data-testid="stSidebarNavItems"] > div:nth-child(5) [data-testid="stNavSectionHeader"] {
   display: none; }
+/* the item has no heading to carry the colour of its group, so the item itself carries it */
+[data-testid="stSidebarNavItems"] > div:nth-child(5) a { border-left: 4px solid var(--dom); }
 [data-testid="stSidebarHeader"] { padding-top: 0.6rem; padding-bottom: 0.2rem; }
 [data-testid="stSidebarNav"] { padding-bottom: 0; }
 [data-testid="stSidebarUserContent"] { padding-bottom: 0 !important; }
@@ -387,8 +394,10 @@ _WORKSPACE = """
 .st-key-dw_avatar { position: relative; z-index: 5; background: var(--card);
   border-top: 2px solid var(--line); padding: var(--s2) 0 var(--s1); }
 @media (max-height: 780px) {
-  [data-testid="stSidebarNavLink"] { min-height: 1.6rem !important; }
-  [data-testid="stNavSectionHeader"] { margin-top: 0.1rem; }
+  [data-testid="stSidebarNavLink"] { min-height: 1.6rem !important;
+    border-left: 4px solid color-mix(in srgb, var(--dom, var(--line)) 55%, transparent); }
+  [data-testid="stNavSectionHeader"] { display: none; }
+  [data-testid="stSidebarNavItems"] > div { margin-top: var(--s2); }
 }
 /* the whole card opens the profile: the page link is stretched over it and left invisible */
 .st-key-dw_avatar { cursor: pointer; }
@@ -622,6 +631,16 @@ def medals(items: list[tuple[str, str, bool]]) -> str:
 def pet_free(svg: str) -> str:
     """The frog on its own (no text), centred in its column."""
     return f'<div class="dw-pet" style="justify-content:center">{svg}</div>'
+
+
+def ring(ratio: float, caption: str, domain: str) -> str:
+    """One value from 0 to 1 as a ring with the percent inside and a caption below it."""
+    percent = round(min(max(float(ratio), 0.0), 1.0) * 100)
+    return (
+        f'<div class="dw-ring{_domain(domain)}" role="img" style="--p:{percent}" '
+        f'aria-label="{escape(caption)}: {percent}%"><b>{percent}%</b></div>'
+        f'<div class="dw-ring-cap">{escape(caption)}</div>'
+    )
 
 
 def todo(kind: str, text: str, domain: str) -> str:

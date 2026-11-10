@@ -9,7 +9,7 @@
 - The **home page** answers "what to do today": up to three coloured actions, rings for the daily goal and
   readiness, the market as rings by source, level and direction beside the daily breakdown, four
   directions, three fresh vacancies and the state of the pipeline (DQ checks, SLOs, rows in silver).
-- Parts of the product have a colour (vacancies teal, growth amber, market violet, system orange) in the
+- Parts of the product have a colour (vacancies teal, learning violet, analytics red, system yellow) in the
   headings, markers and the menu.
 
 - The vacancy list is **paged** (15 a page) with few columns that fit without a sideways scroll; the
@@ -22,6 +22,12 @@
   the right** (the first one at once, a click on a row opens another). "Save the whole page" replaces
   ticking rows. "Стан і дані" is now **"Стан системи"** without a heading above it (the heading looked like
   a button that did nothing). The filter bar has more room, and its pills wrap.
+
+- **Lighter on a small machine**: entrance animations that replayed after every click are gone, the
+  `:has()` rule over all wrappers is gone, progress rings are CSS, home draws one chart of the market at a
+  time instead of three. The toolbar over tables and charts (full screen, search, download) is hidden
+  everywhere. On a short window the menu drops its headings (the group colour stays) so "Стан системи"
+  is never below the fold.
 
 ### Added (workspace)
 - **Undo** for every hand-made change of the profile: a bar with "Скасувати" (and `z` / `Ctrl Z`), the newest

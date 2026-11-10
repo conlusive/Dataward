@@ -208,14 +208,6 @@ def test_a_donut_keeps_the_order_of_the_parts_and_greys_the_folded_tail() -> Non
     assert spec["height"] == spec["width"]  # a ring is square, whatever the page width is
 
 
-def test_a_ring_clamps_the_value_to_a_valid_share() -> None:
-    for ratio, expected in ((-0.5, 0.0), (0.42, 0.42), (3.0, 1.0)):
-        spec = _spec(charts.ring(ratio, caption="Готовність"))
-        values = [row["value"] for row in next(iter(spec["datasets"].values()))]
-        assert values[0] == pytest.approx(expected)
-        assert sum(values) == pytest.approx(1.0)
-
-
 def test_the_activity_grid_is_one_cell_per_day_in_five_levels() -> None:
     frame = pd.DataFrame(
         {
