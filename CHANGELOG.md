@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+### Changed (public site)
+- Where the vacancy catalog is missing (the public export never has it: the listings belong to others),
+  the **public demo** says so plainly and names what it does have (market, skills, salaries, profile,
+  practice) instead of telling the visitor to run `make pipeline`. A local run still gets the build hint.
+
 ### Changed (workspace)
 - The **filters of the catalog moved out of the sidebar** into a bar above the list (search, direction,
   skills, level, source, and a "Ще фільтри" popover), so the menu no longer scrolls. The profile is the

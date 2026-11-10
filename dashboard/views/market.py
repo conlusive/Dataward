@@ -138,10 +138,7 @@ with vacancies_tab:
     if vacancies_tab.open:
         vacancies = ui.catalog()
         if vacancies is None:
-            st.info(
-                "Список вакансій береться з каталогу, а його в цьому експорті немає: він "
-                "локальний (`make pipeline`)."
-            )
+            ui.no_catalog("Список вакансій береться з каталогу.")
         else:
             demand, skill_table = ui.table("fct_skill_demand_monthly"), ui.table("dim_skill")
             st.caption(

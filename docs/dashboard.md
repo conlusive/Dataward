@@ -258,6 +258,9 @@ serverless platform such as Vercel). `render.yaml` is a Render Blueprint for the
   server refreshes it a minute after the first visit and every 6 hours. A failed download keeps the old
   files. `DASHBOARD_DATA_URL` is the archive URL (Render passes its env vars to the build as well);
   unset, nothing is fetched, and `scripts/dashboard-start.sh` fetches only if the image has no data.
+- **No catalog.** The catalog is other people's listings and is never in the public export, so the
+  catalog, "Для мене", the plan on "Навчання" and the vacancy list of "Ринок" show `ui.no_catalog`:
+  on the public demo (`DASHBOARD_PROFILE=session`) a plain note, locally the `make pipeline` hint.
 - **Start time.** A cold start on the free plan (a tenth of a CPU) is mostly Python importing. The
   packages belong to root and the server runs as `app`, which cannot write `.pyc` files, so the image
   compiles bytecode at build time (`UV_COMPILE_BYTECODE`, `compileall`); without it every start compiled
