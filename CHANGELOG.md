@@ -23,6 +23,10 @@
   ticking rows. "Стан і дані" is now **"Стан системи"** without a heading above it (the heading looked like
   a button that did nothing). The filter bar has more room, and its pills wrap.
 
+- **Faster cold start on the hosted site**: bytecode is compiled when the image is built (the server cannot
+  write `.pyc` files, so every start used to compile streamlit, pandas and altair again), the export of the
+  build is baked into the image instead of being downloaded at every start, and the file watcher is off.
+  The first refresh from the `data` branch comes a minute after the first visit.
 - **Public hosting on Render**: `render.yaml`, a start script that serves on `$PORT`, and a data path that
   needs no volume. The nightly workflow publishes the public export (no third-party listings) to the `data`
   branch from a job of its own; the container downloads it on start and every 6 hours

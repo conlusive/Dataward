@@ -132,8 +132,22 @@ def test_the_background_refresh_runs_again_after_its_interval(
     monkeypatch.setenv(sync.URL_ENV, url)
     target = tmp_path / "export"
 
-    thread = sync.keep_fresh(target, every=0.05)
+    thread = sync.keep_fresh(target, every=0.05, first_after=0.05)
 
     assert thread is not None and thread.daemon  # never keeps the server from stopping
     thread.join(timeout=0.5)
     assert (target / "dim_skill.parquet").exists()
+
+
+def test_the_first_background_refresh_waits_so_that_the_first_visitors_have_the_cpu(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    url = _archive(tmp_path, {**TABLES, "last_update.json": _manifest("dim_skill")})
+    monkeypatch.setenv(sync.URL_ENV, url)
+    target = tmp_path / "export"
+
+    thread = sync.keep_fresh(target, every=60, first_after=30)
+
+    assert thread is not None
+    thread.join(timeout=0.3)
+    assert not target.exists()  # nothing yet: the image's own copy is what the visitors read
