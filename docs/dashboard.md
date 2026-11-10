@@ -142,7 +142,8 @@ is shown as a tag too.
   table (`python -m jobmarket.dashboard_logo` rewrites `dashboard/static/`), and a test keeps the committed
   files equal to its output.
 - **Motion**: a page arrives **once, as a whole**. When the address changes, `dashboard_motion.py` hides
-  the page body (`html.dw-hold`), waits until the run has finished (nothing stale, no "running" widget;
+  the page body (`html.dw-go` is taken away; the stylesheet hides the body from the very first paint
+  too), waits until the run has finished (the app's own script state, nothing stale;
   at most 1.6 s, and the stylesheet frees the body after 2 s even if the script fails) and shows it with
   one 0.3 s fade, then switches `html.dw-enter` on for 2.8 s: the meters grow and the subtitle of the
   home page types itself. Nothing rises or is staggered per element, so the building of a page is never

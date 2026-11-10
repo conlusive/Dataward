@@ -2,10 +2,11 @@
 
 Streamlit streams a page element by element and keeps the old one on screen until the new script
 has run. Animating each element (rising, staggered) made that building visible and read as jumping.
-So the script below hides the page body when the address changes (``html.dw-hold``), waits until
-the run has finished (the app's own script state), then shows it with a single opacity fade and
-starts the small one-off animations (``html.dw-enter``: the typed line, the growing meters). A
-rerun on the same page changes nothing: no hold, no replay.
+The stylesheet therefore hides the page body from the start, until ``html.dw-go`` is set. This
+script takes ``dw-go`` away when the address changes, waits until the run has finished (the app's
+own script state), then sets it again: the body is shown with a single opacity fade and the small
+one-off animations start (``html.dw-enter``: the typed line, the growing meters). A rerun on the
+same page changes nothing: no hold, no replay.
 """
 
 import json
@@ -33,7 +34,7 @@ _SCRIPT: Final = """
   };
   const reveal = () => {
     clearInterval(poll);
-    root.classList.remove('dw-hold');
+    root.classList.add('dw-go');
     root.classList.add('dw-enter');
     clearTimeout(window.__dwEnter);
     window.__dwEnter = setTimeout(() => root.classList.remove('dw-enter'), cfg.ms);
@@ -53,7 +54,7 @@ _SCRIPT: Final = """
   const begin = () => {
     if (window.__dwPath === location.pathname) return;
     window.__dwPath = location.pathname;
-    if (!calm) root.classList.add('dw-hold');
+    if (!calm) root.classList.remove('dw-go');
     settle();
   };
   // Streamlit changes the address with pushState: catch it at once, before the new page arrives
@@ -68,7 +69,7 @@ _SCRIPT: Final = """
   }
   window.__dwNav = begin;
   begin();
-  if (root.classList.contains('dw-hold') && !poll) settle();  // a rerun in the middle of a hold
+  if (!root.classList.contains('dw-go') && !poll) settle();  // a rerun in the middle of a hold
   const watch = setInterval(begin, 200);  // back and forward buttons, links the wrapper missed
   window.__dwMotion = () => { clearInterval(poll); clearInterval(watch); window.__dwNav = null; };
 }

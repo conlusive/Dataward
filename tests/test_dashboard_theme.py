@@ -286,7 +286,9 @@ def test_nothing_moves_per_element_on_arrival() -> None:
 def test_a_held_page_shows_itself_even_if_the_script_never_releases_it() -> None:
     css = t.css()
 
-    assert re.search(r"html\.dw-hold [^{]*\{[^}]*opacity: 0;[^}]*dw-unhide 0s 2s forwards", css)
+    assert re.search(
+        r"html:not\(\.dw-go\) [^{]*\{[^}]*opacity: 0;[^}]*dw-unhide 0s 2s forwards", css
+    )
 
 
 def test_the_toolbar_of_tables_and_charts_is_hidden_everywhere() -> None:

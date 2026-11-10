@@ -188,18 +188,21 @@ button[kind], [data-testid="stDownloadButton"] button, [data-testid="stLinkButto
 _MOTION = """
 /* motion: all of it stops for reduced motion */
 @keyframes dw-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
-/* arrival: once, when a page opens (see dashboard_motion.py). The page body is hidden while the
-   page is built (html.dw-hold) and then shown with one fade (html.dw-enter): nothing rises or is
-   staggered, so the building of the page is never seen. The fade moves only opacity and the
-   meters only a transform, so the layout never shifts. A rerun after a click plays nothing. If
-   the script ever fails, the body shows itself after 2 s. */
+/* arrival: once, when a page opens (see dashboard_motion.py). The page body is hidden from the
+   start and until the page is built (no html.dw-go), then shown with one fade (html.dw-enter):
+   nothing rises or is staggered, so the building of the page is never seen. The fade moves only
+   opacity and the meters only a transform, so the layout never shifts. A rerun after a click plays
+   nothing. If the script ever fails, the body shows itself after 2 s. Under reduced motion the
+   body is never hidden. */
 @keyframes dw-fade { from { opacity: 0; } to { opacity: 1; } }
 @keyframes dw-unhide { to { opacity: 1; } }
 @keyframes dw-type { from { width: 0; } to { width: var(--chars); } }
 @keyframes dw-caret { 50% { border-right-color: transparent; } }
 @keyframes dw-grow { from { transform: scaleX(0); } }
-html.dw-hold [data-testid="stMainBlockContainer"] { opacity: 0;
-  animation: dw-unhide 0s 2s forwards; }
+@media (prefers-reduced-motion: no-preference) {
+  html:not(.dw-go) [data-testid="stMainBlockContainer"] { opacity: 0;
+    animation: dw-unhide 0s 2s forwards; }
+}
 html.dw-enter [data-testid="stMainBlockContainer"] { animation: dw-fade 0.3s ease-out both; }
 html.dw-enter .dw-meter span { transform-origin: left;
   animation: dw-grow 0.6s cubic-bezier(0.3, 0.6, 0.2, 1) 0.15s both; }
@@ -370,7 +373,8 @@ _WORKSPACE = """
 .st-key-dw_scripts { position: absolute; width: 0; height: 0; overflow: hidden; }
 
 .st-key-cat_rows, .st-key-mkt_rows { display: flex; flex-direction: column; gap: var(--s2); }
-.st-key-cat_rows button, .st-key-mkt_rows button { height: auto; min-height: 4.6rem;
+.st-key-cat_rows button, .st-key-mkt_rows button { height: 5.2rem; min-height: 5.2rem;
+  box-sizing: border-box;
   padding: var(--s2) var(--s3); justify-content: flex-start; align-items: flex-start;
   text-align: left; background: var(--card); border: 2px solid var(--line);
   border-left-width: 4px; border-radius: 0; }
@@ -378,12 +382,12 @@ _WORKSPACE = """
    them shrink to their text, which put each line at a different offset) */
 .st-key-cat_rows button div, .st-key-mkt_rows button div { width: 100%; min-width: 0;
   justify-content: flex-start; text-align: left; }
-/* the lines are separated by a newline in the label; one line each, cut with an ellipsis, so
-   every row has the same height. The title is bold text, not a block: a block followed by a
-   newline would leave an empty line under it */
+/* the lines are separated by a newline in the label; one line each, cut with an ellipsis. Every
+   row has the same fixed height, so a row with two lines and one with three line up. The title is
+   bold text, not a block: a block followed by a newline would leave an empty line under it */
 .st-key-cat_rows button p, .st-key-mkt_rows button p { margin: 0; width: 100%;
   white-space: pre; overflow: hidden; text-overflow: ellipsis; text-align: left;
-  font-size: var(--fs-sm); color: var(--ink-3); line-height: 1.5; }
+  font-size: var(--fs-sm); color: var(--ink-3); line-height: 1.4; }
 .st-key-cat_rows button p strong, .st-key-mkt_rows button p strong { color: var(--ink);
   font-size: var(--fs-md); }
 .st-key-cat_rows button p code, .st-key-mkt_rows button p code { background: none; padding: 0;
