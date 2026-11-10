@@ -372,17 +372,20 @@ _WORKSPACE = """
 .st-key-cat_rows, .st-key-mkt_rows { display: flex; flex-direction: column; gap: var(--s2); }
 .st-key-cat_rows button, .st-key-mkt_rows button { height: auto; min-height: 4.6rem;
   padding: var(--s2) var(--s3); justify-content: flex-start; align-items: flex-start;
-  text-align: left; white-space: pre-line; background: var(--card);
-  border: 2px solid var(--line); border-left-width: 4px; border-radius: 0; }
-.st-key-cat_rows button > div, .st-key-mkt_rows button > div,
-.st-key-cat_rows button p, .st-key-mkt_rows button p { min-width: 0; width: 100%;
-  text-align: left; margin: 0; }
-.st-key-cat_rows button p, .st-key-mkt_rows button p { font-size: var(--fs-sm);
-  color: var(--ink-3); line-height: 1.5; }
-/* the title keeps one line (an ellipsis, not a wrap), so every row has the same height */
+  text-align: left; background: var(--card); border: 2px solid var(--line);
+  border-left-width: 4px; border-radius: 0; }
+/* every box inside the button spans it and starts at the left (Streamlit centres them and lets
+   them shrink to their text, which put each line at a different offset) */
+.st-key-cat_rows button div, .st-key-mkt_rows button div { width: 100%; min-width: 0;
+  justify-content: flex-start; text-align: left; }
+/* the lines are separated by a newline in the label; one line each, cut with an ellipsis, so
+   every row has the same height. The title is bold text, not a block: a block followed by a
+   newline would leave an empty line under it */
+.st-key-cat_rows button p, .st-key-mkt_rows button p { margin: 0; width: 100%;
+  white-space: pre; overflow: hidden; text-overflow: ellipsis; text-align: left;
+  font-size: var(--fs-sm); color: var(--ink-3); line-height: 1.5; }
 .st-key-cat_rows button p strong, .st-key-mkt_rows button p strong { color: var(--ink);
-  font-size: var(--fs-md); display: block; overflow: hidden; text-overflow: ellipsis;
-  white-space: nowrap; }
+  font-size: var(--fs-md); }
 .st-key-cat_rows button p code, .st-key-mkt_rows button p code { background: none; padding: 0;
   color: var(--accent); font-family: inherit; font-size: var(--fs-sm); }
 .st-key-cat_rows button p em, .st-key-mkt_rows button p em { font-style: normal; }
