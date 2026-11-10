@@ -9,14 +9,75 @@ Every function takes a frame with the fixed column names it documents (the pages
 no field name carries a space or a dot that Vega would read as a path.
 """
 
-from typing import Any, Literal
+import functools
+import hashlib
+import threading
+from collections import OrderedDict
+from collections.abc import Callable
+from typing import Any, Literal, ParamSpec
 
 import altair as alt
 import pandas as pd
+from altair.utils.schemapi import debug_mode
 
 from jobmarket import dashboard_theme as t
 
 FONT = "JetBrains Mono, ui-monospace, Menlo, monospace"
+
+P = ParamSpec("P")
+CACHE_SIZE = 96  # the charts of the pages in use, not a store that grows
+_built: OrderedDict[str, Any] = OrderedDict()
+_lock = threading.Lock()  # guards the cache
+_build_lock = threading.Lock()  # Altair's debug_mode is a global: one build at a time
+
+
+def _fingerprint(name: str, args: tuple[Any, ...], kwargs: dict[str, Any]) -> str:
+    """A key for "this chart, from this data, with these options".
+
+    A frame is hashed by its content (columns, types and every cell), so new data in the nightly
+    export gives a new key and the old chart is simply never asked for again. Raises for cells that
+    cannot be hashed (a list in a cell): the caller then builds without the cache.
+    """
+    digest = hashlib.blake2b(name.encode(), digest_size=16)
+    for value in (*args, *(item for pair in sorted(kwargs.items()) for item in pair)):
+        if isinstance(value, pd.DataFrame):
+            digest.update(repr((list(value.columns), [str(d) for d in value.dtypes])).encode())
+            digest.update(pd.util.hash_pandas_object(value, index=True).to_numpy().tobytes())
+        else:
+            digest.update(repr(value).encode())
+        digest.update(b"\x00")
+    return digest.hexdigest()
+
+
+def memoized(build: Callable[P, Any]) -> Callable[P, Any]:
+    """Build a chart once per set of arguments, and share it between pages and visitors.
+
+    Altair's construction and validation are the larger part of a page's run (60 to 85 %), and a
+    chart is a function of its data, which changes once a day. Altair charts are not changed by
+    their methods (each returns a copy), so handing out the same object is safe. Construction
+    skips Altair's per-call validation: Streamlit validates the spec once more when it draws it.
+    """
+
+    @functools.wraps(build)
+    def wrapper(*args: P.args, **kwargs: P.kwargs) -> Any:
+        try:
+            key = _fingerprint(build.__name__, args, kwargs)
+        except (TypeError, ValueError):
+            with _build_lock, debug_mode(False):
+                return build(*args, **kwargs)
+        with _lock:
+            if key in _built:
+                _built.move_to_end(key)
+                return _built[key]
+        with _build_lock, debug_mode(False):
+            chart = build(*args, **kwargs)
+        with _lock:
+            _built[key] = chart
+            while len(_built) > CACHE_SIZE:
+                _built.popitem(last=False)
+        return chart
+
+    return wrapper
 
 
 OTHER = "Інші"  # the folded tail of a breakdown; always the grey mark, never one of the four
@@ -103,6 +164,7 @@ def _date(frame: pd.DataFrame, column: str) -> pd.DataFrame:
     return out
 
 
+@memoized
 def lines(wide: pd.DataFrame, *, height: int = 300) -> Any:
     """A line per series over days. ``wide`` is indexed by date, one column per series.
 
@@ -157,6 +219,7 @@ def lines(wide: pd.DataFrame, *, height: int = 300) -> Any:
     return _finish(alt.layer(line, dots, picker, rule), height)
 
 
+@memoized
 def ranked_bars(
     frame: pd.DataFrame, *, fmt: str = ",d", unit: str = "", height: int | None = None,
     emphasis: str | None = None,
@@ -200,6 +263,7 @@ def ranked_bars(
     return _finish(alt.layer(bars, labels), height or rows * (size + 12) + 8)
 
 
+@memoized
 def grouped_columns(
     frame: pd.DataFrame, *, height: int = 260, order: list[str] | None = None
 ) -> Any:
@@ -228,6 +292,7 @@ def grouped_columns(
     return _finish(bars, height)
 
 
+@memoized
 def ranges(frame: pd.DataFrame, *, unit: str = "USD/міс", height: int | None = None) -> Any:
     """A range per row with a dot on the middle value: ``label``, ``low``, ``mid``, ``high``.
 
@@ -263,6 +328,7 @@ def ranges(frame: pd.DataFrame, *, unit: str = "USD/міс", height: int | None 
     return _finish(alt.layer(span, dot), height or rows * 34 + 50)
 
 
+@memoized
 def share_trend(frame: pd.DataFrame, *, height: int = 240) -> Any:
     """One series over months, a faint wash under the line: ``month``, ``value`` (0-1)."""
     data = _date(frame, "month")
@@ -295,6 +361,7 @@ def share_trend(frame: pd.DataFrame, *, height: int = 240) -> Any:
     return _finish(alt.layer(area, line, dots), height)
 
 
+@memoized
 def survey_band(frame: pd.DataFrame, *, height: int = 260) -> Any:
     """Median by year with the p25-p75 band. Columns: ``year``, ``low``, ``mid``, ``high``."""
     base = alt.Chart(frame).encode(
@@ -321,6 +388,7 @@ def survey_band(frame: pd.DataFrame, *, height: int = 260) -> Any:
     return _finish(alt.layer(band, line, dots), height)
 
 
+@memoized
 def stacked_bars(
     frame: pd.DataFrame,
     *,
@@ -369,6 +437,7 @@ HEAT = ("#3B3B3F", "#4D4B8C", "#6562C4", "#8481F5", "#B8B6FF")  # no answers, th
 _WEEKDAY_LABELS = "['Пн','Вт','Ср','Чт','Пт','Сб','Нд']"
 
 
+@memoized
 def donut(frame: pd.DataFrame, *, unit: str = "Вакансій", size: int = 190) -> Any:
     """A ring split into parts, the total in the middle. Columns: ``label``, ``value``.
 
@@ -408,6 +477,7 @@ def donut(frame: pd.DataFrame, *, unit: str = "Вакансій", size: int = 19
     return _finish(alt.layer(arcs, middle), size, size)
 
 
+@memoized
 def activity_grid(frame: pd.DataFrame, *, cell: int = 15) -> Any:
     """A week-by-weekday grid of answers per day. Columns: ``date``, ``week``, ``weekday``,
     ``count``, ``level`` (what ``dashboard_data.activity_grid`` returns). Square cells, one hue.
