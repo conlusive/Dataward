@@ -256,9 +256,13 @@ _BLOCKS = """
 [data-testid="stNavSectionHeader"] { pointer-events: none; cursor: default; }
 [data-testid="stNavSectionHeader"] [data-testid="stIconMaterial"] { display: none; }
 
-/* the sidebar is part of the layout, not a drawer: it cannot be collapsed */
-[data-testid="stSidebarCollapseButton"], [data-testid="stSidebarCollapsedControl"],
-[data-testid="stExpandSidebarButton"], button[kind="headerNoPadding"] { display: none !important; }
+/* on a desktop the sidebar is part of the layout, not a drawer: it cannot be collapsed. On a
+   phone it is a drawer (closed at the start, see dashboard_mobile.py), so its buttons stay */
+@media (min-width: 769px) {
+  [data-testid="stSidebarCollapseButton"], [data-testid="stSidebarCollapsedControl"],
+  [data-testid="stExpandSidebarButton"], button[kind="headerNoPadding"] {
+    display: none !important; }
+}
 
 /* a rerun must not dim the page: the old content stays, then is replaced in place */
 [data-stale="true"] { opacity: 1 !important; transition: none !important; }
@@ -325,6 +329,67 @@ button[kind="pills"], button[kind="pillsActive"],
   text-transform: uppercase; color: var(--ink-2); margin-bottom: 0.3rem; }
 .dw-badge { display: inline-block; min-width: 1.3rem; padding: 0 0.35rem; margin-left: 0.5rem;
   background: var(--accent); color: #1B1B1D; text-align: center; font-size: var(--fs-xs); }
+"""
+
+_PHONE = """
+/* a phone: Streamlit puts every column on its own row below 640 px, and sets the sidebar as a
+   drawer below 768 px (see dashboard_mobile.py). The rules here only change what is too big or too
+   long for a narrow screen. Last in the stylesheet, so that they win over the desktop ones. */
+@media (max-width: 640px) {
+  .block-container { padding-top: 3.2rem; padding-bottom: 3rem; }
+
+  /* figures in pairs, not one tall tile under another */
+  [data-testid="stHorizontalBlock"]:has(> [data-testid="stColumn"] [data-testid="stMetric"])
+    > [data-testid="stColumn"] { min-width: calc(50% - 8px) !important;
+    flex: 1 1 calc(50% - 8px) !important; }
+  [data-testid="stMetric"] { min-height: 6.5rem; padding: var(--s3); }
+  [data-testid="stMetricLabel"] *, [data-testid="stMetricDelta"] * { white-space: normal !important;
+    overflow: visible !important; text-overflow: clip !important; }
+  [data-testid="stPills"], [data-testid="stPills"] > div { flex-wrap: wrap !important;
+    overflow: visible !important; }
+
+  /* the filter bar: search and the buttons on a row of their own, the two lists and the source
+     with the reset side by side, the pills wrap instead of scrolling sideways */
+  .st-key-cat_filters { padding: var(--s3); }
+  .st-key-cat_filters [data-testid="stHorizontalBlock"] { gap: var(--s3); }
+  .st-key-cat_filters [data-testid="stColumn"] { min-width: calc(100% - 8px) !important; }
+  .st-key-cat_filters [data-testid="stColumn"]:nth-child(2):nth-last-child(3),
+  .st-key-cat_filters [data-testid="stColumn"]:nth-child(3):nth-last-child(2),
+  .st-key-cat_filters [data-testid="stColumn"]:nth-child(2):nth-last-child(2),
+  .st-key-cat_filters [data-testid="stColumn"]:nth-child(3):nth-last-child(1) {
+    min-width: calc(50% - 8px) !important; }
+
+  /* the sort on a row, the pager (two arrows and the count) on the next one */
+  .st-key-cat_bar [data-testid="stColumn"], .st-key-mkt_bar [data-testid="stColumn"] {
+    min-width: 0 !important; flex: 1 1 0 !important; }
+  .st-key-cat_bar [data-testid="stColumn"]:first-child,
+  .st-key-mkt_bar [data-testid="stColumn"]:first-child { min-width: 100% !important; }
+  .st-key-cat_bar [data-testid="stColumn"]:last-child,
+  .st-key-mkt_bar [data-testid="stColumn"]:last-child { flex-grow: 2 !important; }
+
+  /* the card of a tapped vacancy (its "back" button has the key *_close_open) covers the screen;
+     a card nobody has tapped is hidden: below the list it would be a page away */
+  .st-key-cat_detail, .st-key-mkt_detail { display: none; }
+  .st-key-cat_detail:has(.st-key-cat_close_open), .st-key-mkt_detail:has(.st-key-mkt_close_open) {
+    display: flex; position: fixed; inset: 0; z-index: 1000000; overflow-y: auto;
+    border-radius: 0; background: var(--bg); padding: var(--s3); box-sizing: border-box; }
+  .st-key-cat_close_open, .st-key-mkt_close_open { display: block; position: sticky; top: 0;
+    z-index: 2; background: var(--bg); padding-bottom: var(--s2); }
+}
+
+/* touch: a finger needs a target of about 44 px */
+@media (pointer: coarse) {
+  button[kind], [data-testid="stDownloadButton"] button, [data-testid="stLinkButton"] a,
+  [data-baseweb="select"] > div, [data-baseweb="base-input"] { min-height: 2.75rem; }
+  [data-testid="stSidebarNavLink"] { min-height: 2.75rem !important; }
+}
+
+/* the drawer is as tall as the visible screen (100vh is taller than it on a phone) and keeps its
+   headings: it can scroll, unlike the sidebar of a short desktop window */
+@media (max-width: 768px) {
+  [data-testid="stSidebarContent"] { height: 100dvh; }
+  [data-testid="stNavSectionHeader"] { display: flex; }
+}
 """
 
 _WORKSPACE = """
@@ -395,6 +460,8 @@ _WORKSPACE = """
 .st-key-cat_rows button[kind="primary"], .st-key-mkt_rows button[kind="primary"] {
   background: rgba(170, 168, 255, 0.14); border-color: var(--accent); }
 .st-key-cat_detail, .st-key-mkt_detail { position: sticky; top: 3.5rem; }
+.st-key-cat_close, .st-key-mkt_close, .st-key-cat_close_open, .st-key-mkt_close_open {
+  display: none; }
 .st-key-dw_undo { border: 2px solid var(--accent); background: rgba(170, 168, 255, 0.10);
   padding: var(--s2) var(--s3); margin-bottom: var(--s3); }
 .dw-undo { font-size: var(--fs-sm); color: var(--ink); }
@@ -487,7 +554,7 @@ def css() -> str:
         f" --s6: 2rem; --d-jobs: {DOMAINS['jobs']}; --d-grow: {DOMAINS['grow']};"
         f" --d-market: {DOMAINS['market']}; --d-system: {DOMAINS['system']}; }}"
     )
-    return f"<style>{variables}{_STYLE}{_MOTION}{_BLOCKS}{_WORKSPACE}</style>"
+    return f"<style>{variables}{_STYLE}{_MOTION}{_BLOCKS}{_WORKSPACE}{_PHONE}</style>"
 
 
 def pill(text: str, tone: str = "neutral") -> str:

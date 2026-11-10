@@ -153,6 +153,12 @@ is shown as a tag too.
 - **Tabs build only the open one** (the page "Навички"): `st.tabs(..., on_change="rerun")` and
   `if tab.open:`, so a hidden table or graph is never drawn. Their widgets keep their values through
   `ui.keep(...)`, because Streamlit forgets a widget it did not draw.
+- **A phone** (`_PHONE` in the theme, `dashboard_mobile.py`): Streamlit shows the sidebar as a drawer below
+  768 px and stacks columns below 640 px; the stylesheet only adjusts what is too big. The drawer is closed
+  by a small script once per page load and its buttons are hidden only above 768 px. Figures go two to a
+  row, the filter bar of the catalog is two columns wide, the pills wrap. On the list of vacancies a tapped
+  row gives its "back" button the key `*_close_open`, and the stylesheet lays the card (`:has()` on that
+  key, phone only) over the screen; the card itself keeps its key, so a click does not mount it anew.
 - **Colour by part of the product**: vacancies teal, learning (Розвиток) violet, analytics red, the state of
   the system yellow; they colour the heading marks, the menu bars and the actions (`DOMAINS` in the theme;
   a test keeps the hues). These are not the chart series colours.

@@ -14,6 +14,7 @@ from jobmarket import dashboard_data as dd
 from jobmarket import dashboard_interview as iv
 from jobmarket import dashboard_keys as dk
 from jobmarket import dashboard_mascot as mascot
+from jobmarket import dashboard_mobile as dmo
 from jobmarket import dashboard_motion as dm
 from jobmarket import dashboard_profile as pr
 from jobmarket import dashboard_progress as pg
@@ -216,10 +217,11 @@ def avatar_card() -> None:
 
 
 def scripts() -> None:
-    """Install the keyboard shortcuts and the page-enter motion; the elements show nothing."""
+    """Install the shortcuts, the page-enter motion and the phone drawer; they show nothing."""
     with st.container(key="dw_scripts"):
         st.html(dk.script(), unsafe_allow_javascript=True)
         st.html(dm.script(), unsafe_allow_javascript=True)
+        st.html(dmo.script(), unsafe_allow_javascript=True)
 
 
 def go_practice(skill: str) -> None:
@@ -424,6 +426,11 @@ def _open(key: str, vacancy_id: str) -> None:
     st.session_state[f"{key}_shown"] = vacancy_id
 
 
+def _close(key: str) -> None:
+    """The "back to the list" button of the card on a phone: forget the tapped vacancy."""
+    st.session_state.pop(f"{key}_shown", None)
+
+
 def _plain(text: object) -> str:
     """Text for a button label, which is markdown: a title with `*`, `_` or `$` stays as typed."""
     return re.sub(r"([\\`*_\[\]$~<>])", r"\\\1", str(text))
@@ -466,8 +473,9 @@ def vacancy_list(
 
     @st.fragment
     def view() -> None:
-        sorting, back, forward, where = st.columns([4, 1, 1, 3], vertical_alignment="bottom")
-        sort = sorting.selectbox("Сортування", list(dd.SORTS), key=f"{key}_sort")
+        with st.container(key=f"{key}_bar"):  # on a phone: the sort on one row, the pager below
+            sorting, back, forward, where = st.columns([4, 1, 1, 3], vertical_alignment="bottom")
+            sort = sorting.selectbox("Сортування", list(dd.SORTS), key=f"{key}_sort")
         ordered = dd.sort_catalog(frame, sort).reset_index(drop=True)
         signature = (sort, len(ordered), str(ordered.iloc[0]["vacancy_id"]))
         if st.session_state.get(f"{key}_sig") != signature:  # other filters or order: page one
@@ -509,7 +517,18 @@ def vacancy_list(
                     type="primary" if vacancy_id == opened else "secondary",
                     on_click=_open, args=(key, vacancy_id), width="stretch",
                 )  # fmt: skip
+        # a tapped row changes the key of the "back" button, and only of it: on a phone the
+        # stylesheet then lays the card over the whole screen (below the list it would be a page
+        # away). The card itself keeps its key, so a click does not mount it anew
+        tapped = f"{key}_shown" in st.session_state
         with detail, st.container(border=True, key=f"{key}_detail"):
+            st.button(
+                "← До списку",
+                key=f"{key}_close{'_open' if tapped else ''}",
+                on_click=_close,
+                args=(key,),
+                width="stretch",
+            )  # fmt: skip  (shown on a phone only)
             row = shown.iloc[ids.index(opened)]
             vacancy_card(row, profile=profile)
             analysis_block(row, dd.vacancy_analysis(row, catalog, shares), mine)

@@ -985,6 +985,19 @@ def test_a_click_on_a_row_opens_that_vacancy_and_lights_the_row(with_catalog: Pa
     assert _row(app, _titles(app)[0]).proto.type == "secondary"
 
 
+def test_the_way_back_to_the_list_forgets_the_tapped_vacancy(with_catalog: Path) -> None:
+    app = _run("catalog")
+    other = _titles(app)[2]
+    _row(app, other).click().run()
+    assert _opened(app) == other
+
+    assert not any(b.key == "cat_close" for b in app.button)  # the tapped card has its own
+    next(b for b in app.button if b.key == "cat_close_open").click().run()
+
+    assert not app.exception and "cat_shown" not in app.session_state
+    assert _opened(app) == _titles(app)[0]  # the first one is open again, as at the start
+
+
 def test_a_row_says_the_company_pay_and_fit_under_the_title(with_catalog: Path) -> None:
     _saved_profile(skills={"Python": "know"})
     app = _run("catalog")

@@ -23,6 +23,11 @@
   ticking rows. "Стан і дані" is now **"Стан системи"** without a heading above it (the heading looked like
   a button that did nothing). The filter bar has more room, and its pills wrap.
 
+- **A phone**: the menu is a drawer that starts closed (the buttons that hide it are now only hidden on a
+  desktop; before, an open menu covered the page and could not be closed). Figures sit in pairs, the
+  catalog filter bar is about half as tall, the pills wrap, the sort and the pager share two rows. A
+  tapped vacancy opens as a full-screen card with a "← До списку" button (below the list it was a page
+  away). Targets are at least 44 px on a touch screen.
 - **Smoother page changes**: the old per-element arrival (figures rising one after another, charts
   wiped in) showed the page being built and read as jumping. Now the page body is hidden while it is
   built and shown at once, with no fade (no `html.dw-go`, then `html.dw-enter`); meters and the typed
