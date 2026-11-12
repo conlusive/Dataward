@@ -14,13 +14,14 @@ import yaml
 from loguru import logger
 
 from jobmarket.bronze import BronzeStore
-from jobmarket.config import Settings
+from jobmarket.config import FRESH_LIST_PAGES, Settings
 from jobmarket.dq import LAYERS, run_checks
 from jobmarket.export import EXPORT_DIR, PUBLIC_DIR, ExportError, export_gold, publish_copy
 from jobmarket.flow import (
     StepResult,
     backfill_steps,
     daily_steps,
+    fresh_steps,
     run_flow,
     run_url_from_env,
     summarize,
@@ -79,6 +80,11 @@ def _build_parser() -> argparse.ArgumentParser:
     scrape.add_argument(
         "--max-pages", type=int, default=None, help="cap listing pages per category (for testing)"
     )
+    scrape.add_argument(
+        "--fresh",
+        action="store_true",
+        help="the hourly run: read the first listing pages again, fetch only vacancies not stored",
+    )
     train_cmd = commands.add_parser(
         "train-salary", help="train the salary model on the exported survey rows (needs --group ml)"
     )
@@ -106,7 +112,7 @@ def _build_parser() -> argparse.ArgumentParser:
     flow_cmd = commands.add_parser(
         "flow", help="run a whole flow (steps, retries, timeouts, ops rows): daily or backfill"
     )
-    flow_cmd.add_argument("name", choices=["daily", "backfill"])
+    flow_cmd.add_argument("name", choices=["daily", "fresh", "backfill"])
     flow_cmd.add_argument("--run-date", type=date.fromisoformat, default=None)
     flow_cmd.add_argument("--from", dest="start", type=date.fromisoformat, default=None)
     flow_cmd.add_argument("--to", dest="end", type=date.fromisoformat, default=None)
@@ -318,6 +324,8 @@ def _flow(args: argparse.Namespace) -> int:
             logger.error("flow backfill needs --from and --to, with --from not after --to")
             return 2
         steps = backfill_steps(args.start, args.end)
+    elif args.name == "fresh":
+        steps = fresh_steps()
     else:
         steps = daily_steps()
     only = args.only.split(",") if args.only else None
@@ -535,10 +543,18 @@ async def _fetch_rates() -> int:
 
 
 async def _scrape(
-    sources: Sequence[str], run_date: date, refetch: bool, max_pages: int | None
+    sources: Sequence[str],
+    run_date: date,
+    refetch: bool,
+    max_pages: int | None,
+    fresh: bool = False,
 ) -> int:
     settings = Settings.from_env()
-    if max_pages is not None:
+    if fresh:  # new vacancies are at the top of a listing: a couple of pages, read again
+        settings = replace(
+            settings, refresh_listings=True, max_list_pages=max_pages or FRESH_LIST_PAGES
+        )
+    elif max_pages is not None:
         settings = replace(settings, max_list_pages=max_pages)
     ops = OpsStore(settings.duckdb_path)
     exit_code = 0
@@ -603,7 +619,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             missing=args.missing,
         )
     sources = DAILY_SOURCES if args.source == "all" else (args.source,)
-    return asyncio.run(_scrape(sources, run_date, args.refetch, args.max_pages))
+    return asyncio.run(_scrape(sources, run_date, args.refetch, args.max_pages, args.fresh))
 
 
 if __name__ == "__main__":

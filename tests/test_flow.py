@@ -13,6 +13,7 @@ from jobmarket.flow import (
     StepResult,
     backfill_steps,
     daily_steps,
+    fresh_steps,
     run_flow,
     subprocess_runner,
     summarize,
@@ -247,3 +248,21 @@ def test_a_failed_delivery_does_not_raise_and_does_not_log_the_token(
 
     assert delivered is False
     assert lines and "secret" not in "".join(lines)
+
+
+def test_the_hourly_flow_scrapes_only_what_is_new_and_parses_today_again() -> None:
+    steps = {step.name: step for step in fresh_steps()}
+
+    assert list(steps) == ["scrape", "parse", "dq_silver", "dbt", "dq_gold", "export"]
+    assert steps["scrape"].command == ("make", "scrape-fresh")
+    assert steps["parse"].command == ("make", "parse-today")  # --missing would skip a done day
+    assert steps["export"].needs == ("dq_gold",)  # bad data still never reaches the export
+    assert steps["scrape"].timeout_s < daily_steps()[0].timeout_s  # a light run, a short leash
+
+
+def test_the_make_targets_of_the_hourly_flow_exist_and_pass_the_fresh_flag() -> None:
+    makefile = Path("Makefile").read_text(encoding="utf-8")
+
+    assert "scrape-fresh:\n\tuv run jobmarket scrape all --fresh" in makefile
+    assert "parse-today:\n\tuv run jobmarket parse all $(if" in makefile  # today, not --missing
+    assert "pipeline-fresh:\n\tuv run jobmarket flow fresh" in makefile

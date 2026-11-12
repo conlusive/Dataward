@@ -8,6 +8,14 @@
   part of the product. The prompt, brackets, cursor, stepped corners and capitals are gone. New chart
   colours passed the palette validator on the white card; text colours clear 4.5:1 (tested). A calm
   wordmark replaces the pixel logo in the menu.
+### Added (hourly updates)
+- **New vacancies every hour.** `jobmarket flow fresh` (`make pipeline-fresh`) reads the first two listing
+  pages of every category again and fetches only vacancy pages not stored yet, then parses today, builds
+  gold and exports. The nightly full sweep stays (closures need it: a vacancy closes after two days without
+  a sighting, so an hourly run can never close one). `pipeline-daily.yml` runs it at minute 17 of every hour.
+- The public site refreshes its data every 20 minutes, and **at a start fetches data older than two hours
+  before serving**, so a host that slept or an old image no longer shows stale data for the first minute.
+- An optional `deploy` job asks Render to deploy after a green merge (secret `RENDER_DEPLOY_HOOK_URL`).
 
 ### Changed (the public site)
 - The **vacancy catalog is public**: `fct_vacancy_catalog` is no longer `meta.private`, so the nightly

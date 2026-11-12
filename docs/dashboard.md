@@ -251,7 +251,7 @@ serverless platform such as Vercel). `render.yaml` is a Render Blueprint for the
   listings, to the `data` branch. `jobmarket.dashboard_sync` downloads that branch as an archive and
   writes only the files the archive's own `last_update.json` names (plus `status.json`). It runs at
   build time, so the image holds the export of its build and a start needs no download; a running
-  server refreshes it a minute after the first visit and every 6 hours. A failed download keeps the old
+  server refreshes it a minute after the first visit and every 20 minutes; at a start, data older than two hours is fetched before serving (a host that slept, an old image). A failed download keeps the old
   files. `DASHBOARD_DATA_URL` is the archive URL (Render passes its env vars to the build as well);
   unset, nothing is fetched, and `scripts/dashboard-start.sh` fetches only if the image has no data.
 - **The public copy shows the market and the vacancies, not a person.** On Render

@@ -7,6 +7,9 @@ from pathlib import Path
 DEFAULT_USER_AGENT = "jobmarket-research-bot (+https://github.com/conlusive/Dataward)"
 
 
+FRESH_LIST_PAGES = 2  # listing pages per category that an hourly run reads again
+
+
 @dataclass(frozen=True)
 class Settings:
     bronze_dir: Path = Path("data/bronze")
@@ -23,6 +26,9 @@ class Settings:
     detail_refresh_days: int = 7
     # Cap on listing pages per category/keyword; None means follow pagination to the end.
     max_list_pages: int | None = None
+    # The hourly "fresh" run: download listing pages again even when today's copy is in bronze (new
+    # vacancies appear at the top of a listing), while vacancy pages already stored stay skipped.
+    refresh_listings: bool = False
 
     @classmethod
     def from_env(cls) -> "Settings":
