@@ -1,0 +1,788 @@
+{
+  "dq_latest": [
+    {
+      "check": "gold_built",
+      "detail": "fct_skill_demand_monthly has 921 rows",
+      "layer": "gold",
+      "observed": 921.0,
+      "status": "pass"
+    },
+    {
+      "check": "description_length_drift",
+      "detail": "mean description 2970 characters (newest) vs 2852 (earlier)",
+      "layer": "silver",
+      "observed": 0.04135172766522814,
+      "status": "pass"
+    },
+    {
+      "check": "empty_key_fields",
+      "detail": "0 vacancies with an empty id, url, title or company",
+      "layer": "silver",
+      "observed": 0.0,
+      "status": "pass"
+    },
+    {
+      "check": "fresh_data",
+      "detail": "newest page fetched 0.0 h ago (2026-11-12 22:39 UTC)",
+      "layer": "silver",
+      "observed": 0.019131306944444443,
+      "status": "pass"
+    },
+    {
+      "check": "listing_volume",
+      "detail": "7007 vacancies listed on 2026-11-12; the days before: median 6742",
+      "layer": "silver",
+      "observed": 1.0393058439632157,
+      "status": "pass"
+    },
+    {
+      "check": "parse_failures",
+      "detail": "1 of 1273 pages did not match the parser in the last parse runs",
+      "layer": "silver",
+      "observed": 0.0007855459544383347,
+      "status": "pass"
+    },
+    {
+      "check": "references",
+      "detail": "no orphan rows",
+      "layer": "silver",
+      "observed": 0.0,
+      "status": "pass"
+    },
+    {
+      "check": "salary_in_range",
+      "detail": "5 of 952 salaries outside 100-30000 USD",
+      "layer": "silver",
+      "observed": 0.005252100840336135,
+      "status": "pass"
+    },
+    {
+      "check": "salary_parse_rate",
+      "detail": "too few salary strings to compare",
+      "layer": "silver",
+      "observed": null,
+      "status": "skipped"
+    },
+    {
+      "check": "salary_share_drift",
+      "detail": "8% of the newest vacancies state a salary, 12% of the earlier",
+      "layer": "silver",
+      "observed": 0.04427203077974917,
+      "status": "pass"
+    },
+    {
+      "check": "schema_contract",
+      "detail": "silver tables match contracts/silver.yml",
+      "layer": "silver",
+      "observed": 0.0,
+      "status": "pass"
+    },
+    {
+      "check": "sightings_have_pages",
+      "detail": "0 of 7007 vacancies listed on the latest day have no parsed page",
+      "layer": "silver",
+      "observed": 0.0,
+      "status": "pass"
+    },
+    {
+      "check": "vacancies_without_skills",
+      "detail": "739 of 8116 vacancies have no skill",
+      "layer": "silver",
+      "observed": 0.09105470675209462,
+      "status": "pass"
+    }
+  ],
+  "generated_at": "2026-11-12T22:40:46Z",
+  "runs": [
+    {
+      "duration_s": 204,
+      "failed_steps": null,
+      "flow": "fresh",
+      "run_date": "2026-11-12",
+      "run_id": "flow-fresh-2026-11-12-1",
+      "run_url": "https://github.com/conlusive/Dataward/actions/runs/43321549567",
+      "started_at": "2026-11-12T22:37:22",
+      "status": "success",
+      "trigger": "manual"
+    },
+    {
+      "duration_s": 1165,
+      "failed_steps": null,
+      "flow": "daily",
+      "run_date": "2026-11-12",
+      "run_id": "flow-daily-2026-11-12-1",
+      "run_url": "https://github.com/conlusive/Dataward/actions/runs/43216820118",
+      "started_at": "2026-11-12T12:19:37",
+      "status": "success",
+      "trigger": "cron"
+    },
+    {
+      "duration_s": 1136,
+      "failed_steps": null,
+      "flow": "daily",
+      "run_date": "2026-11-11",
+      "run_id": "flow-daily-2026-11-11-1",
+      "run_url": "https://github.com/conlusive/Dataward/actions/runs/43014262424",
+      "started_at": "2026-11-11T11:43:30",
+      "status": "success",
+      "trigger": "cron"
+    },
+    {
+      "duration_s": 1177,
+      "failed_steps": null,
+      "flow": "daily",
+      "run_date": "2026-11-10",
+      "run_id": "flow-daily-2026-11-10-1",
+      "run_url": "https://github.com/conlusive/Dataward/actions/runs/42814410699",
+      "started_at": "2026-11-10T12:17:10",
+      "status": "success",
+      "trigger": "cron"
+    },
+    {
+      "duration_s": 86,
+      "failed_steps": null,
+      "flow": "daily",
+      "run_date": "2026-11-09",
+      "run_id": "flow-daily-2026-11-09-2",
+      "run_url": "https://github.com/conlusive/Dataward/actions/runs/42618605291",
+      "started_at": "2026-11-09T12:37:59",
+      "status": "success",
+      "trigger": "cron"
+    },
+    {
+      "duration_s": 821,
+      "failed_steps": null,
+      "flow": "daily",
+      "run_date": "2026-11-09",
+      "run_id": "flow-daily-2026-11-09-1",
+      "run_url": "https://github.com/conlusive/Dataward/actions/runs/42543748915",
+      "started_at": "2026-11-09T01:06:38",
+      "status": "success",
+      "trigger": "manual"
+    }
+  ],
+  "scrape": [
+    {
+      "errors": 0,
+      "http_403": 0,
+      "http_429": 0,
+      "pages": 805,
+      "run_date": "2026-11-12",
+      "source": "djinni"
+    },
+    {
+      "errors": 0,
+      "http_403": 0,
+      "http_429": 0,
+      "pages": 160,
+      "run_date": "2026-11-12",
+      "source": "dou"
+    },
+    {
+      "errors": 0,
+      "http_403": 0,
+      "http_429": 0,
+      "pages": 35,
+      "run_date": "2026-11-12",
+      "source": "dou_salaries"
+    },
+    {
+      "errors": 0,
+      "http_403": 0,
+      "http_429": 0,
+      "pages": 2,
+      "run_date": "2026-11-12",
+      "source": "nbu_rates"
+    },
+    {
+      "errors": 0,
+      "http_403": 0,
+      "http_429": 0,
+      "pages": 779,
+      "run_date": "2026-11-11",
+      "source": "djinni"
+    },
+    {
+      "errors": 0,
+      "http_403": 0,
+      "http_429": 0,
+      "pages": 103,
+      "run_date": "2026-11-11",
+      "source": "dou"
+    },
+    {
+      "errors": 0,
+      "http_403": 0,
+      "http_429": 0,
+      "pages": 35,
+      "run_date": "2026-11-11",
+      "source": "dou_salaries"
+    },
+    {
+      "errors": 0,
+      "http_403": 0,
+      "http_429": 0,
+      "pages": 1,
+      "run_date": "2026-11-11",
+      "source": "nbu_rates"
+    },
+    {
+      "errors": 0,
+      "http_403": 0,
+      "http_429": 0,
+      "pages": 894,
+      "run_date": "2026-11-10",
+      "source": "djinni"
+    },
+    {
+      "errors": 0,
+      "http_403": 0,
+      "http_429": 0,
+      "pages": 125,
+      "run_date": "2026-11-10",
+      "source": "dou"
+    },
+    {
+      "errors": 0,
+      "http_403": 0,
+      "http_429": 0,
+      "pages": 35,
+      "run_date": "2026-11-10",
+      "source": "dou_salaries"
+    },
+    {
+      "errors": 0,
+      "http_403": 0,
+      "http_429": 0,
+      "pages": 1,
+      "run_date": "2026-11-10",
+      "source": "nbu_rates"
+    },
+    {
+      "errors": 0,
+      "http_403": 0,
+      "http_429": 0,
+      "pages": 907,
+      "run_date": "2026-11-09",
+      "source": "djinni"
+    },
+    {
+      "errors": 0,
+      "http_403": 0,
+      "http_429": 0,
+      "pages": 88,
+      "run_date": "2026-11-09",
+      "source": "dou"
+    },
+    {
+      "errors": 0,
+      "http_403": 0,
+      "http_429": 0,
+      "pages": 70,
+      "run_date": "2026-11-09",
+      "source": "dou_salaries"
+    },
+    {
+      "errors": 0,
+      "http_403": 0,
+      "http_429": 0,
+      "pages": 2,
+      "run_date": "2026-11-09",
+      "source": "nbu_rates"
+    },
+    {
+      "errors": 0,
+      "http_403": 0,
+      "http_429": 0,
+      "pages": 1839,
+      "run_date": "2026-11-08",
+      "source": "djinni"
+    },
+    {
+      "errors": 0,
+      "http_403": 0,
+      "http_429": 0,
+      "pages": 182,
+      "run_date": "2026-11-08",
+      "source": "dou"
+    },
+    {
+      "errors": 0,
+      "http_403": 0,
+      "http_429": 0,
+      "pages": 105,
+      "run_date": "2026-11-08",
+      "source": "dou_salaries"
+    },
+    {
+      "errors": 0,
+      "http_403": 0,
+      "http_429": 0,
+      "pages": 4,
+      "run_date": "2026-11-08",
+      "source": "nbu_rates"
+    },
+    {
+      "errors": 0,
+      "http_403": 0,
+      "http_429": 0,
+      "pages": 6191,
+      "run_date": "2026-11-07",
+      "source": "djinni"
+    },
+    {
+      "errors": 0,
+      "http_403": 0,
+      "http_429": 0,
+      "pages": 800,
+      "run_date": "2026-11-07",
+      "source": "dou"
+    },
+    {
+      "errors": 0,
+      "http_403": 0,
+      "http_429": 0,
+      "pages": 3,
+      "run_date": "2026-11-07",
+      "source": "nbu_rates"
+    },
+    {
+      "errors": 0,
+      "http_403": 0,
+      "http_429": 0,
+      "pages": 221,
+      "run_date": "2026-11-06",
+      "source": "djinni"
+    },
+    {
+      "errors": 0,
+      "http_403": 0,
+      "http_429": 0,
+      "pages": 286,
+      "run_date": "2026-11-06",
+      "source": "dou"
+    },
+    {
+      "errors": 0,
+      "http_403": 0,
+      "http_429": 0,
+      "pages": 1,
+      "run_date": "2026-11-06",
+      "source": "nbu_rates"
+    },
+    {
+      "errors": 0,
+      "http_403": 0,
+      "http_429": 0,
+      "pages": 1,
+      "run_date": "2026-11-05",
+      "source": "nbu_rates"
+    },
+    {
+      "errors": 0,
+      "http_403": 0,
+      "http_429": 0,
+      "pages": 1,
+      "run_date": "2026-11-04",
+      "source": "nbu_rates"
+    },
+    {
+      "errors": 0,
+      "http_403": 0,
+      "http_429": 0,
+      "pages": 1,
+      "run_date": "2026-11-03",
+      "source": "nbu_rates"
+    },
+    {
+      "errors": 0,
+      "http_403": 0,
+      "http_429": 0,
+      "pages": 1,
+      "run_date": "2026-11-02",
+      "source": "nbu_rates"
+    },
+    {
+      "errors": 0,
+      "http_403": 0,
+      "http_429": 0,
+      "pages": 1,
+      "run_date": "2026-10-30",
+      "source": "nbu_rates"
+    },
+    {
+      "errors": 0,
+      "http_403": 0,
+      "http_429": 0,
+      "pages": 1,
+      "run_date": "2026-10-29",
+      "source": "nbu_rates"
+    }
+  ],
+  "slo": [
+    {
+      "detail": "last successful scrape finished 2026-11-12 22:39 UTC",
+      "name": "data_freshness",
+      "observed": "0.0 h",
+      "ok": true,
+      "target": "last scrape at most 36 h ago"
+    },
+    {
+      "detail": "6 of 6 runs succeeded",
+      "name": "success_rate",
+      "observed": "100.0%",
+      "ok": true,
+      "target": ">= 95% of runs in 30 days succeed"
+    },
+    {
+      "detail": "739 of 8116 vacancies",
+      "name": "skill_coverage",
+      "observed": "9.1%",
+      "ok": true,
+      "target": "under 10% of vacancies without a skill"
+    }
+  ],
+  "steps": [
+    {
+      "attempt": 2,
+      "duration_s": 0,
+      "run_date": "2026-11-12",
+      "status": "success",
+      "step": "export"
+    },
+    {
+      "attempt": 2,
+      "duration_s": 1,
+      "run_date": "2026-11-12",
+      "status": "success",
+      "step": "dq_gold"
+    },
+    {
+      "attempt": 2,
+      "duration_s": 9,
+      "run_date": "2026-11-12",
+      "status": "success",
+      "step": "dbt"
+    },
+    {
+      "attempt": 2,
+      "duration_s": 1,
+      "run_date": "2026-11-12",
+      "status": "success",
+      "step": "dq_silver"
+    },
+    {
+      "attempt": 2,
+      "duration_s": 59,
+      "run_date": "2026-11-12",
+      "status": "success",
+      "step": "parse"
+    },
+    {
+      "attempt": 2,
+      "duration_s": 133,
+      "run_date": "2026-11-12",
+      "status": "success",
+      "step": "scrape"
+    },
+    {
+      "attempt": 1,
+      "duration_s": 0,
+      "run_date": "2026-11-12",
+      "status": "success",
+      "step": "export"
+    },
+    {
+      "attempt": 1,
+      "duration_s": 1,
+      "run_date": "2026-11-12",
+      "status": "success",
+      "step": "dq_gold"
+    },
+    {
+      "attempt": 1,
+      "duration_s": 13,
+      "run_date": "2026-11-12",
+      "status": "success",
+      "step": "dbt"
+    },
+    {
+      "attempt": 1,
+      "duration_s": 1,
+      "run_date": "2026-11-12",
+      "status": "success",
+      "step": "dq_silver"
+    },
+    {
+      "attempt": 1,
+      "duration_s": 114,
+      "run_date": "2026-11-12",
+      "status": "success",
+      "step": "parse"
+    },
+    {
+      "attempt": 1,
+      "duration_s": 23,
+      "run_date": "2026-11-12",
+      "status": "success",
+      "step": "scrape_surveys"
+    },
+    {
+      "attempt": 1,
+      "duration_s": 1013,
+      "run_date": "2026-11-12",
+      "status": "success",
+      "step": "scrape"
+    },
+    {
+      "attempt": 1,
+      "duration_s": 0,
+      "run_date": "2026-11-11",
+      "status": "success",
+      "step": "export"
+    },
+    {
+      "attempt": 1,
+      "duration_s": 0,
+      "run_date": "2026-11-11",
+      "status": "success",
+      "step": "dq_gold"
+    },
+    {
+      "attempt": 1,
+      "duration_s": 8,
+      "run_date": "2026-11-11",
+      "status": "success",
+      "step": "dbt"
+    },
+    {
+      "attempt": 1,
+      "duration_s": 0,
+      "run_date": "2026-11-11",
+      "status": "success",
+      "step": "dq_silver"
+    },
+    {
+      "attempt": 1,
+      "duration_s": 62,
+      "run_date": "2026-11-11",
+      "status": "success",
+      "step": "parse"
+    },
+    {
+      "attempt": 1,
+      "duration_s": 29,
+      "run_date": "2026-11-11",
+      "status": "success",
+      "step": "scrape_surveys"
+    },
+    {
+      "attempt": 1,
+      "duration_s": 1036,
+      "run_date": "2026-11-11",
+      "status": "success",
+      "step": "scrape"
+    },
+    {
+      "attempt": 1,
+      "duration_s": 1,
+      "run_date": "2026-11-10",
+      "status": "success",
+      "step": "export"
+    },
+    {
+      "attempt": 1,
+      "duration_s": 0,
+      "run_date": "2026-11-10",
+      "status": "success",
+      "step": "dq_gold"
+    },
+    {
+      "attempt": 1,
+      "duration_s": 8,
+      "run_date": "2026-11-10",
+      "status": "success",
+      "step": "dbt"
+    },
+    {
+      "attempt": 1,
+      "duration_s": 1,
+      "run_date": "2026-11-10",
+      "status": "success",
+      "step": "dq_silver"
+    },
+    {
+      "attempt": 1,
+      "duration_s": 58,
+      "run_date": "2026-11-10",
+      "status": "success",
+      "step": "parse"
+    },
+    {
+      "attempt": 1,
+      "duration_s": 24,
+      "run_date": "2026-11-10",
+      "status": "success",
+      "step": "scrape_surveys"
+    },
+    {
+      "attempt": 1,
+      "duration_s": 1084,
+      "run_date": "2026-11-10",
+      "status": "success",
+      "step": "scrape"
+    },
+    {
+      "attempt": 2,
+      "duration_s": 1,
+      "run_date": "2026-11-09",
+      "status": "success",
+      "step": "export"
+    },
+    {
+      "attempt": 2,
+      "duration_s": 1,
+      "run_date": "2026-11-09",
+      "status": "success",
+      "step": "dq_gold"
+    },
+    {
+      "attempt": 2,
+      "duration_s": 10,
+      "run_date": "2026-11-09",
+      "status": "success",
+      "step": "dbt"
+    },
+    {
+      "attempt": 2,
+      "duration_s": 1,
+      "run_date": "2026-11-09",
+      "status": "success",
+      "step": "dq_silver"
+    },
+    {
+      "attempt": 2,
+      "duration_s": 68,
+      "run_date": "2026-11-09",
+      "status": "success",
+      "step": "parse"
+    },
+    {
+      "attempt": 2,
+      "duration_s": 0,
+      "run_date": "2026-11-09",
+      "status": "success",
+      "step": "scrape_surveys"
+    },
+    {
+      "attempt": 2,
+      "duration_s": 4,
+      "run_date": "2026-11-09",
+      "status": "success",
+      "step": "scrape"
+    },
+    {
+      "attempt": 1,
+      "duration_s": 1,
+      "run_date": "2026-11-09",
+      "status": "success",
+      "step": "export"
+    },
+    {
+      "attempt": 1,
+      "duration_s": 1,
+      "run_date": "2026-11-09",
+      "status": "success",
+      "step": "dq_gold"
+    },
+    {
+      "attempt": 1,
+      "duration_s": 10,
+      "run_date": "2026-11-09",
+      "status": "success",
+      "step": "dbt"
+    },
+    {
+      "attempt": 1,
+      "duration_s": 0,
+      "run_date": "2026-11-09",
+      "status": "success",
+      "step": "dq_silver"
+    },
+    {
+      "attempt": 1,
+      "duration_s": 69,
+      "run_date": "2026-11-09",
+      "status": "success",
+      "step": "parse"
+    },
+    {
+      "attempt": 1,
+      "duration_s": 24,
+      "run_date": "2026-11-09",
+      "status": "success",
+      "step": "scrape_surveys"
+    },
+    {
+      "attempt": 1,
+      "duration_s": 715,
+      "run_date": "2026-11-09",
+      "status": "success",
+      "step": "scrape"
+    },
+    {
+      "attempt": 1,
+      "duration_s": 1,
+      "run_date": "2026-11-08",
+      "status": "success",
+      "step": "export"
+    },
+    {
+      "attempt": 1,
+      "duration_s": 0,
+      "run_date": "2026-11-08",
+      "status": "success",
+      "step": "dq_gold"
+    },
+    {
+      "attempt": 1,
+      "duration_s": 7,
+      "run_date": "2026-11-08",
+      "status": "success",
+      "step": "dbt"
+    },
+    {
+      "attempt": 1,
+      "duration_s": 0,
+      "run_date": "2026-11-08",
+      "status": "success",
+      "step": "dq_silver"
+    },
+    {
+      "attempt": 1,
+      "duration_s": 48,
+      "run_date": "2026-11-08",
+      "status": "success",
+      "step": "parse"
+    },
+    {
+      "attempt": 1,
+      "duration_s": 1,
+      "run_date": "2026-11-08",
+      "status": "success",
+      "step": "scrape_surveys"
+    },
+    {
+      "attempt": 1,
+      "duration_s": 3,
+      "run_date": "2026-11-08",
+      "status": "success",
+      "step": "scrape"
+    }
+  ],
+  "volumes": {
+    "silver_vacancies": 8116,
+    "silver_vacancy_sightings": 41400,
+    "silver_vacancy_skills": 65112
+  }
+}
