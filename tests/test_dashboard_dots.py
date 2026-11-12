@@ -1,0 +1,79 @@
+import re
+
+from jobmarket import dashboard_dots as dots
+from jobmarket import dashboard_theme as t
+
+
+def _fills(svg: str) -> list[str]:
+    return re.findall(r'<circle[^>]* fill="([^"]+)"', svg)
+
+
+def test_a_ring_lights_the_share_of_its_dots_and_says_the_percent() -> None:
+    svg = dots.ring(0.25, "ціль дня", colour="#111111", dots=36)
+
+    assert _fills(svg).count("#111111") == 2 * 9  # a quarter of 36, on both circles
+    assert ">25%</text>" in svg and 'aria-label="ціль дня: 25%"' in svg
+
+
+def test_a_ring_is_clamped_to_a_valid_share() -> None:
+    assert ">0%</text>" in dots.ring(-3, "x") and ">100%</text>" in dots.ring(7, "x")
+    assert dots.REST not in _fills(dots.ring(7, "x"))  # full: no unlit dot
+
+
+def test_columns_scale_to_the_tallest_and_a_dot_means_the_same_everywhere() -> None:
+    svg = dots.columns(
+        ["01.11", "02.11"], [("dou", "#111111", [60, 30]), ("djinni", "#222222", [60, 0])], rows=12
+    )
+
+    fills = _fills(svg)
+    assert fills.count("#111111") == 6 + 3 and fills.count("#222222") == 6  # 10 per dot
+    assert "02.11 · dou: 30" in svg  # the tooltip says the real number, not the dots
+    assert "одна крапка ≈ 10" in svg
+
+
+def test_a_small_part_of_a_column_keeps_one_dot_and_a_zero_gets_none() -> None:
+    svg = dots.columns(
+        ["d"], [("a", "#111111", [1000]), ("b", "#222222", [1]), ("c", "#333333", [0])]
+    )
+
+    fills = _fills(svg)
+    assert fills.count("#222222") == 1 and fills.count("#333333") == 0
+    assert fills.count("#111111") + fills.count("#222222") <= 12  # never taller than the grid
+
+
+def test_columns_without_data_are_an_empty_figure_not_an_error() -> None:
+    assert "немає даних" in dots.columns([], []) and "<circle" not in dots.columns([], [])
+    assert "<circle" not in dots.columns(["d"], [("a", "#111111", [0])])
+
+
+def test_a_waffle_always_has_a_hundred_dots_and_keeps_a_tiny_part() -> None:
+    svg = dots.waffle([("a", "#111111", 995), ("b", "#222222", 4), ("c", "#333333", 1)])
+
+    fills = _fills(svg)
+    assert len(fills) == 100
+    assert fills.count("#222222") >= 1 and fills.count("#333333") >= 1  # it exists: it is shown
+    assert "a: 995 (100%)" in svg or "a: 995 (99%)" in svg  # the tooltip has the true share
+
+
+def test_a_waffle_of_thirds_adds_up() -> None:
+    fills = _fills(dots.waffle([("a", "#1", 1), ("b", "#2", 1), ("c", "#3", 1)]))
+
+    assert len(fills) == 100 and sorted(fills.count(c) for c in ("#1", "#2", "#3")) == [33, 33, 34]
+
+
+def test_names_are_escaped_everywhere() -> None:
+    for svg in (
+        dots.ring(0.5, "<b>x</b>"),
+        dots.waffle([("<b>x</b>", "#111111", 1)]),
+        dots.columns(["<b>d</b>"], [("<b>x</b>", "#111111", [1])]),
+        dots.spark([1, 2], caption="<b>x</b>"),
+    ):
+        assert "<b>" not in svg and "&lt;b&gt;" in svg
+
+
+def test_a_spark_line_marks_now_with_a_bigger_dot_and_survives_a_flat_series() -> None:
+    svg = dots.spark([5, 5, 5], colour=t.ACCENT)
+
+    radii = re.findall(r' r="([^"]+)"', svg)
+    assert len(radii) == 3 and float(radii[-1]) > float(radii[0])
+    assert "<circle" not in dots.spark([])

@@ -5,6 +5,7 @@ import streamlit as st
 
 from jobmarket import dashboard_charts as charts
 from jobmarket import dashboard_data as dd
+from jobmarket import dashboard_dots as dots
 from jobmarket import dashboard_profile as pr
 from jobmarket import dashboard_progress as pg
 from jobmarket import dashboard_theme as theme
@@ -83,12 +84,15 @@ def today() -> None:
         goal_ring, fit_ring = st.columns(2)
         done = min(state["today"] / max(mine.goal, 1), 1.0)
         with goal_ring:
-            ui.html(theme.ring(done, f"ціль дня: {state['today']}/{mine.goal}", "grow"))
-        with fit_ring:
             ui.html(
-                theme.ring(
-                    fit or 0.0, "готовність" if fit is not None else "додайте навички", "jobs"
-                )
+                dots.ring(done, "ціль дня", colour=theme.DOMAINS["grow"])
+                + f'<div class="dw-ring-cap">ціль дня: {state["today"]}/{mine.goal}</div>'
+            )
+        with fit_ring:
+            note = "готовність" if fit is not None else "додайте навички"
+            ui.html(
+                dots.ring(fit or 0.0, note, colour=theme.DOMAINS["jobs"])
+                + f'<div class="dw-ring-cap">{note}</div>'
             )
 
 
@@ -112,7 +116,13 @@ def breakdown_panel() -> None:
         names, colours = charts.series_domain(order, keep_order=True)
         left.markdown("")
         ui.html(theme.legend(names, colours))
-        ui.chart(charts.stacked_bars(daily, order=order, unit=metric))
+        wide = daily.pivot_table(index="date", columns="series", values="value", fill_value=0)
+        days = [f"{day:%d.%m}" for day in wide.index]
+        parts = [
+            (name, colour, wide[name].tolist() if name in wide else [0.0] * len(days))
+            for name, colour in zip(names, colours, strict=True)
+        ]
+        ui.html(dots.columns(days, parts, unit=metric.lower()))
 
 
 trend, shares = st.columns([3, 2])
@@ -123,7 +133,16 @@ with shares, ui.card("Структура ринку", "відкриті вака
     chosen = st.radio(
         "Розріз", list(SPLITS), horizontal=True, key="home_share", label_visibility="collapsed"
     )  # one chart at a time: tabs would draw all three on every rerun
-    ui.chart(charts.donut(dd.latest_shares(market, SPLITS[chosen], top=4)[["label", "value"]]))
+    share = dd.latest_shares(market, SPLITS[chosen], top=4)
+    share_names, share_colours = charts.series_domain(share["label"].tolist(), keep_order=True)
+    ui.html(
+        dots.waffle(list(zip(share_names, share_colours, share["value"].tolist(), strict=True)))
+        + theme.legend(
+            [f"{n} · {v:.0%}" for n, v in zip(share_names, share["share"], strict=True)],
+            share_colours,
+        )
+    )
+    st.caption("100 крапок: кожна — один відсоток відкритих вакансій.")
 
 # ---- directions: the way into the catalog ---------------------------------------------------
 directions = dd.direction_stats(market, vacancies)

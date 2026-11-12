@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+### Changed (the look, second pass)
+- **"Soft signal"** replaces the calm serif design the owner did not like: a plombir page, powder, mauve
+  and wine worn as whole blocks, a heavy grotesque, small-capital labels, self-numbering sections, a menu
+  without a panel, and **numbers and figures made of dots**: a ring of dots, stacked columns of dots and a
+  waffle of 100 dots on the home page (`dashboard_dots.py`, plain SVG). New chart colours passed the
+  palette validator.
+
 ### Changed (the look)
 - **A light, calm design** replaces the dark pixel-terminal one: a warm off-white page, white cards with
   soft corners, serif headings (Source Serif 4) over sans text (Inter), a clay accent and pastel tints per

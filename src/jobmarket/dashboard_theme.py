@@ -1,43 +1,47 @@
 """The dashboard's look: colour tokens, one stylesheet and small HTML pieces.
 
-No Streamlit import here, so the pieces are tested directly. The look is light and calm: a warm
-off-white page, white cards with hairline borders and soft corners, a clay accent, pastel tints
-for the parts of the product. Headings are set in a serif (Source Serif 4), text in a sans
-(Inter); both have Cyrillic. The four chart colours passed the dataviz palette validator on the
-white card (lightness band, colour-blind separation, 3:1 contrast). Text never wears a chart
-colour: the accent and the domain colours used for text are darker steps that clear 4.5:1.
+No Streamlit import here, so the pieces are tested directly. The look is "soft signal": a plombir
+(ice-cream white) page, three colours from one study (powder blue, mauve, wine) worn as whole
+blocks, a heavy grotesque for titles, small capitals with wide tracking for labels, and numbers
+and figures made of dots (``dashboard_dots``). The menu has no panel of its own: it sits on the
+page. The four chart colours are saturated relatives of the three (the originals are too pale or
+too dark to be marks) and passed the dataviz palette validator on the card.
 """
 
 from html import escape
 from typing import Any
 
-BG = "#FAF9F5"  # the page: warm off-white
+BG = "#FFFBF3"  # plombir: the page, everywhere
 CARD = "#FFFFFF"
-LINE = "#E6E3D8"  # hairlines
-GRID = "#EFEDE4"  # chart grid, tracks of meters and rings
-INK = "#1F1E1C"
-INK_2 = "#45433E"
-INK_3 = "#6E6B63"  # muted text: 5.3:1 on the card
-ACCENT = "#B5532F"  # clay, dark enough for text (5.0:1 on the card)
+LINE = "#EBE3D5"  # hairlines
+GRID = "#EFE8DB"  # chart grid, unlit dots, tracks of meters
+INK = "#22252B"
+INK_2 = "#474A52"
+INK_3 = "#6F6B66"  # muted text: 5.2:1 on the card
+POWDER = "#C0D8E6"  # the three colours of the study, worn as blocks
+MAUVE = "#C77E96"
+WINE = "#5B3044"
+ACCENT = WINE  # links, the open page, lit dots
 
 # Chart colours, in a fixed order (an entity keeps its colour whatever the filter shows). All four
 # passed the palette validator on the card surface; a chart never needs a fifth (the tail is folded
-# into "Інші").
-SERIES = ("#5B6FD6", "#D9673F", "#1F9D78", "#C48A0A")
+# into "Інші"). They are relatives of the study: berry, blue, gold, rose.
+SERIES = ("#96396A", "#3F8FC9", "#B8860B", "#D9668F")
 SOURCE_ORDER = ("dou", "djinni")  # the sources always wear the first two colours in this order
 MARK = SERIES[0]  # one-series bars and lines
-# Each part of the product has its own colour, so a glance says where you are. These are used for
-# small text and marks, so they are dark steps; the page tints them into pastel fills itself.
+# Each part of the product has its own colour, so a glance says where you are. Small text wears
+# them, so they are dark steps (4.5:1 on the card); the page tints them itself.
 DOMAINS = {  # a colour per part of the product
-    "jobs": "#1F7F68",  # vacancies: teal
-    "grow": "#5F55C9",  # learning: violet
-    "market": "#C2453A",  # analytics: red
-    "system": "#946A00",  # state of the system: yellow (an ochre, so that it reads as text)
+    "jobs": "#2F6F94",  # vacancies: the deep step of powder
+    "grow": "#6B3F86",  # learning: plum
+    "market": "#A8456A",  # analytics: the deep step of mauve
+    "system": "#8A6A12",  # state of the system: ochre
 }  # fmt: skip
-MUTED_MARK = "#8C897F"  # context marks next to an emphasised one (3:1 on the card)
+MUTED_MARK = "#8F8A80"  # context marks next to an emphasised one (3:1 on the card)
 
 FONT_BODY = "'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif"
-FONT_DISPLAY = "'Source Serif 4', 'Iowan Old Style', Georgia, serif"
+FONT_DISPLAY = FONT_BODY  # titles are the same grotesque, heavy
+FONT_DOTS = "'Doto', 'Inter', system-ui, sans-serif"  # numbers; Latin only, the rest falls back
 
 # State is never colour alone: every tone carries an icon and a word.
 TONES = {
@@ -534,83 +538,103 @@ _WORKSPACE = """
 
 
 _CALM = """
-/* the calm, light look: what a token alone cannot say. It comes last, so it wins. */
-.stApp { color: var(--ink); }
-.dw-title { font-weight: 600; letter-spacing: -0.01em; }
-.dw-eyebrow { font-weight: 600; color: var(--dom, var(--accent)); }
+/* "soft signal": what a token alone cannot say. It comes last, so it wins. */
+.stApp { color: var(--ink); background: var(--bg); }
+.dw-title { font-weight: 800; letter-spacing: -0.035em; line-height: 1; }
 .dw-sub { font-size: var(--fs-md); color: var(--ink-3); }
+.dw-lead, .dw-vac-title, .dw-dir-name { font-weight: 700; letter-spacing: -0.02em; }
 
-/* a section heading: a dot in the colour of its part of the product, then words in the serif */
-.dw-section { display: flex; align-items: center; gap: var(--s2); font-size: var(--fs-lg);
-  font-weight: 600; color: var(--ink); }
-.dw-section::before { content: ""; width: 0.55rem; height: 0.55rem; border-radius: 50%;
-  background: var(--dom, var(--accent)); flex: none; }
-.dw-section b { color: var(--ink-3); font-weight: 400; margin-right: 0; }
-.dw-card-title { font-size: var(--fs-md); font-weight: 600; color: var(--ink); }
+/* labels: small capitals, wide tracking */
+.dw-eyebrow, .dw-section, .dw-card-title, [data-testid="stMetricLabel"] *, .dw-stat em, .dw-fl,
+.dw-todo-kind, [data-testid="stNavSectionHeader"], .dw-ring-cap, .dw-q-meta {
+  font-family: var(--body); font-size: var(--fs-xs) !important; font-weight: 600;
+  text-transform: uppercase; letter-spacing: 0.14em; }
+.dw-eyebrow { color: var(--dom, var(--accent)); }
+.dw-card-title { color: var(--ink-2); }
 
-/* surfaces: white cards on the warm page, a hairline and a breath of shadow */
+/* a section: a rule, its number in dots, its name. The number is counted by the page itself */
+[data-testid="stMainBlockContainer"] { counter-reset: dw-sec; }
+.dw-section { counter-increment: dw-sec; display: flex; align-items: baseline; gap: var(--s3);
+  color: var(--ink-2); border-top: 1px solid var(--line); padding-top: var(--s3); }
+.dw-section::before { content: counter(dw-sec, decimal-leading-zero); font-family: var(--dots);
+  font-weight: 800; font-size: var(--fs-md); letter-spacing: 0.04em;
+  color: var(--dom, var(--accent)); }
+.dw-section b { display: none; }
+
+/* numbers are made of dots */
+.dw-num, [data-testid="stMetricValue"], .dw-stat b, .dw-dir-count {
+  font-family: var(--dots); font-weight: 800; letter-spacing: 0.02em; }
+
+/* surfaces: white cards with generous corners on the plombir page */
 [data-testid="stVerticalBlockBorderWrapper"], [data-testid="stMetric"], .dw-dir, .dw-vac,
 .dw-todo, .dw-answer, .st-key-cat_filters, [data-testid="stDataFrame"], [data-testid="stAlert"] {
   border-radius: var(--r) !important; }
-[data-testid="stMetric"], .dw-dir, .dw-vac, .st-key-cat_filters {
-  box-shadow: 0 1px 2px rgba(31, 30, 28, 0.04); }
-[data-testid="stMetricValue"], .dw-dir-count, .dw-vac-pay { color: var(--ink); }
-.dw-dir-count { color: var(--dom, var(--accent)); }
+[data-testid="stMetric"], .dw-dir, .dw-vac { box-shadow: none; }
+.dw-dir-count { color: var(--ink); }
 
-/* figures in a row: pastel chips in the colour of their part, not brackets */
+/* figures in a row: whole blocks of colour, as in the study */
 .dw-stats { gap: var(--s3); }
-.dw-stat { padding: var(--s2) var(--s4); border-radius: var(--r); color: var(--ink-2);
-  background: color-mix(in srgb, var(--dom, var(--accent)) 9%, var(--card));
-  border: 1px solid color-mix(in srgb, var(--dom, var(--accent)) 20%, var(--line)); }
+.dw-stat { flex: 1 1 9rem; flex-direction: column; align-items: flex-start; gap: var(--s2);
+  padding: var(--s4) var(--s5); border-radius: var(--r); border: 0; color: var(--ink);
+  background: var(--card); box-shadow: inset 0 0 0 1px var(--line); }
+.dw-stat:nth-child(4n + 1) { background: var(--powder); box-shadow: none; }
+.dw-stat:nth-child(4n + 2) { background: var(--mauve); box-shadow: none; }
+.dw-stat:nth-child(4n + 3) { background: var(--wine); box-shadow: none; color: var(--bg); }
+.dw-stat:nth-child(4n + 3) b, .dw-stat:nth-child(4n + 3) em { color: var(--bg); }
 .dw-stat i, .dw-leg i { display: none; }
-.dw-stat b { font-weight: 600; }
-.dw-leg b { border-radius: 3px; }
+.dw-stat b { font-size: var(--fs-xl); line-height: 1; color: var(--ink); }
+.dw-stat em { color: var(--ink-2); }
+.dw-leg b { border-radius: 50%; }
 
-/* things to do, tags, medals, meters: soft and round */
-.dw-todo { border: 1px solid color-mix(in srgb, var(--dom) 22%, var(--line));
-  border-left: 4px solid var(--dom);
-  background: color-mix(in srgb, var(--dom) 7%, var(--card)); }
+/* things to do, tags, meters */
+.dw-todo { border: 0; background: color-mix(in srgb, var(--dom) 13%, var(--card)); }
 .dw-chip, .dw-medal, .dw-pill, .dw-active .dw-tag, [data-baseweb="tag"],
 button[kind="pills"], button[kind="pillsActive"], [data-testid="stBaseButton-pills"],
 [data-testid="stBaseButton-pillsActive"] { border-radius: 999px !important;
   border-width: 1px !important; }
-.dw-chip.req { background: color-mix(in srgb, var(--accent) 10%, var(--card)); }
+.dw-chip.req { background: var(--powder); border-color: var(--powder); color: var(--ink); }
 .dw-xp, .dw-meter, .dw-skillrow .dw-bar { border-radius: 999px; background: var(--grid);
   overflow: hidden; }
 .dw-xp span, .dw-meter span, .dw-skillrow .dw-bar span { border-radius: 999px; }
+.dw-meter span { background: var(--mauve); }
 .dw-pulse span { border-radius: 50%; width: 10px; height: 10px; }
-.dw-ring { background: conic-gradient(var(--dom, var(--accent)) calc(var(--p) * 1%),
-  var(--grid) 0); }
 
-/* the menu: an oat panel, the open page a soft pill in the colour of its group */
-[data-testid="stSidebar"] { background: var(--side); border-right: 1px solid var(--line); }
-[data-testid="stSidebarNavLink"] { border-radius: 8px !important; border-left: 0 !important;
-  margin: 1px 0; }
-[data-testid="stSidebarNavLink"]:hover { background: color-mix(in srgb, var(--ink) 5%,
+/* the menu has no panel: it sits on the page; the open page is a wine pill */
+[data-testid="stSidebar"] { background: transparent; border-right: 0; }
+[data-testid="stSidebarNavLink"] { border-radius: 999px !important; border-left: 0 !important;
+  margin: 1px 0; padding-left: 0.9rem; }
+[data-testid="stSidebarNavLink"]:hover { background: color-mix(in srgb, var(--wine) 8%,
   transparent); }
-[data-testid="stSidebarNavItems"] a[aria-current="page"] { font-weight: 600;
-  background: color-mix(in srgb, var(--dom, var(--accent)) 13%, var(--card)) !important; }
-[data-testid="stNavSectionHeader"] { border-left: 0 !important; padding-left: 0.75rem;
-  font-family: var(--body); font-size: var(--fs-xs); font-weight: 600;
+[data-testid="stSidebarNavItems"] a[aria-current="page"] { background: var(--wine) !important; }
+[data-testid="stSidebarNavItems"] a[aria-current="page"] * { color: var(--bg) !important; }
+[data-testid="stNavSectionHeader"] { border-left: 0 !important; padding-left: 0.9rem;
   color: var(--dom, var(--ink-3)); }
-.st-key-dw_avatar { background: var(--side); }
-.dw-avatar-pic { border-radius: var(--r); border-width: 1px; background: var(--card); }
+.st-key-dw_avatar { background: transparent; }
+.dw-avatar-pic { border-radius: 50%; border-width: 1px; background: var(--powder); }
 
 /* tabs, lists and the open vacancy */
-button[data-baseweb="tab"] { font-family: var(--body); font-weight: 500; }
-[data-baseweb="tab-highlight"] { height: 2px; }
-.st-key-cat_rows button, .st-key-mkt_rows button { border-radius: var(--r) !important;
+button[data-baseweb="tab"] { font-family: var(--body); font-weight: 600; }
+[data-baseweb="tab-highlight"] { height: 3px; border-radius: 999px; }
+.st-key-cat_rows button, .st-key-mkt_rows button { border-radius: 16px !important;
   border-width: 1px; border-left-width: 1px; }
 .st-key-cat_rows button[kind="primary"], .st-key-mkt_rows button[kind="primary"] {
-  background: color-mix(in srgb, var(--d-jobs) 9%, var(--card));
-  border-color: color-mix(in srgb, var(--d-jobs) 45%, var(--line)); }
+  background: var(--powder); border-color: var(--powder); }
 .st-key-cat_rows button[kind="primary"] p, .st-key-mkt_rows button[kind="primary"] p {
   color: var(--ink-2); }
 .st-key-dw_undo { border-radius: var(--r); border-width: 1px; }
-#dw-overlay { background: rgba(31, 30, 28, 0.32); }
-#dw-overlay .dw-box { border: 1px solid var(--line); border-radius: 14px;
-  box-shadow: 0 18px 50px rgba(31, 30, 28, 0.18); }
+#dw-overlay { background: color-mix(in srgb, var(--wine) 35%, transparent); }
+#dw-overlay .dw-box { border: 0; border-radius: var(--r);
+  box-shadow: 0 24px 60px color-mix(in srgb, var(--wine) 30%, transparent); }
 .dw-kbd { border-radius: 6px; border-width: 1px; border-bottom-width: 2px; }
+
+/* figures made of dots (dashboard_dots.py) */
+.dw-dots { display: block; width: 100%; height: auto; overflow: visible; }
+.dw-dot-ring { max-width: 9.5rem; margin: 0 auto; }
+.dw-dot-waffle { max-width: 13rem; margin: var(--s2) auto; }
+.dw-dot-cols { max-height: 16rem; margin: var(--s2) 0; }
+.dw-dot-spark { max-height: 2.2rem; }
+.dw-dots .dw-num { font-family: var(--dots); font-weight: 800; fill: var(--ink); }
+.dw-dots .dw-dot-axis { font-family: var(--body); font-weight: 500; fill: var(--ink-3); }
 """
 
 
@@ -619,15 +643,19 @@ def css() -> str:
     variables = (
         f":root {{ --bg: {BG}; --card: {CARD}; --line: {LINE}; --ink: {INK}; --ink-2: {INK_2};"
         f" --ink-3: {INK_3}; --accent: {ACCENT}; --cursor: {SERIES[1]}; --ok: #2E7D5B;"
-        f" --warn: #A8650A; --bad: #C0392B; --grid: {GRID}; --line-2: #CFCBBD; --r: 12px;"
-        f" --side: #F3F1E8;"
+        f" --warn: #A8650A; --bad: #C0392B; --grid: {GRID}; --line-2: #D8CEBC; --r: 22px;"
+        f" --powder: {POWDER}; --mauve: {MAUVE}; --wine: {WINE}; --dots: {FONT_DOTS};"
+        f" --dot-rest: {GRID};"
         f" --body: {FONT_BODY}; --display: {FONT_DISPLAY};"
         f" --fs-xs: 0.75rem; --fs-sm: 0.85rem; --fs-md: 1rem; --fs-lg: 1.25rem; --fs-xl: 1.75rem;"
         f" --fs-2xl: 2.5rem; --s1: 0.25rem; --s2: 0.5rem; --s3: 0.75rem; --s4: 1rem; --s5: 1.5rem;"
         f" --s6: 2rem; --d-jobs: {DOMAINS['jobs']}; --d-grow: {DOMAINS['grow']};"
         f" --d-market: {DOMAINS['market']}; --d-system: {DOMAINS['system']}; }}"
     )
-    return f"<style>{variables}{_STYLE}{_MOTION}{_BLOCKS}{_WORKSPACE}{_PHONE}{_CALM}</style>"
+    fonts = (
+        "@import url('https://fonts.googleapis.com/css2?family=Doto:wght@700;900&display=swap');"
+    )
+    return f"<style>{fonts}{variables}{_STYLE}{_MOTION}{_BLOCKS}{_WORKSPACE}{_PHONE}{_CALM}</style>"
 
 
 def pill(text: str, tone: str = "neutral") -> str:

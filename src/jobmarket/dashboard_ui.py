@@ -437,7 +437,7 @@ def vacancy_card(row: Any, *, profile: pr.Profile | None = None) -> None:
     st.markdown(theme.facts(rows), unsafe_allow_html=True)
     if len(row["skills"]):
         st.markdown(
-            '<div class="dw-muted">Навички (■ — названо вимогою)</div>'
+            '<div class="dw-muted">Навички (блакитні — названо вимогою)</div>'
             + theme.chips(list(row["skills"]), list(row["skills_required"])),
             unsafe_allow_html=True,
         )
@@ -484,7 +484,7 @@ def analysis_block(row: Any, analysis: dict[str, Any], mine: set[str]) -> None:
     items = [{**item, "mine": item["skill"] in mine} for item in analysis["skills"]]
     st.markdown(
         theme.card_title("Аналіз проти ринку", "частка вакансій ринку, що просять навичку; "
-                         "бірюзовим обов'язкові, ✓ у вас є"),
+                         "блакитним обов'язкові, ✓ у вас є"),
         unsafe_allow_html=True,
     )  # fmt: skip
     if items:
