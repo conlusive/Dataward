@@ -22,7 +22,7 @@ from altair.utils.schemapi import debug_mode
 
 from jobmarket import dashboard_theme as t
 
-FONT = "JetBrains Mono, ui-monospace, Menlo, monospace"
+FONT = "Inter, system-ui, -apple-system, Segoe UI, sans-serif"
 
 P = ParamSpec("P")
 CACHE_SIZE = 96  # the charts of the pages in use, not a store that grows
@@ -433,7 +433,7 @@ def stacked_bars(
     return _finish(bars, height)
 
 
-HEAT = ("#3B3B3F", "#4D4B8C", "#6562C4", "#8481F5", "#B8B6FF")  # no answers, then four steps
+HEAT = ("#EFEDE4", "#C9CFF3", "#9AA5E8", "#5B6FD6", "#3A4BA8")  # no answers, then four steps
 _WEEKDAY_LABELS = "['Пн','Вт','Ср','Чт','Пт','Сб','Нд']"
 
 

@@ -83,7 +83,7 @@ def test_the_assets_can_be_rewritten(tmp_path: Path) -> None:
     written = logo.write_assets(tmp_path)
 
     assert sorted(p.name for p in written) == [
-        "apple-touch-icon.png", "favicon.png", "icon.svg", "logo.svg",
+        "apple-touch-icon.png", "favicon.png", "icon.svg", "logo.svg", "wordmark.svg",
     ]  # fmt: skip
     assert (tmp_path / "logo.svg").read_text(encoding="utf-8") == logo.wordmark_svg()
 
@@ -102,3 +102,12 @@ def test_the_committed_png_icons_are_what_the_generator_draws() -> None:
     for name, size in (("favicon.png", 64), ("apple-touch-icon.png", logo.APPLE_TOUCH_SIZE)):
         committed = _pixels((logo.STATIC / name).read_bytes())
         assert committed == _pixels(logo.favicon_png(size)), name
+
+
+def test_the_calm_wordmark_is_real_text_with_the_rising_bars_and_is_committed() -> None:
+    svg = logo.calm_wordmark_svg()
+
+    assert svg.count("<rect") == len(logo.BARS) and ">Dataward</text>" in svg
+    assert 'aria-label="Dataward"' in svg and t.ACCENT in svg and logo.DOT_COLOUR in svg
+    assert "&lt;b&gt;" in logo.calm_wordmark_svg("<b>")  # a name is escaped
+    assert (logo.STATIC / "wordmark.svg").read_text(encoding="utf-8") == svg

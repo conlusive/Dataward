@@ -124,20 +124,19 @@ is shown as a tag too.
 
 ## The look
 
-- **Colours**: the "smoky lilac" pair, surface `#303032` and accent `#AAA8FF`; cards are a step darker
-  (`#28282A`). The theme is in `.streamlit/config.toml` (native Streamlit options) and `dashboard_theme.py`
-  (one stylesheet for the tiles, tabs, sidebar and header).
-- **Pixel and terminal**: Tektur (angular and technical, not pixelated, good Cyrillic) for headings,
-  figures and labels,
-  JetBrains Mono for text and tables. Corners are stepped (a CSS clip), a page starts with a prompt
-  (`$ вакансії · каталог`) and a blinking cursor after the title (switched off by `prefers-reduced-motion`),
-  section labels read `// ВИБІРКА`, the open tab has an arrow. The fonts come from Google Fonts, and the
-  browser falls back to its own monospace font offline. Pixelify Sans (crude Cyrillic) and Tiny5 (read as too pixelated) were tried and
-  dropped.
-- **Logo**: three rising pixel bars, then DATAWARD spelled in a 5x7 pixel font with a pixel shadow, and a
-  static terracotta full stop; the sidebar icon and the favicon are the bars and the stop. `dashboard_logo.py` draws them from a glyph
-  table (`python -m jobmarket.dashboard_logo` rewrites `dashboard/static/`), and a test keeps the committed
-  files equal to its output.
+Light and calm (`dashboard_theme.py`, `.streamlit/config.toml`):
+
+- **Surfaces**: a warm off-white page (`#FAF9F5`), white cards with a hairline border, 12 px corners and a
+  breath of shadow; the menu is an oat panel.
+- **Type**: headings in a serif (Source Serif 4), text in a sans (Inter); both have Cyrillic. One scale of
+  six sizes (0.75 to 2.5 rem); a test refuses a size outside it.
+- **Colour**: a clay accent (`#B5532F`) and a colour per part of the product (vacancies teal, learning
+  violet, analytics red, the state of the system ochre). They are dark steps, because small text wears
+  them (a test checks 4.5:1 on the card); the page tints them into pastel fills with `color-mix`.
+- **No terminal props**: no prompt, brackets, cursor, stepped corners or capitals (a test keeps them out).
+  Figures in a row are pastel chips; a section heading is a dot in the colour of its part and words.
+- **The mark**: three rising rounded bars and the name in the serif (`wordmark.svg`); the pixel mark stays
+  as the tab icon. The frog is still pixel art.
 - **Motion**: a page arrives **once, as a whole**. When the address changes, `dashboard_motion.py` hides
   the page body (`html.dw-go` is taken away; the stylesheet hides the body from the very first paint
   too), waits until the run has finished (the app's own script state) and the page has stopped changing (lazy widgets and charts mount after

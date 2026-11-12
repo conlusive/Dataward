@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+### Changed (the look)
+- **A light, calm design** replaces the dark pixel-terminal one: a warm off-white page, white cards with
+  soft corners, serif headings (Source Serif 4) over sans text (Inter), a clay accent and pastel tints per
+  part of the product. The prompt, brackets, cursor, stepped corners and capitals are gone. New chart
+  colours passed the palette validator on the white card; text colours clear 4.5:1 (tested). A calm
+  wordmark replaces the pixel logo in the menu.
 ### Added (hourly updates)
 - **New vacancies every hour.** `jobmarket flow fresh` (`make pipeline-fresh`) reads the first two listing
   pages of every category again and fetches only vacancy pages not stored yet, then parses today, builds
