@@ -60,3 +60,20 @@ jobs:
           done
           docker logs dashboard
           exit 1
+
+  # Tell the host to deploy this commit. Render's own auto-deploy has missed merges; a deploy hook
+  # does not depend on it. Optional: without the secret RENDER_DEPLOY_HOOK_URL the job does nothing.
+  deploy:
+    needs: [checks, dashboard-image]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ask Render to deploy
+        env:
+          HOOK: ${{ secrets.RENDER_DEPLOY_HOOK_URL }}
+        run: |
+          if [ -z "$HOOK" ]; then
+            echo "no RENDER_DEPLOY_HOOK_URL secret: relying on the host's auto-deploy"
+            exit 0
+          fi
+          curl -fsS -X POST "$HOOK" -o /dev/null && echo "deploy requested"

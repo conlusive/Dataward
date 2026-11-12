@@ -58,6 +58,24 @@ def daily_steps() -> list[Step]:
     ]
 
 
+def fresh_steps() -> list[Step]:
+    """The hourly run: only what is new since the last run, then the same road to the export.
+
+    The scrape reads the first listing pages again and fetches only vacancy pages not stored yet,
+    so it costs a few dozen requests instead of the nightly sweep. Today is parsed again as a whole
+    (a finished day is otherwise skipped). Closures still come from the nightly run: a vacancy is
+    closed after two days without a sighting, so an hourly run can never close one by itself.
+    """
+    return [
+        Step("scrape", ("make", "scrape-fresh"), timeout_s=20 * 60, retries=1),
+        Step("parse", ("make", "parse-today"), needs=("scrape",), timeout_s=20 * 60),
+        Step("dq_silver", ("make", "dq-silver"), needs=("parse",), timeout_s=5 * 60),
+        Step("dbt", ("make", "dbt-build"), needs=("dq_silver",), timeout_s=30 * 60),
+        Step("dq_gold", ("make", "dq-gold"), needs=("dbt",), timeout_s=5 * 60),
+        Step("export", ("make", "export"), needs=("dq_gold",), timeout_s=10 * 60),
+    ]
+
+
 def backfill_steps(start: date, end: date) -> list[Step]:
     """Re-parse the stored days of a range and rebuild gold; no network."""
     return [

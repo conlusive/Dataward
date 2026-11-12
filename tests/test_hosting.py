@@ -42,11 +42,21 @@ def test_the_image_compiles_its_bytecode_and_bakes_the_data_in() -> None:
     assert bake < dockerfile.index("chown -R app:app") < dockerfile.index("USER app")
 
 
-def test_a_start_fetches_data_only_when_the_image_has_none_and_does_not_watch_files() -> None:
+def test_a_start_asks_the_sync_whether_the_data_is_stale_and_does_not_watch_files() -> None:
     script = (ROOT / "scripts" / "dashboard-start.sh").read_text(encoding="utf-8")
 
-    assert 'if [ ! -f "${DASHBOARD_DATA_DIR:-data/export}/last_update.json" ]' in script
+    # no shell test for the file: the sync itself decides (missing or stale: fetch; fresh: start)
+    assert "python -m jobmarket.dashboard_sync ||" in script and "if [ ! -f" not in script
     assert "--server.fileWatcherType=none" in script
+
+
+def test_the_workflow_runs_the_full_sweep_nightly_and_the_light_flow_every_hour() -> None:
+    workflow = (ROOT / ".github" / "workflows" / "pipeline-daily.yml").read_text(encoding="utf-8")
+
+    assert 'cron: "0 4 * * *"' in workflow and 'cron: "17 * * * *"' in workflow
+    assert "github.event.schedule == '17 * * * *'" in workflow  # which schedule fired decides
+    assert "'pipeline-fresh' || 'pipeline'" in workflow and 'make "$FLOW_TARGET"' in workflow
+    assert "cancel-in-progress: false" in workflow  # runs queue: two would race on bronze
 
 
 def test_the_image_starts_through_the_script_that_fetches_data_and_honours_port() -> None:
@@ -73,3 +83,13 @@ def test_only_the_public_copy_is_published_and_by_a_job_of_its_own() -> None:
     ]
     assert downloaded == ["gold-export"]  # the artifact is the stripped copy (test_export.py)
     assert not re.search(r"data/export\b(?!_public)", text[text.index("publish-data:") :])
+
+
+def test_a_merge_can_ask_the_host_to_deploy_without_leaking_the_hook() -> None:
+    ci = (ROOT / ".github" / "workflows" / "ci.yml").read_text(encoding="utf-8")
+    job = ci[ci.index("  deploy:") :]
+
+    assert "needs: [checks, dashboard-image]" in job  # never deploy what did not pass
+    assert "github.ref == 'refs/heads/main'" in job
+    assert "secrets.RENDER_DEPLOY_HOOK_URL" in job and 'echo "$HOOK"' not in job
+    assert "-o /dev/null" in job  # the answer names the deploy; keep it out of a public log

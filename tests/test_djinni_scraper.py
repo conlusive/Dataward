@@ -114,3 +114,33 @@ async def test_redirect_past_the_last_page_does_not_leak_unrelated_vacancies(
     expected = len(parse_listing_urls(sample("djinni/list_python.html").decode()))
     assert len(site.vacancy_gets) == expected
     assert scraper.stats.errors == 0
+
+
+async def test_a_fresh_run_reads_the_listing_again_but_no_vacancy_twice(tmp_path: Path) -> None:
+    site = _Site()
+    async with _scraper(tmp_path, site) as scraper:
+        await scraper.run()  # the nightly sweep: listing and every vacancy are in bronze now
+    seen_vacancies = len(site.vacancy_gets)
+    site.list_pages.clear()
+
+    fresh = Settings(bronze_dir=tmp_path, refresh_listings=True, max_list_pages=2)
+    async with _scraper(tmp_path, site, fresh) as scraper:
+        await scraper.run()
+
+    assert site.list_pages == ["1", "2"]  # asked again, although today's copy was stored
+    assert len(site.vacancy_gets) == seen_vacancies  # nothing known is downloaded twice
+    assert scraper.stats.errors == 0
+
+
+async def test_without_the_fresh_setting_a_second_run_of_the_day_asks_the_site_nothing(
+    tmp_path: Path,
+) -> None:
+    site = _Site()
+    async with _scraper(tmp_path, site) as scraper:
+        await scraper.run()
+    site.list_pages.clear()
+
+    async with _scraper(tmp_path, site) as scraper:
+        await scraper.run()
+
+    assert site.list_pages == []  # the reason an hourly run needs the setting at all

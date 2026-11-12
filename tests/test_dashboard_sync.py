@@ -1,6 +1,7 @@
 import io
 import json
 import tarfile
+from datetime import UTC, datetime
 from pathlib import Path
 
 import pytest
@@ -151,3 +152,49 @@ def test_the_first_background_refresh_waits_so_that_the_first_visitors_have_the_
     assert thread is not None
     thread.join(timeout=0.3)
     assert not target.exists()  # nothing yet: the image's own copy is what the visitors read
+
+
+# ---- stale data at a start ----------------------------------------------------------------
+def _exported_at(directory: Path, exported_at: str) -> None:
+    directory.mkdir(parents=True, exist_ok=True)
+    (directory / sync.MANIFEST).write_text(json.dumps({"exported_at": exported_at, "tables": {}}))
+
+
+def test_data_is_stale_when_missing_unreadable_or_older_than_the_limit(tmp_path: Path) -> None:
+    now = datetime(2026, 11, 13, 12, 0, tzinfo=UTC)
+
+    assert sync.is_stale(tmp_path / "nothing", now)  # no export at all
+    _exported_at(tmp_path / "old", "2026-11-13T09:59:00+00:00")
+    assert sync.is_stale(tmp_path / "old", now)  # two hours and a minute
+    _exported_at(tmp_path / "fresh", "2026-11-13T10:01:00+00:00")
+    assert not sync.is_stale(tmp_path / "fresh", now)
+    _exported_at(tmp_path / "naive", "2026-11-13T11:00:00")  # no zone: read as UTC, not a crash
+    assert not sync.is_stale(tmp_path / "naive", now)
+    (tmp_path / "broken").mkdir()
+    (tmp_path / "broken" / sync.MANIFEST).write_text("{not json")
+    assert sync.is_stale(tmp_path / "broken", now)
+
+
+def test_a_start_fetches_stale_data_and_leaves_fresh_data_alone(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    calls: list[Path] = []
+    monkeypatch.setenv(sync.DIR_ENV, str(tmp_path))
+
+    def record(directory: Path) -> int:
+        calls.append(directory)
+        return 1
+
+    monkeypatch.setattr(sync, "sync_from_environment", record)
+
+    sync.main()  # nothing there: fetch
+    _exported_at(tmp_path, datetime.now(UTC).isoformat())
+    sync.main()  # just exported: start with it
+
+    assert calls == [tmp_path]
+
+
+def test_the_sync_and_the_dashboard_agree_on_the_default_folder() -> None:
+    from jobmarket import dashboard_data as dd
+
+    assert str(dd.DEFAULT_DIR) == sync.DEFAULT_DIR and sync.DIR_ENV == "DASHBOARD_DATA_DIR"
