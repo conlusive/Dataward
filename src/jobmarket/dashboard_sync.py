@@ -17,6 +17,7 @@ import tarfile
 import tempfile
 import threading
 import urllib.request
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Final
 
@@ -24,9 +25,14 @@ MANIFEST: Final = "last_update.json"
 STATUS: Final = "status.json"  # the run's health, shown on the "Стан системи" page
 URL_ENV: Final = "DASHBOARD_DATA_URL"
 REFRESH_SECONDS: Final = (
-    6 * 3600
-)  # the data changes once a day; a sleeping host re-fetches on start
+    20 * 60
+)  # the export is published hourly; a sleeping host re-fetches on start
 FIRST_REFRESH_SECONDS: Final = 60  # the image has the data of its build: refresh once it is calm
+STALE_SECONDS: Final = 2 * 3600  # older than this at a start: fetch before serving, not after
+DIR_ENV: Final = "DASHBOARD_DATA_DIR"
+DEFAULT_DIR: Final = (
+    "data/export"  # the same default as dashboard_data.data_dir (a test keeps them equal)
+)
 MAX_BYTES: Final = 100 * 1024 * 1024
 TIMEOUT_SECONDS: Final = 30
 _TABLE_FILE: Final = re.compile(r"^[A-Za-z0-9_]+\.parquet$")
@@ -137,13 +143,35 @@ def keep_fresh(
     return thread
 
 
-def main() -> None:
-    """Entry point of the container start: fetch once before the server starts."""
-    from jobmarket import dashboard_data as dd
+def is_stale(directory: Path, now: datetime, max_age: float = STALE_SECONDS) -> bool:
+    """No export here, an unreadable manifest, or one exported more than ``max_age`` seconds ago.
 
+    An image carries the export of its build. A host that slept for days, or an old image, would
+    otherwise serve that for the first minute after it wakes (no catalog yet, old numbers).
+    """
+    try:
+        manifest = json.loads((directory / MANIFEST).read_text(encoding="utf-8"))
+        exported = datetime.fromisoformat(str(manifest["exported_at"]))
+    except (OSError, ValueError, KeyError, TypeError):
+        return True
+    if exported.tzinfo is None:
+        exported = exported.replace(tzinfo=UTC)
+    return (now - exported).total_seconds() > max_age
+
+
+def main() -> None:
+    """Entry point of the container start: fetch before the server starts if the data is stale.
+
+    Fresh data (an image built minutes ago) starts at once; the background refresh takes over.
+    Nothing heavy is imported here: a start on a small plan is mostly Python importing.
+    """
     logging.basicConfig(level=logging.INFO, format="%(message)s")
-    if sync_from_environment(dd.data_dir()) is None and os.environ.get(URL_ENV):
-        log.warning("starting with the data that is already in %s", dd.data_dir())
+    directory = Path(os.environ.get(DIR_ENV) or DEFAULT_DIR)
+    if not is_stale(directory, datetime.now(UTC)):
+        log.info("the data in %s is fresh: starting with it", directory)
+        return
+    if sync_from_environment(directory) is None and os.environ.get(URL_ENV):
+        log.warning("starting with the data that is already in %s", directory)
 
 
 if __name__ == "__main__":

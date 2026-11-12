@@ -2,9 +2,15 @@ name: pipeline-daily
 
 on:
   schedule:
-    - cron: "0 4 * * *" # 04:00 UTC
+    - cron: "0 4 * * *" # 04:00 UTC: the full sweep (every listing page, closures)
+    - cron: "17 * * * *" # every hour: only what is new (the first listing pages, new vacancies)
   workflow_dispatch:
     inputs:
+      flow:
+        description: "daily = the full sweep, fresh = only what is new"
+        type: choice
+        options: [daily, fresh]
+        default: daily
       run_date:
         description: "YYYY-MM-DD (empty = today, UTC)"
         required: false
@@ -30,6 +36,8 @@ jobs:
       RUN_DATE: ${{ inputs.run_date }}
       SCRAPE_MAX_LIST_PAGES: ${{ inputs.max_pages }}
       SCRAPE_USER_AGENT: "jobmarket-research-bot (+https://github.com/${{ github.repository }})"
+      # the hourly schedule and a manual `fresh` run the light flow; everything else the full one
+      FLOW_TARGET: ${{ (github.event.schedule == '17 * * * *' || inputs.flow == 'fresh') && 'pipeline-fresh' || 'pipeline' }}
     steps:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v5
@@ -58,7 +66,7 @@ jobs:
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
-        run: make pipeline
+        run: make "$FLOW_TARGET"
 
       # Save even when a step failed: what was scraped and parsed is still valid.
       - name: Save bronze and silver

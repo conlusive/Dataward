@@ -64,6 +64,7 @@ class DouScraper(BaseScraper):
     async def _category_urls(self, category: str, *, refetch: bool) -> list[str]:
         encoded = quote(category, safe="")
         list_url = LIST_URL.format(category=encoded)
+        refetch = refetch or self._settings.refresh_listings  # listings only: details stay skipped
         page = await self.fetch(list_url, refetch=refetch)
         if page is None or page.status != 200:
             logger.error("dou {}: listing unavailable", category)

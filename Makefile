@@ -1,4 +1,4 @@
-.PHONY: install lint test test-all scrape scrape-surveys parse backfill dbt-build dq dq-silver dq-gold pipeline export docker-build docker-pipeline dashboard docker-dashboard train lineage gold
+.PHONY: install lint test test-all scrape scrape-fresh scrape-surveys parse parse-today backfill dbt-build dq dq-silver dq-gold pipeline pipeline-fresh export docker-build docker-pipeline dashboard docker-dashboard train lineage gold
 
 install:
 	uv sync --group dashboard --group ml
@@ -18,6 +18,10 @@ test-all:
 scrape:
 	uv run jobmarket scrape all $(if $(RUN_DATE),--run-date $(RUN_DATE),)
 
+# The hourly run: the first listing pages again, only vacancies not stored yet.
+scrape-fresh:
+	uv run jobmarket scrape all --fresh $(if $(RUN_DATE),--run-date $(RUN_DATE),)
+
 # Survey waves: files already in bronze are skipped, so this is cheap on repeat runs.
 scrape-surveys:
 	uv run jobmarket scrape dou_salaries
@@ -28,6 +32,12 @@ parse:
 	uv run jobmarket fetch-rates
 	uv run jobmarket parse all --missing
 	uv run jobmarket parse-surveys
+
+# Today again as a whole (a finished day is skipped by --missing), then rates for new salaries.
+parse-today:
+	uv run jobmarket parse all $(if $(RUN_DATE),--run-date $(RUN_DATE),)
+	uv run jobmarket fetch-rates
+	uv run jobmarket parse all $(if $(RUN_DATE),--run-date $(RUN_DATE),)
 
 # Re-parse stored days after a parser or taxonomy change, then rebuild gold. No network, no LLM calls
 # (answers come from the cache). Usage: make backfill FROM=2026-11-01 TO=2026-11-30
@@ -55,6 +65,10 @@ dq-gold:
 # Usage: make pipeline [RUN_DATE=YYYY-MM-DD]
 pipeline:
 	uv run jobmarket flow daily $(if $(RUN_DATE),--run-date $(RUN_DATE),)
+
+# The hourly flow: new vacancies only (see flow.fresh_steps).
+pipeline-fresh:
+	uv run jobmarket flow fresh $(if $(RUN_DATE),--run-date $(RUN_DATE),)
 
 # The pipeline in a container (see docker-compose.yml); data stays in ./data.
 docker-build:

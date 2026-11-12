@@ -36,6 +36,9 @@ flow (`src/jobmarket/flow.py`) adds the policy around them.
 - `ci.yml`: ruff, mypy, pytest (including real dbt runs on made-up data); a second job builds the
   Docker image and checks that the CLI and dbt start in it.
 - `pipeline-daily.yml`: 04:00 UTC, restores the bronze/silver cache, runs `make pipeline`, saves the
+  Every hour (minute 17) the same workflow runs the light flow instead: `make pipeline-fresh`
+  (`flow fresh`: the first listing pages again, only new vacancy pages, today parsed again, gold, export).
+  Runs queue, never overlap (one bronze cache).
   cache (also after a failure), prints run metrics and keeps the parquet export as an artifact.
   Optional secrets: `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID`.
 - `docs.yml`: manual, builds the dbt docs site for GitHub Pages.

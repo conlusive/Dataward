@@ -65,7 +65,7 @@ class DjinniScraper(BaseScraper):
         max_pages = self._settings.max_list_pages
         while max_pages is None or page_number <= max_pages:
             url = base_url if page_number == 1 else f"{base_url}&page={page_number}"
-            page = await self.fetch(url, refetch=refetch)
+            page = await self.fetch(url, refetch=refetch or self._settings.refresh_listings)
             if page is None or page.status != 200:
                 if page is None or page_number == 1:
                     self.stats.errors += 1
