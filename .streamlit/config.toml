@@ -1,32 +1,32 @@
 # The dashboard's look (read when `streamlit run` starts in the repository root; the dashboard image
-# copies this file too). Light and calm: a warm off-white page, white cards, a clay accent. The chart
+# copies this file too). "Soft signal": a plombir page, powder, mauve and wine, a heavy grotesque. The chart
 # colours were checked with the dataviz palette validator on the white card.
 [theme]
 base = "light"
-primaryColor = "#B5532F"
-backgroundColor = "#FAF9F5"
-secondaryBackgroundColor = "#F3F1E8"
-textColor = "#1F1E1C"
-borderColor = "#E6E3D8"
-dataframeBorderColor = "#E6E3D8"
-dataframeHeaderBackgroundColor = "#F3F1E8"
-linkColor = "#B5532F"
+primaryColor = "#5B3044"
+backgroundColor = "#FFFBF3"
+secondaryBackgroundColor = "#F6EFE3"
+textColor = "#22252B"
+borderColor = "#EBE3D5"
+dataframeBorderColor = "#EBE3D5"
+dataframeHeaderBackgroundColor = "#F6EFE3"
+linkColor = "#5B3044"
 greenColor = "#2E7D5B"
 orangeColor = "#A8650A"
 redColor = "#C0392B"
-blueColor = "#5B6FD6"
-baseRadius = "medium"
-buttonRadius = "medium"
-showSidebarBorder = true
-# Headings in a serif, text in a sans. Cyrillic is required (the UI is Ukrainian): both have it. If
+blueColor = "#3F8FC9"
+baseRadius = "large"
+buttonRadius = "full"
+showSidebarBorder = false
+# One grotesque for everything, heavy in titles. Cyrillic is required (the UI is Ukrainian): both have it. If
 # the font host is not reachable the browser falls back to its own serif and sans fonts.
-font = "Inter:https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap, sans-serif"
-headingFont = "Source Serif 4:https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&display=swap, serif"
+font = "Inter:https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap, sans-serif"
+headingFont = "Inter:https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap, sans-serif"
 codeFont = "JetBrains Mono, ui-monospace, monospace"
-headingFontWeights = [600, 600, 600, 600, 600, 600]
+headingFontWeights = [800, 800, 700, 700, 700, 700]
 metricValueFontSize = "1.75rem"
 metricValueFontWeight = 600
-chartCategoricalColors = ["#5B6FD6", "#D9673F", "#1F9D78", "#C48A0A"]
+chartCategoricalColors = ["#96396A", "#3F8FC9", "#B8860B", "#D9668F"]
 
 [server]
 # dashboard/static (the logo and the tab icons) is served at /app/static, see dashboard_icon.py

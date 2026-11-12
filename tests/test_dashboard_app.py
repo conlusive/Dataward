@@ -695,7 +695,7 @@ def test_home_asks_an_empty_profile_for_skills_and_then_tracks_the_day(export: P
 def test_home_shows_the_goal_of_the_day_as_a_ring(export: Path) -> None:
     app = _run("home")
 
-    assert "ціль дня: 0/5" in _markdown(app) and 'class="dw-ring dw-d-grow"' in _markdown(app)
+    assert "ціль дня: 0/5" in _markdown(app) and "dw-dot-ring" in _markdown(app)
 
 
 def test_home_draws_one_ring_of_the_market_at_a_time_and_the_choice_changes_it(

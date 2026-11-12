@@ -124,19 +124,23 @@ is shown as a tag too.
 
 ## The look
 
-Light and calm (`dashboard_theme.py`, `.streamlit/config.toml`):
+"Soft signal" (`dashboard_theme.py`, `dashboard_dots.py`, `.streamlit/config.toml`), after the owner's two
+references: a three-colour study (powder, mauve, wine) and a dot-matrix dashboard.
 
-- **Surfaces**: a warm off-white page (`#FAF9F5`), white cards with a hairline border, 12 px corners and a
-  breath of shadow; the menu is an oat panel.
-- **Type**: headings in a serif (Source Serif 4), text in a sans (Inter); both have Cyrillic. One scale of
-  six sizes (0.75 to 2.5 rem); a test refuses a size outside it.
-- **Colour**: a clay accent (`#B5532F`) and a colour per part of the product (vacancies teal, learning
-  violet, analytics red, the state of the system ochre). They are dark steps, because small text wears
-  them (a test checks 4.5:1 on the card); the page tints them into pastel fills with `color-mix`.
-- **No terminal props**: no prompt, brackets, cursor, stepped corners or capitals (a test keeps them out).
-  Figures in a row are pastel chips; a section heading is a dot in the colour of its part and words.
-- **The mark**: three rising rounded bars and the name in the serif (`wordmark.svg`); the pixel mark stays
-  as the tab icon. The frog is still pixel art.
+- **Page**: plombir (`#FFFBF3`) everywhere; white cards with 22 px corners and a hairline. The menu has no
+  panel of its own: it sits on the page, and the open page is a wine pill.
+- **Colour**: powder `#C0D8E6`, mauve `#C77E96` and wine `#5B3044` are worn as whole blocks (the row of
+  figures, the chosen vacancy, the required skills). A part of the product has a dark step of the same
+  family for small text (a test checks 4.5:1).
+- **Type**: one grotesque (Inter), weight 800 and tight tracking in titles; labels are small capitals with
+  wide tracking; **numbers are made of dots** (the Doto face, Latin only, so Cyrillic falls back).
+- **Sections number themselves** (`01`, `02`, a CSS counter), under a hairline rule.
+- **Figures made of dots** (plain SVG, no chart library, each dot a unit you can count): a ring of dots for
+  a share, stacked **columns of dots** for a metric per day (the tallest column fills the grid, so a dot
+  means the same amount everywhere), a **waffle of 100 dots** for parts of a whole. Tooltips carry the
+  real numbers; a part that exists never rounds to no dot. The Altair charts on the other pages use the
+  same four colours, relatives of the study that passed the palette validator on the card (the three
+  originals are too pale or too dark to be marks).
 - **Motion**: a page arrives **once, as a whole**. When the address changes, `dashboard_motion.py` hides
   the page body (`html.dw-go` is taken away; the stylesheet hides the body from the very first paint
   too), waits until the run has finished (the app's own script state) and the page has stopped changing (lazy widgets and charts mount after

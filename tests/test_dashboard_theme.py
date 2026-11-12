@@ -47,7 +47,7 @@ def test_a_section_label_is_numbered_with_two_digits() -> None:
 
 
 def test_chart_colours_are_four_fixed_ones_and_the_muted_mark_is_not_one_of_them() -> None:
-    assert t.SERIES == ("#5B6FD6", "#D9673F", "#1F9D78", "#C48A0A")  # passed the validator
+    assert t.SERIES == ("#96396A", "#3F8FC9", "#B8860B", "#D9668F")  # passed the validator
     assert t.MUTED_MARK not in t.SERIES and len(set(t.SERIES)) == 4
     assert all(re.fullmatch(r"#[0-9A-F]{6}", colour) for colour in (*t.SERIES, t.ACCENT, t.BG))
 
@@ -97,13 +97,22 @@ def test_a_sidebar_label_is_escaped() -> None:
     assert "&lt;" in t.side_label("<x>") and "dw-side-label" in t.side_label("Пошук")
 
 
-def test_the_style_is_calm_a_serif_for_headings_a_sans_for_text_and_soft_corners() -> None:
+def test_the_style_is_soft_signal_a_heavy_grotesque_dot_numbers_and_three_colours() -> None:
     css = t.css()
 
-    assert "'Source Serif 4'" in css and "'Inter'" in css
-    assert "clip-path: polygon" not in css and "text-transform: uppercase" not in css
-    assert 'content: "$ "' not in css and 'content: "// "' not in css  # no terminal props left
-    assert "--r: 12px" in css and "prefers-reduced-motion" in css
+    assert "'Inter'" in css and "'Doto'" in css and "font-weight: 800" in css
+    assert (t.POWDER, t.MAUVE, t.WINE) == ("#C0D8E6", "#C77E96", "#5B3044")  # the owner's study
+    assert f"--powder: {t.POWDER}" in css and f"--wine: {t.WINE}" in css
+    assert "clip-path: polygon" not in css  # no stepped corners
+    assert 'content: "$ "' not in css and 'content: "// "' not in css  # no terminal props
+    assert "counter(dw-sec, decimal-leading-zero)" in css  # sections number themselves
+    assert "prefers-reduced-motion" in css
+
+
+def test_the_menu_has_no_panel_of_its_own() -> None:
+    css = t.css()
+
+    assert '[data-testid="stSidebar"] { background: transparent; border-right: 0; }' in css
 
 
 def test_bracket_statistics_are_escaped_and_arrive_one_after_another() -> None:
@@ -306,7 +315,7 @@ def test_the_toolbar_of_tables_and_charts_is_hidden_everywhere() -> None:
     assert '[data-testid="stElementToolbar"]' in css and "display: none !important" in css
 
 
-def test_the_parts_of_the_product_have_the_colours_asked_for() -> None:
+def test_the_parts_of_the_product_have_four_colours_of_one_family() -> None:
     import colorsys
 
     def hue(name: str) -> float:
@@ -314,10 +323,11 @@ def test_the_parts_of_the_product_have_the_colours_asked_for() -> None:
         red, green, blue = (int(colour[i : i + 2], 16) / 255 for i in (0, 2, 4))
         return colorsys.rgb_to_hsv(red, green, blue)[0] * 360
 
-    assert 235 <= hue("grow") <= 265  # learning: violet
-    assert hue("market") <= 12 or hue("market") >= 350  # analytics: red
-    assert 40 <= hue("system") <= 52  # the state of the system: yellow
-    assert len({t.DOMAINS[name] for name in t.DOMAINS}) == 4  # four parts, four colours
+    assert 190 <= hue("jobs") <= 215  # vacancies: the deep step of powder blue
+    assert 265 <= hue("grow") <= 290  # learning: plum
+    assert 325 <= hue("market") <= 345  # analytics: the deep step of mauve
+    assert 40 <= hue("system") <= 52  # the state of the system: ochre
+    assert len(set(t.DOMAINS.values())) == 4  # four parts, four colours
 
 
 def test_a_ring_is_bounded_labelled_and_coloured_by_its_domain() -> None:

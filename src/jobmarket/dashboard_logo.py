@@ -118,9 +118,9 @@ def favicon_png(size: int = 64) -> bytes:
 
 
 def calm_wordmark_svg(text: str = "Dataward") -> str:
-    """The wordmark of the light look: three rounded bars and the name in a serif.
+    """The wordmark of the light look: three rounded bars and the name in the grotesque.
 
-    The name is real text (an image cannot load a web font, so it falls back to the system serif),
+    The name is real text (an image cannot load a web font, so it falls back to the system sans),
     the bars repeat the emblem of the pixel mark: the same rising heights, the last one a dot of
     the second chart colour.
     """
@@ -131,8 +131,9 @@ def calm_wordmark_svg(text: str = "Dataward") -> str:
     )
     dot = f'<circle cx="{len(BARS) * 9 + 3}" cy="27" r="3" fill="{DOT_COLOUR}"/>'
     name = (
-        f'<text x="{len(BARS) * 9 + 14}" y="29" fill="{t.INK}" font-size="26" font-weight="600" '
-        f"font-family=\"'Source Serif 4', 'Iowan Old Style', Georgia, serif\">{escape(text)}</text>"
+        f'<text x="{len(BARS) * 9 + 14}" y="29" fill="{t.INK}" font-size="25" '
+        'font-weight="800" letter-spacing="-0.8" '
+        f"font-family=\"Inter, 'Helvetica Neue', Arial, sans-serif\">{escape(text)}</text>"
     )
     return (
         '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 190 36" role="img" '
