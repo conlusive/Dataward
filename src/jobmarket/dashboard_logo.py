@@ -7,6 +7,7 @@ The stop is static on purpose (the blinking cursor lives in the page titles only
 """
 
 import io
+from html import escape
 from pathlib import Path
 
 from jobmarket import dashboard_theme as t
@@ -25,7 +26,7 @@ BARS = (3, 5, 7)  # heights of the emblem's bars, one column each with a column 
 EMBLEM_WIDTH = len(BARS) * 2 - 1
 EMBLEM_GAP = 3  # columns between the emblem and the first letter
 DOT = 2  # the full stop is DOT x DOT pixels
-SHADOW = "#4B4986"  # a darker step of the accent, one pixel down and right
+SHADOW = "#E6C7B8"  # a pale step of the accent, one pixel down and right
 DOT_COLOUR = t.SERIES[1]  # the terracotta of the second chart colour
 STATIC = Path(__file__).resolve().parents[2] / "dashboard" / "static"
 
@@ -116,10 +117,34 @@ def favicon_png(size: int = 64) -> bytes:
     return buffer.getvalue()
 
 
+def calm_wordmark_svg(text: str = "Dataward") -> str:
+    """The wordmark of the light look: three rounded bars and the name in a serif.
+
+    The name is real text (an image cannot load a web font, so it falls back to the system serif),
+    the bars repeat the emblem of the pixel mark: the same rising heights, the last one a dot of
+    the second chart colour.
+    """
+    bars = "".join(
+        f'<rect x="{i * 9}" y="{30 - h * 3.4:.1f}" width="6" height="{h * 3.4:.1f}" rx="3" '
+        f'fill="{t.ACCENT}"/>'
+        for i, h in enumerate(BARS)
+    )
+    dot = f'<circle cx="{len(BARS) * 9 + 3}" cy="27" r="3" fill="{DOT_COLOUR}"/>'
+    name = (
+        f'<text x="{len(BARS) * 9 + 14}" y="29" fill="{t.INK}" font-size="26" font-weight="600" '
+        f"font-family=\"'Source Serif 4', 'Iowan Old Style', Georgia, serif\">{escape(text)}</text>"
+    )
+    return (
+        '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 190 36" role="img" '
+        f'aria-label="{escape(text)}">{bars}{dot}{name}</svg>'
+    )
+
+
 def write_assets(directory: Path = STATIC) -> list[Path]:
-    """Write ``logo.svg``, ``icon.svg``, ``favicon.png`` and ``apple-touch-icon.png``."""
+    """Write the wordmark, ``logo.svg``, ``icon.svg``, ``favicon.png``, ``apple-touch-icon.png``."""
     directory.mkdir(parents=True, exist_ok=True)
     files = {
+        "wordmark.svg": calm_wordmark_svg().encode("utf-8"),
         "logo.svg": wordmark_svg().encode("utf-8"),
         "icon.svg": icon_svg().encode("utf-8"),
         "favicon.png": favicon_png(),

@@ -10,14 +10,14 @@ dashboard_reload.refresh()  # pick up edited modules from src/ before they are i
 
 from jobmarket import dashboard_ui as ui  # noqa: E402  (after the refresh on purpose)
 
-STATIC = Path(__file__).parent / "static"  # the pixel logo and the favicon (dashboard_logo.py)
+STATIC = Path(__file__).parent / "static"  # the wordmark and the favicon (dashboard_logo.py)
 
 st.set_page_config(
     page_title="Dataward · ринок праці в ІТ України",
     layout="wide",
     initial_sidebar_state="expanded",
 )
-st.logo(str(STATIC / "logo.svg"), size="large", icon_image=str(STATIC / "icon.svg"))
+st.logo(str(STATIC / "wordmark.svg"), size="large", icon_image=str(STATIC / "icon.svg"))
 ui.setup()
 ui.keep_data_fresh()  # a hosted copy re-fetches the nightly export (no-op without a URL)
 

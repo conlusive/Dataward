@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+### Changed (the look)
+- **A light, calm design** replaces the dark pixel-terminal one: a warm off-white page, white cards with
+  soft corners, serif headings (Source Serif 4) over sans text (Inter), a clay accent and pastel tints per
+  part of the product. The prompt, brackets, cursor, stepped corners and capitals are gone. New chart
+  colours passed the palette validator on the white card; text colours clear 4.5:1 (tested). A calm
+  wordmark replaces the pixel logo in the menu.
+
 ### Changed (the public site)
 - The **vacancy catalog is public**: `fct_vacancy_catalog` is no longer `meta.private`, so the nightly
   export carries it and the public site lists the vacancies (no description text, no contacts, a link to

@@ -7,7 +7,7 @@ def test_the_stylesheet_carries_the_surface_and_the_accent() -> None:
     css = t.css()
 
     assert css.startswith("<style>") and css.endswith("</style>")
-    assert "--bg: #303032" in css and "--accent: #AAA8FF" in css
+    assert f"--bg: {t.BG}" in css and f"--accent: {t.ACCENT}" in css
 
 
 def test_the_stylesheet_has_balanced_braces() -> None:
@@ -47,7 +47,7 @@ def test_a_section_label_is_numbered_with_two_digits() -> None:
 
 
 def test_chart_colours_are_four_fixed_ones_and_the_muted_mark_is_not_one_of_them() -> None:
-    assert t.SERIES == ("#8481F5", "#E5603B", "#26A08F", "#B58A1F")
+    assert t.SERIES == ("#5B6FD6", "#D9673F", "#1F9D78", "#C48A0A")  # passed the validator
     assert t.MUTED_MARK not in t.SERIES and len(set(t.SERIES)) == 4
     assert all(re.fullmatch(r"#[0-9A-F]{6}", colour) for colour in (*t.SERIES, t.ACCENT, t.BG))
 
@@ -69,6 +69,13 @@ def test_text_and_marks_are_readable_on_the_surfaces() -> None:
         assert _contrast(t.INK, surface) >= 7
     for mark in (*t.SERIES, t.MUTED_MARK):
         assert _contrast(mark, t.CARD) >= 3  # a mark needs 3:1
+    for text_colour in (t.ACCENT, *t.DOMAINS.values()):
+        assert _contrast(text_colour, t.CARD) >= 4.5  # these are worn by small text
+
+
+def test_the_page_is_light_and_the_text_dark() -> None:
+    assert _luminance(t.BG) > 0.9 and _luminance(t.CARD) > 0.95  # an off-white page, white cards
+    assert _luminance(t.INK) < 0.05
 
 
 def test_skill_tags_mark_the_required_ones_and_escape_the_text() -> None:
@@ -90,11 +97,13 @@ def test_a_sidebar_label_is_escaped() -> None:
     assert "&lt;" in t.side_label("<x>") and "dw-side-label" in t.side_label("Пошук")
 
 
-def test_the_style_is_pixel_and_terminal() -> None:
+def test_the_style_is_calm_a_serif_for_headings_a_sans_for_text_and_soft_corners() -> None:
     css = t.css()
 
-    assert "'Tektur'" in css and "clip-path" in css  # a technical face and stepped corners
-    assert "prefers-reduced-motion" in css  # the blinking cursor can be switched off
+    assert "'Source Serif 4'" in css and "'Inter'" in css
+    assert "clip-path: polygon" not in css and "text-transform: uppercase" not in css
+    assert 'content: "$ "' not in css and 'content: "// "' not in css  # no terminal props left
+    assert "--r: 12px" in css and "prefers-reduced-motion" in css
 
 
 def test_bracket_statistics_are_escaped_and_arrive_one_after_another() -> None:
