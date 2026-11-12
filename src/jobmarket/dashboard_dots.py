@@ -71,34 +71,61 @@ def columns(
         return _svg(100, 20, "", "немає даних", cls="dw-dot-cols")
     per_dot = top / rows
     step = 9.0  # between the dots of a column
-    gap = max(step, min(30.0, 300 / count))  # between columns: few days spread out, many pack in
-    width, height = (count - 1) * gap + 12, rows * step + 16
-    body = []
+    gap = max(26.0, min(34.0, 300 / count))  # wide enough for a number over every column
+    top_pad, foot = 22.0, 14.0  # room for the totals and the key above, the days below
+    width, height = (count - 1) * gap + 30, rows * step + top_pad + foot
+    every = max(1, -(-count // 14))  # a label on every column while they fit, else every n-th
+    body = [
+        '<text class="dw-dot-axis" x="0" y="6" font-size="5.5">одна крапка ≈ '
+        + f"{per_dot:,.0f}".replace(",", "\u00a0")
+        + (f" {escape(unit)}" if unit else "")
+        + "</text>"
+    ]
     for i, label in enumerate(labels):
-        x = 6 + i * gap
+        x = 15 + i * gap
         values_here = [float(values[i]) for _, _, values in parts]
         counts = [max(1, round(v / per_dot)) if v > 0 else 0 for v in values_here]
         while sum(counts) > rows:  # "at least one dot" may overshoot: the biggest part gives way
             counts[counts.index(max(counts))] -= 1
+        base = height - foot - 4
         used = 0
         for (name, colour, _), value, dots in zip(parts, values_here, counts, strict=True):
             tip = f"{label} · {name}: {value:,.0f}".replace(",", "\u00a0") + (
                 f" {unit}" if unit else ""
             )
             for k in range(dots):
-                y = height - 14 - (used + k) * step
-                body.append(_dot(x, y, 3.2, colour, tip, index=i))
+                body.append(_dot(x, base - (used + k) * step, 3.2, colour, tip, index=i))
             used += dots
         for k in range(used, rows):  # the unlit rest of the column, so the grid reads as a grid
-            body.append(_dot(x, height - 14 - k * step, 1.2, REST))
-        if i in (0, count - 1) or (count > 8 and i % max(1, count // 6) == 0):
+            body.append(_dot(x, base - k * step, 1.2, REST))
+        if i % every == 0 or i == count - 1:
+            total = f"{totals[i]:,.0f}".replace(",", "\u00a0")
+            body.append(  # the number itself over the column: dots are for shape, this is the fact
+                f'<text class="dw-num" x="{x:.1f}" y="{base - used * step - 1:.1f}" '
+                f'font-size="7" text-anchor="middle">{total}</text>'
+            )
             body.append(
                 f'<text class="dw-dot-axis" x="{x:.1f}" y="{height - 2:g}" font-size="5.5" '
-                f'text-anchor="middle">'
-                f"{escape(label)}</text>"
+                f'text-anchor="middle">{escape(label)}</text>'
             )
-    summary = f"стовпчики з крапок, одна крапка ≈ {per_dot:,.0f}".replace(",", " ")
+    summary = f"стовпчики з крапок, одна крапка ≈ {per_dot:,.0f}".replace(",", "\u00a0")
     return _svg(width, height, "".join(body), f"{summary} {unit}".strip(), cls="dw-dot-cols")
+
+
+def key(parts: Sequence[tuple[str, str, float]]) -> str:
+    """What a figure of parts shows, in words and numbers: a row per part with its colour, its
+    name, its share (big) and its value. A reader should not have to count dots."""
+    total = sum(max(float(value), 0.0) for _, _, value in parts)
+    rows = []
+    for name, colour, value in parts:
+        share = float(value) / total if total > 0 else 0.0
+        amount = f"{float(value):,.0f}".replace(",", "\u00a0")
+        rows.append(
+            f'<div class="dw-key-row"><span class="dw-key-dot" style="background:{colour}">'
+            f'</span><span class="dw-key-name">{escape(name)}</span>'
+            f'<b class="dw-num">{share:.0%}</b><em>{amount}</em></div>'
+        )
+    return f'<div class="dw-key">{"".join(rows)}</div>' if rows else ""
 
 
 def waffle(parts: Sequence[tuple[str, str, float]], *, side: int = 10) -> str:

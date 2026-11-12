@@ -4,17 +4,17 @@
 [theme]
 base = "light"
 primaryColor = "#5B3044"
-backgroundColor = "#FFFBF3"
-secondaryBackgroundColor = "#F6EFE3"
+backgroundColor = "#FBF3E1"
+secondaryBackgroundColor = "#F4EAD5"
 textColor = "#22252B"
-borderColor = "#EBE3D5"
-dataframeBorderColor = "#EBE3D5"
-dataframeHeaderBackgroundColor = "#F6EFE3"
+borderColor = "#E9DDC8"
+dataframeBorderColor = "#E9DDC8"
+dataframeHeaderBackgroundColor = "#F4EAD5"
 linkColor = "#5B3044"
 greenColor = "#2E7D5B"
 orangeColor = "#A8650A"
 redColor = "#C0392B"
-blueColor = "#3F8FC9"
+blueColor = "#6C8FD8"
 baseRadius = "large"
 buttonRadius = "full"
 showSidebarBorder = false
@@ -26,7 +26,7 @@ codeFont = "JetBrains Mono, ui-monospace, monospace"
 headingFontWeights = [800, 800, 700, 700, 700, 700]
 metricValueFontSize = "1.75rem"
 metricValueFontWeight = 600
-chartCategoricalColors = ["#96396A", "#3F8FC9", "#B8860B", "#D9668F"]
+chartCategoricalColors = ["#9A3F6C", "#6C8FD8", "#B98A1E", "#D76C8E"]
 
 [server]
 # dashboard/static (the logo and the tab icons) is served at /app/static, see dashboard_icon.py

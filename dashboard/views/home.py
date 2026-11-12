@@ -107,7 +107,8 @@ ui.section("Ринок зараз", domain="market")
 def breakdown_panel() -> None:
     """Only this panel reruns when a selector changes."""
     with ui.card(
-        "Розріз ринку за днями", "тонкий стовпчик — один день; кольори — частини розрізу."
+        "Розріз ринку за днями",
+        "стовпчик — день, число над ним — разом за день; кольори — частини.",
     ):
         left, middle, right = st.columns([3, 1, 1])
         metric = middle.selectbox("Показник", list(dd.METRICS), key="home_metric")
@@ -135,13 +136,8 @@ with shares, ui.card("Структура ринку", "відкриті вака
     )  # one chart at a time: tabs would draw all three on every rerun
     share = dd.latest_shares(market, SPLITS[chosen], top=4)
     share_names, share_colours = charts.series_domain(share["label"].tolist(), keep_order=True)
-    ui.html(
-        dots.waffle(list(zip(share_names, share_colours, share["value"].tolist(), strict=True)))
-        + theme.legend(
-            [f"{n} · {v:.0%}" for n, v in zip(share_names, share["share"], strict=True)],
-            share_colours,
-        )
-    )
+    share_parts = list(zip(share_names, share_colours, share["value"].tolist(), strict=True))
+    ui.html(dots.waffle(share_parts) + dots.key(share_parts))
     st.caption("100 крапок: кожна — один відсоток відкритих вакансій.")
 
 # ---- directions: the way into the catalog ---------------------------------------------------

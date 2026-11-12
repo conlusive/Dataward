@@ -11,13 +11,13 @@ too dark to be marks) and passed the dataviz palette validator on the card.
 from html import escape
 from typing import Any
 
-BG = "#FFFBF3"  # plombir: the page, everywhere
-CARD = "#FFFFFF"
-LINE = "#EBE3D5"  # hairlines
-GRID = "#EFE8DB"  # chart grid, unlit dots, tracks of meters
+BG = "#FBF3E1"  # plombir: the cream of vanilla ice cream, the page everywhere
+CARD = "#FFFDF7"
+LINE = "#E9DDC8"  # hairlines
+GRID = "#EFE4D0"  # chart grid, unlit dots, tracks of meters
 INK = "#22252B"
 INK_2 = "#474A52"
-INK_3 = "#6F6B66"  # muted text: 5.2:1 on the card
+INK_3 = "#68635C"  # muted text: 4.9:1 on the page, 5.8:1 on the card
 POWDER = "#C0D8E6"  # the three colours of the study, worn as blocks
 MAUVE = "#C77E96"
 WINE = "#5B3044"
@@ -25,8 +25,8 @@ ACCENT = WINE  # links, the open page, lit dots
 
 # Chart colours, in a fixed order (an entity keeps its colour whatever the filter shows). All four
 # passed the palette validator on the card surface; a chart never needs a fifth (the tail is folded
-# into "Інші"). They are relatives of the study: berry, blue, gold, rose.
-SERIES = ("#96396A", "#3F8FC9", "#B8860B", "#D9668F")
+# into "Інші"). They are relatives of the study: berry, periwinkle, gold, rose.
+SERIES = ("#9A3F6C", "#6C8FD8", "#B98A1E", "#D76C8E")
 SOURCE_ORDER = ("dou", "djinni")  # the sources always wear the first two colours in this order
 MARK = SERIES[0]  # one-series bars and lines
 # Each part of the product has its own colour, so a glance says where you are. Small text wears
@@ -627,11 +627,20 @@ button[data-baseweb="tab"] { font-family: var(--body); font-weight: 600; }
   box-shadow: 0 24px 60px color-mix(in srgb, var(--wine) 30%, transparent); }
 .dw-kbd { border-radius: 6px; border-width: 1px; border-bottom-width: 2px; }
 
+/* the key of a figure of parts: colour, name, share (big), value */
+.dw-key { display: grid; gap: var(--s2); margin: var(--s3) 0 var(--s2); }
+.dw-key-row { display: grid; grid-template-columns: 0.8rem 1fr auto 4.5rem; gap: var(--s3);
+  align-items: baseline; font-size: var(--fs-sm); color: var(--ink-2);
+  border-bottom: 1px solid var(--line); padding-bottom: var(--s2); }
+.dw-key-dot { width: 0.7rem; height: 0.7rem; border-radius: 50%; align-self: center; }
+.dw-key-row b { font-size: var(--fs-lg); color: var(--ink); }
+.dw-key-row em { font-style: normal; text-align: right; color: var(--ink-3); }
+
 /* figures made of dots (dashboard_dots.py) */
 .dw-dots { display: block; width: 100%; height: auto; overflow: visible; }
 .dw-dot-ring { max-width: 9.5rem; margin: 0 auto; }
-.dw-dot-waffle { max-width: 13rem; margin: var(--s2) auto; }
-.dw-dot-cols { max-height: 16rem; margin: var(--s2) 0; }
+.dw-dot-waffle { max-width: 11rem; margin: var(--s2) auto; }
+.dw-dot-cols { max-height: 19rem; margin: var(--s2) 0; }
 .dw-dot-spark { max-height: 2.2rem; }
 .dw-dots .dw-num { font-family: var(--dots); font-weight: 800; fill: var(--ink); }
 .dw-dots .dw-dot-axis { font-family: var(--body); font-weight: 500; fill: var(--ink-3); }
