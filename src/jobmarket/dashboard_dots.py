@@ -162,6 +162,55 @@ def balance(
     return _svg(width, height, "".join(body), summary, cls="dw-dot-cols")
 
 
+def flow(
+    labels: Sequence[str],
+    new: Sequence[float],
+    closed: Sequence[float],
+    *,
+    new_colour: str,
+    closed_colour: str,
+    max_dots: int = 14,
+) -> str:
+    """One row per day: closed vacancies as dots going left, new ones going right, from one centre.
+
+    The number of each stands at the end of its dots and the day on the left, so nothing is
+    drawn over anything else however many days there are. A dot is worth the same on both sides
+    (the biggest value of either fills ``max_dots``); a value that exists keeps at least one dot.
+    """
+    peak = max([float(v) for v in (*new, *closed)], default=0.0)
+    if not labels or peak <= 0:
+        return ""
+    per_dot = peak / max_dots
+
+    def run(value: float, colour: str, name: str, label: str) -> str:
+        n = min(max_dots, max(1, round(value / per_dot))) if value > 0 else 0
+        tip = f"{label} · {name}: {value:,.0f}".replace(",", "\u00a0")
+        return "".join(
+            f'<i style="background:{colour}" title="{escape(tip)}"></i>' for _ in range(n)
+        )
+
+    def figure(value: float) -> str:
+        return f"{float(value):,.0f}".replace(",", "\u00a0")
+
+    rows = []
+    for label, up, down in zip(labels, new, closed, strict=True):
+        rows.append(
+            f'<div class="dw-flow-row"><span class="dw-flow-day">{escape(label)}</span>'
+            f'<b class="dw-num">{figure(down)}</b>'
+            f'<span class="dw-flow-side left">'
+            f"{run(float(down), closed_colour, 'Закриті', label)}</span>"
+            f'<span class="dw-flow-axis"></span>'
+            f'<span class="dw-flow-side">{run(float(up), new_colour, "Нові", label)}</span>'
+            f'<b class="dw-num">{figure(up)}</b></div>'
+        )
+    note = f"одна крапка ≈ {per_dot:,.0f}".replace(",", "\u00a0")
+    return (
+        f'<div class="dw-flow" role="img" aria-label="нові та закриті за днями, {escape(note)}">'
+        f'<div class="dw-flow-head"><span></span><em>закриті</em><span></span><em>нові</em></div>'
+        f'{"".join(rows)}<div class="dw-flow-note">{escape(note)}</div></div>'
+    )
+
+
 def key(parts: Sequence[tuple[str, str, float]]) -> str:
     """What a figure of parts shows, in words and numbers: a row per part with its colour, its
     name, its share (big) and its value. A reader should not have to count dots."""

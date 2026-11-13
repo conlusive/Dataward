@@ -104,7 +104,8 @@ h1, h2, h3, h4 { font-family: var(--display) !important; }
 .dw-title { font-family: var(--display); font-weight: 600; font-size: var(--fs-2xl);
   line-height: 1.1; color: var(--ink); margin: 0; }
 .dw-sub { color: var(--ink-3); font-size: var(--fs-sm); margin-top: 0.6rem; max-width: 48rem; }
-.dw-pills { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+.dw-pills { display: flex; gap: 0.5rem; flex-wrap: wrap; align-items: center;
+  margin-bottom: var(--s4); }
 .dw-pill { display: inline-flex; align-items: center; gap: 0.5rem; background: var(--card);
   border: 1px solid var(--line); padding: 0.28rem 0.8rem; font-size: var(--fs-xs);
   color: var(--ink-2); white-space: nowrap; }
@@ -668,6 +669,29 @@ button[data-baseweb="tab"] { font-family: var(--body); font-weight: 600; }
       backdrop-filter: blur(28px) saturate(1.7); }
   }
 }
+
+/* a row per day: closed to the left, new to the right of one centre, the numbers at the ends */
+.dw-flow { display: grid; gap: var(--s2); margin: var(--s3) 0 var(--s2); }
+.dw-flow-head, .dw-flow-row { display: grid; align-items: center; gap: var(--s2);
+  grid-template-columns: 3rem 3.2rem 1fr 2px 1fr 3.2rem; }
+.dw-flow-head em { font-style: normal; font-size: var(--fs-xs); color: var(--ink-3);
+  text-transform: uppercase; letter-spacing: 0.12em; }
+.dw-flow-head em:first-of-type { grid-column: 3; text-align: right; }
+.dw-flow-head em:last-of-type { grid-column: 5; }
+.dw-flow-day { font-size: var(--fs-sm); color: var(--ink-3); }
+.dw-flow-row b { font-size: var(--fs-sm); color: var(--ink); }
+.dw-flow-row b:first-of-type { text-align: right; }
+.dw-flow-side { display: flex; gap: 3px; flex-wrap: nowrap; min-height: 0.7rem; }
+.dw-flow-side.left { justify-content: flex-end; }
+.dw-flow-side i { width: 0.7rem; height: 0.7rem; border-radius: 50%; flex: none; }
+.dw-flow-axis { align-self: stretch; background: var(--line-2); border-radius: 1px; }
+.dw-flow-note { font-size: var(--fs-xs); color: var(--ink-3); }
+
+/* tiles of one proportion, whatever their title or tags */
+.dw-dir, .dw-vac { min-height: 13.5rem; }
+.dw-vac-title, .dw-dir-name { display: -webkit-box; -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical; overflow: hidden; }
+.dw-pulse { margin-right: var(--s2); }
 
 /* the key of a figure of parts: colour, name, share (big), value */
 .dw-key { display: grid; gap: var(--s2); margin: var(--s3) 0 var(--s2); }
