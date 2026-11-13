@@ -76,7 +76,7 @@ with ranking_tab:
                     "change_pp": "Зміна, п. п.", "salary_median": "Медіана вилки, USD",
                 }
             )  # fmt: skip
-            st.caption(
+            ui.explain(
                 f"{len(table)} навичок. Клік по заголовку сортує. «Обов'язкова» — у скількох "
                 "вакансіях "
                 "навичку названо вимогою, а не бажаною. «Зміна» — проти попереднього місяця. "
@@ -85,9 +85,7 @@ with ranking_tab:
             st.dataframe(
                 table[
                     [
-                        "№",
                         "Навичка",
-                        "Група",
                         "Вакансій",
                         "Частка вакансій, %",
                         "Обов'язкова, %",
@@ -97,14 +95,19 @@ with ranking_tab:
                 ],  # fmt: skip
                 hide_index=True,
                 height=460,
+                width="stretch",
                 column_config={
+                    "Навичка": st.column_config.TextColumn(width="medium"),
+                    "Вакансій": st.column_config.NumberColumn(width="small"),
+                    "Обов'язкова, %": st.column_config.NumberColumn(format="%.1f", width="small"),
                     "Частка вакансій, %": st.column_config.ProgressColumn(
+                        width="medium",
                         format="%.1f",
                         min_value=0,
                         max_value=float(table["Частка вакансій, %"].max()),
                     ),
-                    "Зміна, п. п.": st.column_config.NumberColumn(format="%+.1f"),
-                    "Медіана вилки, USD": st.column_config.NumberColumn(format="%d"),
+                    "Зміна, п. п.": st.column_config.NumberColumn(format="%+.1f", width="small"),
+                    "Медіана вилки, USD": st.column_config.NumberColumn(format="%d", width="small"),
                 },
             )
             st.download_button(

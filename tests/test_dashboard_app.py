@@ -137,13 +137,13 @@ def test_on_the_first_day_of_data_the_page_explains_why_everything_is_new(export
 
     app = _run("home")
 
-    assert any("перший день спостереження" in c.value for c in app.caption)
+    assert "перший день спостереження" in _markdown(app)  # in a "?" tip
 
 
 def test_from_the_second_day_on_there_is_no_such_note(export: Path) -> None:
     app = _run("home")
 
-    assert not any("перший день спостереження" in c.value for c in app.caption)
+    assert "перший день спостереження" not in _markdown(app)
 
 
 def test_a_missing_data_directory_is_a_message_not_a_stack_trace(
@@ -318,7 +318,10 @@ def test_the_salary_page_shows_the_survey_for_the_chosen_role(export: Path) -> N
     assert _metrics(app)["02 · Медіана"] == f"3{NBSP}000"
 
 
-def test_without_a_trained_model_the_calculator_says_how_to_get_one(export: Path) -> None:
+def test_without_a_trained_model_the_calculator_says_how_to_get_one(
+    export: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(dd, "MODEL_DIR", export / "no-shipped-grid")  # nor one that ships
     app = _run("salary")
 
     assert any("make train" in i.value for i in app.info)
@@ -338,9 +341,8 @@ def test_the_calculator_shows_the_models_range_for_the_chosen_profile(export: Pa
     assert metrics["01 · Нижня межа (p10), USD/міс"] == f"2{NBSP}000"
     assert metrics["02 · Типова (p50), USD/міс"] == f"3{NBSP}300"
     assert metrics["03 · Верхня межа (p90), USD/міс"] == f"4{NBSP}800"
-    assert any(
-        "1245" in c.value and "1405" in c.value for c in app.caption
-    )  # model vs baseline error
+    html = _markdown(app)
+    assert "1245" in html and "1405" in html  # model vs baseline error, in a "?" tip
 
 
 # ---- system -----------------------------------------------------------------------------------
@@ -1264,7 +1266,7 @@ def test_the_public_catalog_lists_the_vacancies_and_has_nowhere_to_save_them(
     assert not app.exception and _titles(app) and _opened(app)  # a list, the first one open
     assert not any(b.key == "cat_save" or (b.key or "").startswith("save_") for b in app.button)
     assert "Збіг із вашим профілем" not in _markdown(app)  # nobody's profile to match against
-    assert "належать їхнім авторам" in " ".join(c.value for c in app.caption)  # whose they are
+    assert "належать їхнім авторам" in _markdown(app)  # whose they are
 
 
 def test_the_public_home_and_market_show_the_vacancies_too(
@@ -1293,3 +1295,44 @@ def test_your_own_machine_keeps_every_page(with_catalog: Path) -> None:
     for page in ("catalog", "fit", "saved", "profile", "learn", "practice"):
         app = app.switch_page(f"views/{page}.py").run()
         assert not app.exception, page
+
+
+# ---- tips, the salary calculator on a host that cannot train, one-axis balance ------------------
+def test_the_calculator_falls_back_to_the_grid_that_ships_with_the_app(
+    export: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    shipped = Path("dashboard/model")
+    assert (shipped / dd.GRID_FILE).exists() and (shipped / dd.GRID_INFO_FILE).exists()
+    monkeypatch.setenv("DASHBOARD_PROFILE", "session")  # a public host: no model was trained here
+
+    app = _run("salary")
+
+    assert not any("Модель ще не навчена" in i.value for i in app.info)  # a calculator, not a note
+    assert app.selectbox(key="calc_role").options  # with real roles to pick
+
+
+def test_the_exports_own_grid_wins_over_the_shipped_one(tmp_path: Path) -> None:
+    assert dd.read_grid(tmp_path / "empty") is not None  # the shipped copy
+    shipped, _ = dd.read_grid(tmp_path / "empty")  # type: ignore[misc]
+    own = tmp_path / "own"
+    own.mkdir()
+    shipped.head(3).to_parquet(own / dd.GRID_FILE)
+    (own / dd.GRID_INFO_FILE).write_text((Path("dashboard/model") / dd.GRID_INFO_FILE).read_text())
+
+    grid, _ = dd.read_grid(own)  # type: ignore[misc]
+
+    assert len(grid) == 3
+
+
+def test_market_explanations_are_tips_not_lines_of_grey_text(export: Path) -> None:
+    html = _markdown(_run("market"))
+
+    assert 'class="dw-tip"' in html and 'data-tip="' in html
+
+
+def test_new_and_closed_are_drawn_from_one_axis_without_the_first_day(export: Path) -> None:
+    app = _run("market")
+    html = _markdown(app)
+
+    assert "одна крапка ≈" in html and "угору" in html  # the balance figure, not a bar chart
+    assert "Перший день не показано" in html  # and why day one is left out

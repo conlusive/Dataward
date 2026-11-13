@@ -279,8 +279,8 @@ _BLOCKS = """
 .dw-dir-count small { font-size: var(--fs-sm); color: var(--ink-3); margin-left: 0.4rem; }
 .dw-meter { height: 8px; background: var(--line); margin: 0.4rem 0 0.7rem; }
 .dw-meter span { display: block; height: 100%; background: var(--accent); }
-.dw-dir { height: 12rem; overflow: hidden; }
-.dw-vac { height: 11rem; overflow: hidden; }
+.dw-dir { min-height: 12rem; }
+.dw-vac { min-height: 11rem; }
 .dw-vac-title { font-family: var(--display); font-size: var(--fs-lg); color: var(--ink);
   line-height: 1.2; }
 .dw-vac-meta { color: var(--ink-3); font-size: var(--fs-sm); margin: 0.3rem 0 0.5rem; }
@@ -310,6 +310,19 @@ button[kind="pills"], button[kind="pillsActive"],
   padding: var(--s3) var(--s4);
   margin: 0.6rem 0; color: var(--ink); font-size: var(--fs-md); line-height: 1.55; }
 .dw-q-meta { color: var(--ink-3); font-size: var(--fs-sm); margin-bottom: 0.3rem; }
+.dw-tip { display: inline-flex; align-items: center; justify-content: center; position: relative;
+  width: 1.15rem; height: 1.15rem; margin-left: 0.5rem; border-radius: 50%; vertical-align: middle;
+  border: 1px solid var(--line-2); color: var(--ink-3); font-size: 0.7rem; font-weight: 700;
+  letter-spacing: 0; text-transform: none; cursor: help; background: var(--card); }
+.dw-tip:hover, .dw-tip:focus { color: var(--ink); border-color: var(--ink-3); outline: none; }
+.dw-tip::after { content: attr(data-tip); position: absolute; left: 0; top: calc(100% + 8px);
+  width: max-content; max-width: min(21rem, 78vw); padding: 0.6rem 0.8rem; border-radius: 12px;
+  background: var(--ink); color: var(--card); font-family: var(--body); font-size: var(--fs-sm);
+  font-weight: 400; line-height: 1.45; text-align: left; text-transform: none; white-space: normal;
+  opacity: 0; pointer-events: none; transition: opacity 0.12s; z-index: 60; }
+.dw-tip:hover::after, .dw-tip:focus::after { opacity: 1; }
+.dw-tipline { display: flex; align-items: center; color: var(--ink-3); font-size: var(--fs-sm);
+  margin: var(--s2) 0; }
 .dw-fl { font-family: var(--display); font-size: var(--fs-md); color: var(--ink-2);
   margin-bottom: 0.3rem; }
 .dw-badge { display: inline-block; min-width: 1.3rem; padding: 0 0.35rem; margin-left: 0.5rem;
@@ -612,6 +625,12 @@ button[kind="pills"], button[kind="pillsActive"], [data-testid="stBaseButton-pil
 .st-key-dw_avatar { background: transparent; }
 .dw-avatar-pic { border-radius: 50%; border-width: 1px; background: var(--powder); }
 
+/* a select shows its whole value, and its list is as wide as its longest option */
+[data-baseweb="select"] div[value], [data-baseweb="select"] [role="combobox"] {
+  text-overflow: clip; }
+[data-baseweb="popover"] [role="listbox"] { min-width: max-content; }
+[data-baseweb="popover"] li { white-space: nowrap; }
+
 /* tabs, lists and the open vacancy */
 button[data-baseweb="tab"] { font-family: var(--body); font-weight: 600; }
 [data-baseweb="tab-highlight"] { height: 3px; border-radius: 999px; }
@@ -706,9 +725,21 @@ def section(label: str, number: int | None = None, domain: str | None = None) ->
     return f'<div class="dw-section{_domain(domain)}">{mark}{escape(label)}</div>'
 
 
+def tip(text: str) -> str:
+    """A small "?" that shows ``text`` when pointed at or focused (keyboard and touch too).
+
+    Pure CSS, so it needs no script; the text is also its accessible label.
+    """
+    return (
+        f'<span class="dw-tip" tabindex="0" role="note" aria-label="{escape(text)}" '
+        f'data-tip="{escape(text)}">?</span>'
+    )
+
+
 def card_title(title: str, note: str = "") -> str:
-    extra = f'<div class="dw-card-note">{escape(note)}</div>' if note else ""
-    return f'<div class="dw-card-title">{escape(title)}</div>{extra}'
+    """A card's heading; its explanation is a "?" next to it, not a line of grey text."""
+    mark = tip(note) if note else ""
+    return f'<div class="dw-card-title">{escape(title)}{mark}</div>'
 
 
 def side_label(text: str) -> str:

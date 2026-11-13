@@ -1,0 +1,18 @@
+{
+  "baseline": {
+    "coverage_10_90": 0.7516367182058783,
+    "interval_width": 3608.7341551748154,
+    "mae": 1404.8935436690347
+  },
+  "generated_at": "2026-11-13T07:09:07+00:00",
+  "model": {
+    "coverage_10_90": 0.7949575149742304,
+    "interval_width": 3926.152007934656,
+    "mae": 1245.1620807083848
+  },
+  "predicts_for_year": 2026,
+  "run_id": "6f1ad56fcf2d48db9b30910514b05435",
+  "target": "salary_usd",
+  "tested_on_year": 2026,
+  "version": 1
+}

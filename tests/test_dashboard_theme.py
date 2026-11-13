@@ -352,3 +352,26 @@ def test_a_menu_group_takes_its_colour_from_its_page_not_from_its_place() -> Non
     for page, domain in (("catalog", "jobs"), ("learn", "grow"), ("market", "market"),
                          ("system", "system")):  # fmt: skip
         assert f'div:has(a[href$="{page}"]) {{ --dom: var(--d-{domain}); }}' in css
+
+
+def test_a_tip_is_a_question_mark_that_carries_its_text_and_escapes_it() -> None:
+    html = t.tip("<b>x</b> пояснення")
+
+    assert ">?</span>" in html and 'data-tip="&lt;b&gt;x&lt;/b&gt; пояснення"' in html
+    assert 'tabindex="0"' in html and 'aria-label="' in html  # reachable by keyboard and a reader
+    assert "<b>x</b>" not in html
+
+
+def test_a_cards_explanation_is_a_tip_beside_its_title_not_a_line_of_text() -> None:
+    html = t.card_title("Розріз", "Пояснення")
+
+    assert html.count("dw-tip") == 1 and "dw-card-note" not in html
+    assert t.card_title("Без пояснення") == '<div class="dw-card-title">Без пояснення</div>'
+
+
+def test_a_tip_shows_on_hover_and_on_focus_and_tiles_are_not_cut() -> None:
+    css = t.css()
+
+    assert ".dw-tip:hover::after, .dw-tip:focus::after { opacity: 1; }" in css
+    assert ".dw-dir { min-height: 12rem; }" in css and ".dw-vac { min-height: 11rem; }" in css
+    assert "overflow: hidden; }\n.dw-vac" not in css  # a tile grows with its tags

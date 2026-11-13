@@ -244,7 +244,10 @@ def test_slo_and_run_tables_use_plain_words() -> None:
 
 
 # ---- the salary calculator -----------------------------------------------------------------------
-def test_without_a_trained_model_there_is_no_grid(tmp_path: Path) -> None:
+def test_without_a_trained_model_there_is_no_grid(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(dd, "MODEL_DIR", tmp_path / "no-shipped-grid")  # nor one that ships
     write_export(tmp_path)
 
     assert dd.read_grid(tmp_path) is None

@@ -104,6 +104,13 @@ The table lives in `dashboard_keys.py` and the script is generated from it (`st.
 about Streamlit's routing. Keys are matched by position (`KeyboardEvent.code`), so they work in the
 Ukrainian layout. A test keeps the table equal to the menu and checks the script with `node --check`.
 
+## The salary calculator on a host that cannot train
+
+`make train` writes `salary_model_grid.parquet` and `salary_model.json` into the export; the public
+export does not carry them (no model is trained in CI). The trained grid is therefore committed in
+`dashboard/model/` and `dashboard_data.read_grid` falls back to it. After retraining (`make train`),
+copy the two files from `data/export/` to `dashboard/model/` to publish the new grid.
+
 ## Taking an action back
 
 Every change to the profile that you make by hand (saving vacancies, editing the saved ones, ticking

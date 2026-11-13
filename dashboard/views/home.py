@@ -48,7 +48,7 @@ ui.html(
     )
 )
 if len(totals) < 2:
-    st.caption(
+    ui.explain(
         "Це перший день спостереження: усі вакансії позначено «новими», бо раніше ми їх не бачили. "
         "Реальні нові й закриті з'являться з другого дня."
     )
@@ -110,7 +110,7 @@ def breakdown_panel() -> None:
         "Розріз ринку за днями",
         "стовпчик — день, число над ним — разом за день; кольори — частини.",
     ):
-        left, middle, right = st.columns([3, 1, 1])
+        left, middle, right = st.columns([1, 2, 2])
         metric = middle.selectbox("Показник", list(dd.METRICS), key="home_metric")
         split = right.selectbox("Розріз", list(dd.BREAKDOWNS), key="home_split")
         daily, order = dd.daily_breakdown(market, dd.METRICS[metric], dd.BREAKDOWNS[split])
@@ -138,7 +138,7 @@ with shares, ui.card("Структура ринку", "відкриті вака
     share_names, share_colours = charts.series_domain(share["label"].tolist(), keep_order=True)
     share_parts = list(zip(share_names, share_colours, share["value"].tolist(), strict=True))
     ui.html(dots.waffle(share_parts) + dots.key(share_parts))
-    st.caption("100 крапок: кожна — один відсоток відкритих вакансій.")
+    ui.explain("100 крапок: кожна — один відсоток відкритих вакансій.")
 
 # ---- directions: the way into the catalog ---------------------------------------------------
 directions = dd.direction_stats(market, vacancies)

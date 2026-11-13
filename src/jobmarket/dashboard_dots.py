@@ -112,6 +112,56 @@ def columns(
     return _svg(width, height, "".join(body), f"{summary} {unit}".strip(), cls="dw-dot-cols")
 
 
+def balance(
+    labels: Sequence[str],
+    up: tuple[str, str, Sequence[float]],
+    down: tuple[str, str, Sequence[float]],
+    *,
+    rows: int = 6,
+) -> str:
+    """Two things per day from one axis: ``up`` grows upwards, ``down`` downwards.
+
+    For arrivals against departures: the day is a column with dots above the axis (arrived) and
+    below it (left), and the number of each at the end of its dots. A dot is worth the same amount
+    on both sides (the biggest value of either fills ``rows`` dots); a value that exists keeps one.
+    """
+    count = len(labels)
+    peak = max([float(v) for v in (*up[2], *down[2])], default=0.0)
+    if count == 0 or peak <= 0:
+        return _svg(100, 20, "", "немає даних", cls="dw-dot-cols")
+    per_dot, step = peak / rows, 9.0
+    gap = max(26.0, min(34.0, 300 / count))
+    axis = 14 + rows * step
+    width, height = (count - 1) * gap + 30, 2 * rows * step + 36
+    every = max(1, -(-count // 14))
+    body = [
+        f'<text class="dw-dot-axis" x="0" y="6" font-size="5.5">одна крапка ≈ '
+        f"{per_dot:,.0f}</text>".replace(",", "\u00a0"),
+        f'<line x1="6" x2="{width - 6:g}" y1="{axis:g}" y2="{axis:g}" stroke="{t.LINE}"/>',
+    ]
+    for i, label in enumerate(labels):
+        x = 15 + i * gap
+        for sign, (name, colour, values) in ((-1, up), (1, down)):
+            value = float(values[i])
+            dots = min(rows, max(1, round(value / per_dot))) if value > 0 else 0
+            tip = f"{label} · {name}: {value:,.0f}".replace(",", "\u00a0")
+            for k in range(dots):
+                body.append(_dot(x, axis + sign * (6 + k * step), 3.2, colour, tip, index=i))
+            if i % every == 0 or i == count - 1:
+                edge = axis + sign * (6 + max(dots, 1) * step) + (-2 if sign < 0 else 8)
+                body.append(
+                    f'<text class="dw-num" x="{x:.1f}" y="{edge:.1f}" font-size="6.5" '
+                    f'text-anchor="middle">{value:,.0f}</text>'.replace(",", "\u00a0")
+                )
+        if i % every == 0 or i == count - 1:
+            body.append(
+                f'<text class="dw-dot-axis" x="{x:.1f}" y="{height - 2:g}" font-size="5.5" '
+                f'text-anchor="middle">{escape(label)}</text>'
+            )
+    summary = f"{up[0]} угору, {down[0]} вниз, одна крапка ≈ {per_dot:,.0f}".replace(",", "\u00a0")
+    return _svg(width, height, "".join(body), summary, cls="dw-dot-cols")
+
+
 def key(parts: Sequence[tuple[str, str, float]]) -> str:
     """What a figure of parts shows, in words and numbers: a row per part with its colour, its
     name, its share (big) and its value. A reader should not have to count dots."""
