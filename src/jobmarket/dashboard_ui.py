@@ -24,6 +24,7 @@ from jobmarket import dashboard_progress as pg
 from jobmarket import dashboard_resources as rs
 from jobmarket import dashboard_sync as sync
 from jobmarket import dashboard_theme as theme
+from jobmarket import dashboard_tips as dtips
 
 CACHE_SECONDS = 300  # the data changes once a day; five minutes keeps a deploy's new files visible
 
@@ -227,6 +228,7 @@ def scripts() -> None:
         st.html(dm.script(), unsafe_allow_javascript=True)
         st.html(dmo.script(), unsafe_allow_javascript=True)
         st.html(dic.script(), unsafe_allow_javascript=True)
+        st.html(dtips.script(), unsafe_allow_javascript=True)
 
 
 def go_practice(skill: str) -> None:

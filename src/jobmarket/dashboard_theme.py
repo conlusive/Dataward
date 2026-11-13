@@ -315,7 +315,8 @@ button[kind="pills"], button[kind="pillsActive"],
   border: 1px solid var(--line-2); color: var(--ink-3); font-size: 0.7rem; font-weight: 700;
   letter-spacing: 0; text-transform: none; cursor: help; background: var(--card); }
 .dw-tip:hover, .dw-tip:focus { color: var(--ink); border-color: var(--ink-3); outline: none; }
-.dw-tip::after { content: attr(data-tip); position: absolute; left: 0; top: calc(100% + 8px);
+.dw-tip::after { content: attr(data-tip); position: absolute; left: var(--dx, 0);
+  top: calc(100% + 8px);
   width: max-content; max-width: min(21rem, 78vw); padding: 0.6rem 0.8rem; border-radius: 12px;
   background: var(--ink); color: var(--card); font-family: var(--body); font-size: var(--fs-sm);
   font-weight: 400; line-height: 1.45; text-align: left; text-transform: none; white-space: normal;
@@ -588,7 +589,7 @@ _CALM = """
 /* figures in a row: whole blocks of colour, as in the study */
 .dw-stats { gap: var(--s3); }
 .dw-stat { flex: 1 1 9rem; flex-direction: column; align-items: flex-start; gap: var(--s2);
-  padding: var(--s4) var(--s5); border-radius: var(--r); border: 0; color: var(--ink);
+  padding: var(--s4); min-width: 0; border-radius: var(--r); border: 0; color: var(--ink);
   background: var(--card); box-shadow: inset 0 0 0 1px var(--line); }
 .dw-stat:nth-child(4n + 1) { background: var(--powder); box-shadow: none; }
 .dw-stat:nth-child(4n + 2) { background: var(--mauve); box-shadow: none; }
@@ -596,7 +597,7 @@ _CALM = """
 .dw-stat:nth-child(4n + 3) b, .dw-stat:nth-child(4n + 3) em { color: var(--bg); }
 .dw-stat i, .dw-leg i { display: none; }
 .dw-stat b { font-size: var(--fs-xl); line-height: 1; color: var(--ink); }
-.dw-stat em { color: var(--ink-2); }
+.dw-stat em { color: var(--ink-2); white-space: nowrap; letter-spacing: 0.08em; }
 .dw-leg b { border-radius: 50%; }
 
 /* things to do, tags, meters */
@@ -645,6 +646,28 @@ button[data-baseweb="tab"] { font-family: var(--body); font-weight: 600; }
 #dw-overlay .dw-box { border: 0; border-radius: var(--r);
   box-shadow: 0 24px 60px color-mix(in srgb, var(--wine) 30%, transparent); }
 .dw-kbd { border-radius: 6px; border-width: 1px; border-bottom-width: 2px; }
+
+/* a phone: the menu is a drawer over the page, so it is frosted glass, not nothing (on a desktop it
+   sits on the page with no panel). A translucent cream, a strong blur, a bright rim and a soft
+   shadow; where the browser cannot blur, the cream is opaque enough to read. */
+@media (max-width: 768px) {
+  [data-testid="stSidebar"] { background: rgba(251, 243, 225, 0.94);
+    border-right: 1px solid rgba(255, 255, 255, 0.7); border-radius: 0 28px 28px 0;
+    box-shadow: inset -1px 0 0 rgba(255, 255, 255, 0.55), 0 18px 60px rgba(34, 37, 43, 0.22); }
+  [data-testid="stSidebarContent"] { background: transparent; }
+
+  /* the top bar (with the button that opens the menu): the same glass, a slim strip */
+  [data-testid="stHeader"] { background: rgba(251, 243, 225, 0.94);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.7);
+    box-shadow: 0 8px 28px rgba(34, 37, 43, 0.08); }
+}
+@supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  @media (max-width: 768px) {
+    [data-testid="stSidebar"], [data-testid="stHeader"] { background: rgba(251, 243, 225, 0.55);
+      -webkit-backdrop-filter: blur(28px) saturate(1.7);
+      backdrop-filter: blur(28px) saturate(1.7); }
+  }
+}
 
 /* the key of a figure of parts: colour, name, share (big), value */
 .dw-key { display: grid; gap: var(--s2); margin: var(--s3) 0 var(--s2); }

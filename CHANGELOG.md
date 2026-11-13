@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+### Fixed (tips, phone menu)
+- A "?" tip near the right edge ran past the screen and made the page scroll sideways; a small script
+  (`dashboard_tips.py`) now shifts its text left by exactly as much as needed. The labels of the figures
+  on the home page stay on one line.
+- On a phone the menu drawer is **frosted glass** (a translucent cream with a strong blur and a bright
+  rim) instead of fully transparent; on a desktop it still sits on the page with no panel.
+
 ### Changed (hints, charts, calculator)
 - Long grey explanations became a small **"?" that shows its text when pointed at** (or focused with the
   keyboard); card notes sit beside the card title the same way.
