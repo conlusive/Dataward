@@ -38,6 +38,7 @@ def test_the_apple_touch_icon_has_the_size_the_script_announces() -> None:
 
     assert image.size == (logo.APPLE_TOUCH_SIZE, logo.APPLE_TOUCH_SIZE)
     assert f"{logo.APPLE_TOUCH_SIZE}x{logo.APPLE_TOUCH_SIZE}" in icon.script()
+    assert f"{logo.FAVICON_SIZE}x{logo.FAVICON_SIZE}" in icon.script()  # a multiple of 48
 
 
 def test_streamlit_serves_the_static_folder_and_no_longer_swaps_the_icon_itself() -> None:
@@ -51,7 +52,8 @@ def test_streamlit_serves_the_static_folder_and_no_longer_swaps_the_icon_itself(
 def test_the_image_puts_our_icon_where_streamlits_own_favicon_is() -> None:
     dockerfile = (ROOT / "Dockerfile.dashboard").read_text(encoding="utf-8")
 
-    assert "cp dashboard/static/favicon.png" in dockerfile
+    assert "cp dashboard/static/favicon.png dashboard/static/favicon.ico" in dockerfile
+    assert "apple-touch-icon.png" in dockerfile  # and the other names a browser asks for
     assert dockerfile.index("COPY dashboard ./dashboard") < dockerfile.index("cp dashboard/static")
     assert dockerfile.index("cp dashboard/static") < dockerfile.index(
         "USER app"

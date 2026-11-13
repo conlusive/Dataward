@@ -281,6 +281,15 @@ serverless platform such as Vercel). `render.yaml` is a Render Blueprint for the
 - **Profiles.** `DASHBOARD_PROFILE=session` is also the storage rule: should a profile ever be created on
   the public copy it lives in the visitor's session and never in the server's file, because one file on a
   shared server would be one profile for everybody. Today nothing on the public copy creates one.
+- **Deploying every merge.** Render's own auto-deploy has missed merges. `ci.yml` has a `deploy` job that,
+  after green checks on `main`, posts to a **Deploy Hook**. Set it up once: in Render open the service
+  > Settings > Deploy Hook and copy the URL, then in the repository run `gh secret set
+  RENDER_DEPLOY_HOOK_URL` and paste it (the value is never printed in a log). Without the secret the job
+  does nothing and Render's auto-deploy is all there is.
+- **The site icon.** A round badge (three rising bars and a dot, cream on wine) of 192 px, a multiple of
+  48 px as search engines ask, plus `favicon.ico` (16, 32, 48) and the touch icon; the image copies all
+  three over Streamlit's own, and the page links ours. A browser keeps old icons hard (Safari most): to see
+  a changed icon, close the tab and reopen it, or clear the site's data.
 - **Free plan.** The service sleeps after about 15 minutes without a visit and wakes in under a
   minute; it has 512 MB of memory.
 
