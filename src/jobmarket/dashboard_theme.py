@@ -710,6 +710,18 @@ button[data-baseweb="tab"] { font-family: var(--body); font-weight: 600; }
 .dw-dot-spark { max-height: 2.2rem; }
 .dw-dots .dw-num { font-family: var(--dots); font-weight: 800; fill: var(--ink); }
 .dw-dots .dw-dot-axis { font-family: var(--body); font-weight: 500; fill: var(--ink-3); }
+
+/* two cards side by side are one height, whatever wraps in them: the chain of single children from
+   the column down to the card (a fragment or a keyed block adds a level) is stretched */
+[data-testid="stColumn"] > [data-testid="stVerticalBlock"] > :only-child,
+[data-testid="stColumn"] > [data-testid="stVerticalBlock"] > :only-child > :only-child,
+[data-testid="stColumn"] > [data-testid="stVerticalBlock"] > :only-child > :only-child >
+  :only-child { height: 100%; }
+
+/* tiles of a row are one size: tags are cut at two rows rather than make one tile taller */
+.dw-dir, .dw-vac { min-height: 16rem; }
+.dw-dir .dw-chips, .dw-vac .dw-chips { max-height: 4.6rem; overflow: hidden; }
+.dw-pills { margin-bottom: var(--s5); }
 """
 
 
