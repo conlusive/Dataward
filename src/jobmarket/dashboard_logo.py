@@ -26,7 +26,7 @@ BARS = (3, 5, 7)  # heights of the emblem's bars, one column each with a column 
 EMBLEM_WIDTH = len(BARS) * 2 - 1
 EMBLEM_GAP = 3  # columns between the emblem and the first letter
 DOT = 2  # the full stop is DOT x DOT pixels
-SHADOW = "#E6C7B8"  # a pale step of the accent, one pixel down and right
+SHADOW = "#D6CCF0"  # a pale step of the accent, one pixel down and right
 DOT_COLOUR = t.SERIES[1]  # the terracotta of the second chart colour
 STATIC = Path(__file__).resolve().parents[2] / "dashboard" / "static"
 
@@ -98,7 +98,7 @@ ICO_SIZES = ((16, 16), (32, 32), (48, 48))
 
 
 def favicon_png(size: int = FAVICON_SIZE, *, round_badge: bool = True) -> bytes:
-    """The site icon: three rising bars and a dot, cream on a wine disc (a round badge).
+    """The site icon: three rising bars and a dot, cream on a violet disc (a round badge).
 
     The corners of a round badge are transparent, so a tab or a search result shows a circle; the
     icon of a home screen (``round_badge=False``) is a full square, which the system rounds itself.

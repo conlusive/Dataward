@@ -1,7 +1,7 @@
 """The dashboard's look: colour tokens, one stylesheet and small HTML pieces.
 
 No Streamlit import here, so the pieces are tested directly. The look is "soft signal": a plombir
-(ice-cream white) page, three colours from one study (powder blue, mauve, wine) worn as whole
+(ice-cream white) page, three colours (powder blue, lavender, violet) worn as whole
 blocks, a heavy grotesque for titles, small capitals with wide tracking for labels, and numbers
 and figures made of dots (``dashboard_dots``). The menu has no panel of its own: it sits on the
 page. The four chart colours are saturated relatives of the three (the originals are too pale or
@@ -19,22 +19,22 @@ INK = "#22252B"
 INK_2 = "#474A52"
 INK_3 = "#68635C"  # muted text: 4.9:1 on the page, 5.8:1 on the card
 POWDER = "#C0D8E6"  # the three colours of the study, worn as blocks
-MAUVE = "#C77E96"
-WINE = "#5B3044"
-ACCENT = WINE  # links, the open page, lit dots
+LAVENDER = "#B7A3EA"
+VIOLET = "#5B3FB5"
+ACCENT = VIOLET  # links, the open page, lit dots, the mark
 
 # Chart colours, in a fixed order (an entity keeps its colour whatever the filter shows). All four
 # passed the palette validator on the card surface; a chart never needs a fifth (the tail is folded
-# into "Інші"). They are relatives of the study: berry, periwinkle, gold, rose.
-SERIES = ("#9A3F6C", "#6C8FD8", "#B98A1E", "#D76C8E")
+# into "Інші"). Violet, blue, gold and rose; the violet of the accent leads.
+SERIES = ("#6D4FC8", "#3F8FC9", "#B8860B", "#D9668F")
 SOURCE_ORDER = ("dou", "djinni")  # the sources always wear the first two colours in this order
 MARK = SERIES[0]  # one-series bars and lines
 # Each part of the product has its own colour, so a glance says where you are. Small text wears
 # them, so they are dark steps (4.5:1 on the card); the page tints them itself.
 DOMAINS = {  # a colour per part of the product
     "jobs": "#2F6F94",  # vacancies: the deep step of powder
-    "grow": "#6B3F86",  # learning: plum
-    "market": "#A8456A",  # analytics: the deep step of mauve
+    "grow": "#5B3FB5",  # learning: the violet of the accent
+    "market": "#B0457A",  # analytics: a deep rose
     "system": "#8A6A12",  # state of the system: ochre
 }  # fmt: skip
 MUTED_MARK = "#8F8A80"  # context marks next to an emphasised one (3:1 on the card)
@@ -593,8 +593,8 @@ _CALM = """
   padding: var(--s4); min-width: 0; border-radius: var(--r); border: 0; color: var(--ink);
   background: var(--card); box-shadow: inset 0 0 0 1px var(--line); }
 .dw-stat:nth-child(4n + 1) { background: var(--powder); box-shadow: none; }
-.dw-stat:nth-child(4n + 2) { background: var(--mauve); box-shadow: none; }
-.dw-stat:nth-child(4n + 3) { background: var(--wine); box-shadow: none; color: var(--bg); }
+.dw-stat:nth-child(4n + 2) { background: var(--lavender); box-shadow: none; }
+.dw-stat:nth-child(4n + 3) { background: var(--violet); box-shadow: none; color: var(--bg); }
 .dw-stat:nth-child(4n + 3) b, .dw-stat:nth-child(4n + 3) em { color: var(--bg); }
 .dw-stat i, .dw-leg i { display: none; }
 .dw-stat b { font-size: var(--fs-xl); line-height: 1; color: var(--ink); }
@@ -611,16 +611,16 @@ button[kind="pills"], button[kind="pillsActive"], [data-testid="stBaseButton-pil
 .dw-xp, .dw-meter, .dw-skillrow .dw-bar { border-radius: 999px; background: var(--grid);
   overflow: hidden; }
 .dw-xp span, .dw-meter span, .dw-skillrow .dw-bar span { border-radius: 999px; }
-.dw-meter span { background: var(--mauve); }
+.dw-meter span { background: var(--lavender); }
 .dw-pulse span { border-radius: 50%; width: 10px; height: 10px; }
 
-/* the menu has no panel: it sits on the page; the open page is a wine pill */
+/* the menu has no panel: it sits on the page; the open page is a violet pill */
 [data-testid="stSidebar"] { background: transparent; border-right: 0; }
 [data-testid="stSidebarNavLink"] { border-radius: 999px !important; border-left: 0 !important;
   margin: 1px 0; padding-left: 0.9rem; }
-[data-testid="stSidebarNavLink"]:hover { background: color-mix(in srgb, var(--wine) 8%,
+[data-testid="stSidebarNavLink"]:hover { background: color-mix(in srgb, var(--violet) 8%,
   transparent); }
-[data-testid="stSidebarNavItems"] a[aria-current="page"] { background: var(--wine) !important; }
+[data-testid="stSidebarNavItems"] a[aria-current="page"] { background: var(--violet) !important; }
 [data-testid="stSidebarNavItems"] a[aria-current="page"] * { color: var(--bg) !important; }
 [data-testid="stNavSectionHeader"] { border-left: 0 !important; padding-left: 0.9rem;
   color: var(--dom, var(--ink-3)); }
@@ -643,9 +643,9 @@ button[data-baseweb="tab"] { font-family: var(--body); font-weight: 600; }
 .st-key-cat_rows button[kind="primary"] p, .st-key-mkt_rows button[kind="primary"] p {
   color: var(--ink-2); }
 .st-key-dw_undo { border-radius: var(--r); border-width: 1px; }
-#dw-overlay { background: color-mix(in srgb, var(--wine) 35%, transparent); }
+#dw-overlay { background: color-mix(in srgb, var(--violet) 35%, transparent); }
 #dw-overlay .dw-box { border: 0; border-radius: var(--r);
-  box-shadow: 0 24px 60px color-mix(in srgb, var(--wine) 30%, transparent); }
+  box-shadow: 0 24px 60px color-mix(in srgb, var(--violet) 30%, transparent); }
 .dw-kbd { border-radius: 6px; border-width: 1px; border-bottom-width: 2px; }
 
 /* a phone: the menu is a drawer over the page, so it is frosted glass, not nothing (on a desktop it
@@ -773,7 +773,7 @@ def css() -> str:
         f":root {{ --bg: {BG}; --card: {CARD}; --line: {LINE}; --ink: {INK}; --ink-2: {INK_2};"
         f" --ink-3: {INK_3}; --accent: {ACCENT}; --cursor: {SERIES[1]}; --ok: #2E7D5B;"
         f" --warn: #A8650A; --bad: #C0392B; --grid: {GRID}; --line-2: #D8CEBC; --r: 22px;"
-        f" --powder: {POWDER}; --mauve: {MAUVE}; --wine: {WINE}; --dots: {FONT_DOTS};"
+        f" --powder: {POWDER}; --lavender: {LAVENDER}; --violet: {VIOLET}; --dots: {FONT_DOTS};"
         f" --dot-rest: {GRID};"
         f" --body: {FONT_BODY}; --display: {FONT_DISPLAY};"
         f" --fs-xs: 0.75rem; --fs-sm: 0.85rem; --fs-md: 1rem; --fs-lg: 1.25rem; --fs-xl: 1.75rem;"
