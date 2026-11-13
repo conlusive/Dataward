@@ -22,6 +22,9 @@ def test_the_style_reads_the_shift_and_a_phone_menu_is_frosted_glass() -> None:
     assert "left: var(--dx, 0)" in css  # the tip text moves with the measured shift
     assert "backdrop-filter: blur(28px) saturate(1.7)" in css and "-webkit-backdrop-filter" in css
     assert "@supports ((backdrop-filter: blur(1px))" in css  # and readable where it cannot blur
+    assert (
+        '[data-testid="stSidebar"], [data-testid="stHeader"] { background: rgba(' in css
+    )  # the bar too
     assert "max-width: 768px" in css  # on a desktop the menu stays panel-less
 
 

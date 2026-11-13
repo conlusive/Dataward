@@ -655,10 +655,15 @@ button[data-baseweb="tab"] { font-family: var(--body); font-weight: 600; }
     border-right: 1px solid rgba(255, 255, 255, 0.7); border-radius: 0 28px 28px 0;
     box-shadow: inset -1px 0 0 rgba(255, 255, 255, 0.55), 0 18px 60px rgba(34, 37, 43, 0.22); }
   [data-testid="stSidebarContent"] { background: transparent; }
+
+  /* the top bar (with the button that opens the menu): the same glass, a slim strip */
+  [data-testid="stHeader"] { background: rgba(251, 243, 225, 0.94);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.7);
+    box-shadow: 0 8px 28px rgba(34, 37, 43, 0.08); }
 }
 @supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
   @media (max-width: 768px) {
-    [data-testid="stSidebar"] { background: rgba(251, 243, 225, 0.55);
+    [data-testid="stSidebar"], [data-testid="stHeader"] { background: rgba(251, 243, 225, 0.55);
       -webkit-backdrop-filter: blur(28px) saturate(1.7);
       backdrop-filter: blur(28px) saturate(1.7); }
   }
