@@ -29,17 +29,34 @@ with calculator:
         st.info("Модель ще не навчена. Запустіть `make train`, і тут з'явиться калькулятор.")
     else:
         grid, info = loaded
+        roles = dd.ordered(grid["role"].tolist(), tuple(dd.ROLE_LABELS))
         a, b = st.columns(2)
-        role_choice = a.selectbox("Роль", sorted(grid["role"].unique()), key="calc_role")
-        level_choice = b.selectbox(
-            "Рівень",
-            sorted(grid.loc[grid["role"] == role_choice, "seniority"].unique()),
-            key="calc_level",
+        role_choice = a.selectbox(
+            "Роль", roles, key="calc_role", format_func=lambda v: dd.ROLE_LABELS.get(v, v),
+            index=dd.default_index(roles, dd.CALC_DEFAULTS["role"]),
+        )  # fmt: skip
+        levels = dd.ordered(
+            grid.loc[grid["role"] == role_choice, "seniority"].tolist(), dd.LEVEL_ORDER
         )
+        level_choice = b.selectbox(
+            "Рівень", levels, key="calc_level", format_func=lambda v: dd.LEVEL_LABELS.get(v, v),
+            index=dd.default_index(levels, dd.CALC_DEFAULTS["level"]),
+            help="«Не вказано» — респонденти опитування не називали свій рівень.",
+        )  # fmt: skip
         c, d, e = st.columns(3)
         experience = c.slider("Досвід, років", 0.0, 15.0, 3.0, 0.5, key="calc_experience")
-        english = d.selectbox("Англійська", sorted(grid["english"].unique()), key="calc_english")
-        city = e.selectbox("Де працює", sorted(grid["city_group"].unique()), key="calc_city")
+        english_options = dd.ordered(grid["english"].tolist(), dd.ENGLISH_ORDER)
+        english = d.selectbox(
+            "Англійська", english_options, key="calc_english",
+            format_func=lambda v: dd.ENGLISH_LABELS.get(v, v),
+            index=dd.default_index(english_options, dd.CALC_DEFAULTS["english"]),
+        )  # fmt: skip
+        city_options = dd.ordered(grid["city_group"].tolist(), dd.CITY_ORDER)
+        city = e.selectbox(
+            "Де працює", city_options, key="calc_city",
+            format_func=lambda v: dd.CITY_LABELS.get(v, v),
+            index=dd.default_index(city_options, dd.CALC_DEFAULTS["city"]),
+        )  # fmt: skip
         found = dd.grid_lookup(
             grid, role=role_choice, seniority=level_choice, experience=experience,
             english=english, city_group=city,
@@ -49,11 +66,23 @@ with calculator:
         else:
             low, mid, high = st.columns(3)
             with low:
-                ui.kpi(1, "Нижня межа (p10), USD/міс", dd.fmt_int(found["p10"]))
+                ui.kpi(
+                    1, "Нижня межа", dd.fmt_int(found["p10"]), delta="USD на місяць",
+                    direction="neutral",
+                    help="p10: десята частина людей з таким профілем отримує менше.",
+                )  # fmt: skip
             with mid:
-                ui.kpi(2, "Типова (p50), USD/міс", dd.fmt_int(found["p50"]))
+                ui.kpi(
+                    2, "Типова", dd.fmt_int(found["p50"]), delta="USD на місяць",
+                    direction="neutral",
+                    help="p50: медіана, половина отримує менше, половина більше.",
+                )  # fmt: skip
             with high:
-                ui.kpi(3, "Верхня межа (p90), USD/міс", dd.fmt_int(found["p90"]))
+                ui.kpi(
+                    3, "Верхня межа", dd.fmt_int(found["p90"]), delta="USD на місяць",
+                    direction="neutral",
+                    help="p90: лише десята частина людей отримує більше.",
+                )  # fmt: skip
             profile = pd.DataFrame(
                 {"label": ["Ваш профіль"], "low": [found["p10"]], "mid": [found["p50"]],
                  "high": [found["p90"]]}

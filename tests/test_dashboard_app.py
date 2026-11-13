@@ -338,9 +338,9 @@ def test_the_calculator_shows_the_models_range_for_the_chosen_profile(export: Pa
     app.run()
 
     metrics = _metrics(app)
-    assert metrics["01 · Нижня межа (p10), USD/міс"] == f"2{NBSP}000"
-    assert metrics["02 · Типова (p50), USD/міс"] == f"3{NBSP}300"
-    assert metrics["03 · Верхня межа (p90), USD/міс"] == f"4{NBSP}800"
+    assert metrics["01 · Нижня межа"] == f"2{NBSP}000"
+    assert metrics["02 · Типова"] == f"3{NBSP}300"
+    assert metrics["03 · Верхня межа"] == f"4{NBSP}800"
     html = _markdown(app)
     assert "1245" in html and "1405" in html  # model vs baseline error, in a "?" tip
 
@@ -1361,3 +1361,39 @@ def test_the_daily_card_speaks_plainly_on_both_pages(export: Path) -> None:
         assert "оберіть праворуч, що рахувати" in html, page  # the tip says what the card is
         key = "home_metric" if page == "home" else "mk_metric"
         assert app.selectbox(key=key).label == "Що рахувати", page
+
+
+def test_the_calculator_speaks_words_and_starts_on_a_sensible_profile(export: Path) -> None:
+    from tests.dashboard_fixtures import write_grid
+
+    write_grid(export)
+    app = _run("salary")
+
+    role = app.selectbox(key="calc_role")
+    assert role.value == "qa" or role.value in dd.ROLE_LABELS  # the value stays the survey's code
+    assert all(label not in role.options for label in ("software_engineer", "frontend_coder"))
+    assert "Не вказано" not in app.selectbox(key="calc_level").options[:1]  # not the default
+    assert not any(
+        o in ("unknown", "advanced", "abroad")
+        for k in ("calc_level", "calc_english", "calc_city")
+        for o in app.selectbox(key=k).options
+    )  # no raw codes on the screen
+
+
+def test_every_code_in_the_shipped_grid_has_a_label_and_the_order_is_by_meaning() -> None:
+    grid, _ = dd.read_grid(Path("dashboard/model-does-not-exist")) or (None, None)  # shipped copy
+    assert grid is not None
+    assert set(grid["role"]) <= set(dd.ROLE_LABELS) and set(grid["seniority"]) <= set(
+        dd.LEVEL_LABELS
+    )
+    assert set(grid["english"]) <= set(dd.ENGLISH_LABELS) and set(grid["city_group"]) <= set(
+        dd.CITY_LABELS
+    )
+    assert dd.ordered(["lead", "junior", "unknown", "middle"], dd.LEVEL_ORDER) == [
+        "junior",
+        "middle",
+        "lead",
+        "unknown",
+    ]  # not alphabetical
+    assert dd.ordered(["x", "b", "a"]) == ["a", "b", "x"]  # unknown codes after, in order
+    assert dd.default_index(["a", "b"], "b") == 1 and dd.default_index(["a", "b"], "z") == 0
