@@ -132,11 +132,11 @@ is shown as a tag too.
 ## The look
 
 "Soft signal" (`dashboard_theme.py`, `dashboard_dots.py`, `.streamlit/config.toml`), after the owner's two
-references: a three-colour study (powder, mauve, wine) and a dot-matrix dashboard.
+references: a three-colour study (powder blue and two violets) and a dot-matrix dashboard.
 
 - **Page**: plombir, the cream of vanilla ice cream (`#FBF3E1`), everywhere; near-white cards with 22 px corners and a hairline. The menu has no
-  panel of its own: it sits on the page, and the open page is a wine pill.
-- **Colour**: powder `#C0D8E6`, mauve `#C77E96` and wine `#5B3044` are worn as whole blocks (the row of
+  panel of its own: it sits on the page, and the open page is a violet pill.
+- **Colour**: powder `#C0D8E6`, lavender `#B7A3EA` and violet `#5B3FB5` (the accent) are worn as whole blocks (the row of
   figures, the chosen vacancy, the required skills). A part of the product has a dark step of the same
   family for small text (a test checks 4.5:1).
 - **Type**: one grotesque (Inter), weight 800 and tight tracking in titles; labels are small capitals with
@@ -286,7 +286,7 @@ serverless platform such as Vercel). `render.yaml` is a Render Blueprint for the
   > Settings > Deploy Hook and copy the URL, then in the repository run `gh secret set
   RENDER_DEPLOY_HOOK_URL` and paste it (the value is never printed in a log). Without the secret the job
   does nothing and Render's auto-deploy is all there is.
-- **The site icon.** A round badge (three rising bars and a dot, cream on wine) of 192 px, a multiple of
+- **The site icon.** A round badge (three rising bars and a dot, cream on violet) of 192 px, a multiple of
   48 px as search engines ask, plus `favicon.ico` (16, 32, 48) and the touch icon; the image copies all
   three over Streamlit's own, and the page links ours. A browser keeps old icons hard (Safari most): to see
   a changed icon, close the tab and reopen it, or clear the site's data.

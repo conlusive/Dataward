@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+### Changed (violet accent)
+- The accent is **violet** (`#5B3FB5`, from the owner's reference) instead of wine: links, the open menu
+  page, lit dots, the mark and the tab icon. The three blocks are powder blue, lavender and violet. Chart
+  colours are violet, blue, gold and rose and pass the palette validator; the heat ramp is violet.
+
 ### Changed (the salary calculator in words)
 - The calculator showed the survey's codes (`analyst`, `unknown`, `advanced`, `abroad`) and started on the
   first one in alphabetical order. It now shows **words** (Розробник, Middle, Вище середнього (B2), В

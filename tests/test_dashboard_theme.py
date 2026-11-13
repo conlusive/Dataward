@@ -47,7 +47,7 @@ def test_a_section_label_is_numbered_with_two_digits() -> None:
 
 
 def test_chart_colours_are_four_fixed_ones_and_the_muted_mark_is_not_one_of_them() -> None:
-    assert t.SERIES == ("#9A3F6C", "#6C8FD8", "#B98A1E", "#D76C8E")  # passed the validator
+    assert t.SERIES == ("#6D4FC8", "#3F8FC9", "#B8860B", "#D9668F")  # passed the validator
     assert t.MUTED_MARK not in t.SERIES and len(set(t.SERIES)) == 4
     assert all(re.fullmatch(r"#[0-9A-F]{6}", colour) for colour in (*t.SERIES, t.ACCENT, t.BG))
 
@@ -101,8 +101,9 @@ def test_the_style_is_soft_signal_a_heavy_grotesque_dot_numbers_and_three_colour
     css = t.css()
 
     assert "'Inter'" in css and "'Doto'" in css and "font-weight: 800" in css
-    assert (t.POWDER, t.MAUVE, t.WINE) == ("#C0D8E6", "#C77E96", "#5B3044")  # the owner's study
-    assert f"--powder: {t.POWDER}" in css and f"--wine: {t.WINE}" in css
+    assert (t.POWDER, t.LAVENDER, t.VIOLET) == ("#C0D8E6", "#B7A3EA", "#5B3FB5")  # three colours
+    assert t.ACCENT == t.VIOLET  # the accent is the violet the owner picked
+    assert f"--powder: {t.POWDER}" in css and f"--violet: {t.VIOLET}" in css
     assert "clip-path: polygon" not in css  # no stepped corners
     assert 'content: "$ "' not in css and 'content: "// "' not in css  # no terminal props
     assert "counter(dw-sec, decimal-leading-zero)" in css  # sections number themselves
@@ -324,8 +325,8 @@ def test_the_parts_of_the_product_have_four_colours_of_one_family() -> None:
         return colorsys.rgb_to_hsv(red, green, blue)[0] * 360
 
     assert 190 <= hue("jobs") <= 215  # vacancies: the deep step of powder blue
-    assert 265 <= hue("grow") <= 290  # learning: plum
-    assert 325 <= hue("market") <= 345  # analytics: the deep step of mauve
+    assert 250 <= hue("grow") <= 262  # learning: the violet of the accent
+    assert 320 <= hue("market") <= 340  # analytics: a deep rose
     assert 40 <= hue("system") <= 52  # the state of the system: ochre
     assert len(set(t.DOMAINS.values())) == 4  # four parts, four colours
 
