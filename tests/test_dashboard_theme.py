@@ -333,7 +333,7 @@ def test_the_parts_of_the_product_have_four_colours_of_one_family() -> None:
 
     assert 190 <= hue("jobs") <= 215  # vacancies: the deep step of powder blue
     assert 250 <= hue("grow") <= 262  # learning: the violet of the accent
-    assert 320 <= hue("market") <= 340  # analytics: a deep rose
+    assert 150 <= hue("market") <= 170  # analytics: mint
     assert 40 <= hue("system") <= 52  # the state of the system: ochre
     assert len(set(t.DOMAINS.values())) == 4  # four parts, four colours
 
@@ -385,13 +385,21 @@ def test_a_tip_shows_on_hover_and_on_focus_and_tiles_are_not_cut() -> None:
     assert "overflow: hidden; }\n.dw-vac" not in css  # a tile grows with its tags
 
 
-def test_a_phone_gets_a_burger_that_says_menu_and_a_cross_to_close_it() -> None:
+def test_a_phone_gets_a_burger_icon_on_the_right_and_a_cross_to_close_it() -> None:
     css = t.css()
 
-    assert 'content: "Меню"' in css and "linear-gradient(currentColor 0 0)" in css  # three lines
+    assert "linear-gradient(currentColor 0 0)" in css  # three lines, drawn, not a text arrow
     assert 'stExpandSidebarButton"] [data-testid="stIconMaterial"]' in css  # the bare arrow is gone
+    assert 'content: "Меню"' not in css  # an icon, as in most services
+    assert "justify-content: space-between" in css  # the mark left, the burger right
     assert 'content: "✕"' in css  # inside the open menu
-    assert css.index('content: "Меню"') > css.index("@media (max-width: 768px)")  # a phone only
+    assert css.index("linear-gradient(currentColor 0 0)") > css.index("@media (max-width: 768px)")
+
+
+def test_the_phone_menu_is_a_plain_panel_without_a_floating_outline() -> None:
+    css = t.css()
+
+    assert "border-radius: 0 28px 28px 0" not in css and "inset -1px 0 0" not in css
 
 
 def test_nothing_on_a_dark_page_keeps_a_light_theme_colour() -> None:

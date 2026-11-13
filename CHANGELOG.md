@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+### Changed (phone header, one colour)
+- On a phone the top bar is the mark on the left and a **burger icon on the right**, as in most services
+  (no text label); the open menu is a plain panel without the rounded outline that floated above the
+  browser's bottom bar.
+- Analytics (the menu group, its page labels and the section numbers) is **mint** instead of the rose
+  that did not fit the violet and blue.
+
 ### Changed (dark, like GitHub)
 - The page is **GitHub's dark surface** (`#0D1117`, cards `#161B22`) instead of cream. Text and labels wear
   light steps of the colours, the powder and lavender blocks carry dark ink, the violet block and the open

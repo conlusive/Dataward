@@ -35,7 +35,7 @@ MARK = SERIES[0]  # one-series bars and lines
 DOMAINS = {  # a colour per part of the product
     "jobs": "#5BB5E6",  # vacancies: sky
     "grow": "#A78BFA",  # learning: the violet of the accent
-    "market": "#F07FB1",  # analytics: rose
+    "market": "#4FD1A5",  # analytics: mint
     "system": "#E3B341",  # state of the system: amber
 }  # fmt: skip
 MUTED_MARK = "#6E7681"  # context marks next to an emphasised one (3:1 on the card)
@@ -658,8 +658,8 @@ button[data-baseweb="tab"] { font-family: var(--body); font-weight: 600; }
    shadow; where the browser cannot blur, the cream is opaque enough to read. */
 @media (max-width: 768px) {
   [data-testid="stSidebar"] { background: rgba(13, 17, 23, 0.9);
-    border-right: 1px solid rgba(255, 255, 255, 0.14); border-radius: 0 28px 28px 0;
-    box-shadow: inset -1px 0 0 rgba(255, 255, 255, 0.08), 0 18px 60px rgba(1, 4, 9, 0.7); }
+    border-right: 1px solid rgba(255, 255, 255, 0.14);
+    box-shadow: 0 0 60px rgba(1, 4, 9, 0.7); }
   [data-testid="stSidebarContent"] { background: transparent; }
 
   /* the top bar (with the button that opens the menu): the same glass, a slim strip */
@@ -770,24 +770,25 @@ button[data-baseweb="tab"] { font-family: var(--body); font-weight: 600; }
   .st-key-cat_detail, .st-key-mkt_detail { position: static; }
 }
 
-/* a phone: the menu opens from a button that says what it is (three lines and "Меню"), not from a
-   bare arrow; inside the open menu the way out is a clear cross */
+/* a phone: the top bar is the mark on the left and a burger icon on the right, as in most
+   services; inside the open menu the way out is a cross */
 @media (max-width: 768px) {
+  [data-testid="stHeader"] > [data-testid="stToolbar"] > div > div {
+    width: 100%; justify-content: space-between; align-items: center; padding-right: 0.25rem; }
   [data-testid="stExpandSidebarButton"] { display: inline-flex; align-items: center;
-    justify-content: center; gap: 0.55rem; min-width: 0;
-    width: auto; height: 2.5rem; padding: 0 0.95rem; border-radius: 999px; color: var(--ink);
-    background: var(--card); border: 1px solid var(--line-2); }
+    justify-content: center; width: 2.75rem; height: 2.75rem; min-width: 0; padding: 0;
+    border-radius: 50%; color: var(--ink); background: var(--card);
+    border: 1px solid var(--line-2); }
   [data-testid="stExpandSidebarButton"] [data-testid="stIconMaterial"],
-  [data-testid="stExpandSidebarButton"] svg { display: none; }
-  [data-testid="stExpandSidebarButton"]::before { content: ""; width: 1.15rem; height: 0.85rem;
+  [data-testid="stExpandSidebarButton"] svg, [data-testid="stExpandSidebarButton"] > * {
+    display: none; }
+  [data-testid="stExpandSidebarButton"]::before { content: ""; width: 1.2rem; height: 0.9rem;
     background:
       linear-gradient(currentColor 0 0) 0 0 / 100% 2px no-repeat,
       linear-gradient(currentColor 0 0) 0 50% / 100% 2px no-repeat,
       linear-gradient(currentColor 0 0) 0 100% / 100% 2px no-repeat; }
-  [data-testid="stExpandSidebarButton"]::after { content: "Меню"; font-family: var(--body);
-    font-size: var(--fs-sm); font-weight: 600; }
   [data-testid="stSidebar"] button[data-testid="stBaseButton-headerNoPadding"] {
-    width: 2.5rem; height: 2.5rem; border-radius: 50%; color: var(--ink);
+    width: 2.75rem; height: 2.75rem; border-radius: 50%; color: var(--ink);
     background: var(--card); border: 1px solid var(--line-2); }
   [data-testid="stSidebar"] button[data-testid="stBaseButton-headerNoPadding"] * { display: none; }
   [data-testid="stSidebar"] button[data-testid="stBaseButton-headerNoPadding"]::before {
