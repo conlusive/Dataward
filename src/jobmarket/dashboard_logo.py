@@ -26,7 +26,7 @@ BARS = (3, 5, 7)  # heights of the emblem's bars, one column each with a column 
 EMBLEM_WIDTH = len(BARS) * 2 - 1
 EMBLEM_GAP = 3  # columns between the emblem and the first letter
 DOT = 2  # the full stop is DOT x DOT pixels
-SHADOW = "#D6CCF0"  # a pale step of the accent, one pixel down and right
+SHADOW = "#2F2A55"  # a pale step of the accent, one pixel down and right
 DOT_COLOUR = t.SERIES[1]  # the terracotta of the second chart colour
 STATIC = Path(__file__).resolve().parents[2] / "dashboard" / "static"
 
@@ -98,7 +98,7 @@ ICO_SIZES = ((16, 16), (32, 32), (48, 48))
 
 
 def favicon_png(size: int = FAVICON_SIZE, *, round_badge: bool = True) -> bytes:
-    """The site icon: three rising bars and a dot, cream on a violet disc (a round badge).
+    """The site icon: three rising bars and a dot, light on a violet disc (a round badge).
 
     The corners of a round badge are transparent, so a tab or a search result shows a circle; the
     icon of a home screen (``round_badge=False``) is a full square, which the system rounds itself.
@@ -111,9 +111,9 @@ def favicon_png(size: int = FAVICON_SIZE, *, round_badge: bool = True) -> bytes:
     draw = ImageDraw.Draw(canvas)
     disc = [0, 0, big - 1, big - 1]
     if round_badge:
-        draw.ellipse(disc, fill=t.ACCENT)
+        draw.ellipse(disc, fill=t.VIOLET)
     else:
-        draw.rectangle(disc, fill=t.ACCENT)
+        draw.rectangle(disc, fill=t.VIOLET)
     unit = big * 0.075  # the height of the shortest step of the bars
     wide, gap = big * 0.11, big * 0.06
     left = (big - (4 * wide + 3 * gap)) / 2
@@ -121,7 +121,7 @@ def favicon_png(size: int = FAVICON_SIZE, *, round_badge: bool = True) -> bytes:
     for i, height in enumerate(BARS):
         x = left + i * (wide + gap)
         draw.rounded_rectangle(
-            [x, base - height * unit, x + wide, base], radius=wide / 2, fill=t.BG
+            [x, base - height * unit, x + wide, base], radius=wide / 2, fill=t.INK
         )
     x = left + 3 * (wide + gap)
     draw.ellipse([x, base - wide, x + wide, base], fill=DOT_COLOUR)

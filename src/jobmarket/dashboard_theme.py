@@ -1,43 +1,44 @@
 """The dashboard's look: colour tokens, one stylesheet and small HTML pieces.
 
-No Streamlit import here, so the pieces are tested directly. The look is "soft signal": a plombir
-(ice-cream white) page, three colours (powder blue, lavender, violet) worn as whole
-blocks, a heavy grotesque for titles, small capitals with wide tracking for labels, and numbers
-and figures made of dots (``dashboard_dots``). The menu has no panel of its own: it sits on the
-page. The four chart colours are saturated relatives of the three (the originals are too pale or
-too dark to be marks) and passed the dataviz palette validator on the card.
+No Streamlit import here, so the pieces are tested directly. The look is "soft signal" on GitHub's
+dark surface: a near-black page, dark cards with a hairline, three bright colours worn as whole
+blocks (powder blue, lavender, violet), a heavy grotesque for titles, small capitals with wide
+tracking for labels, and numbers and figures made of dots (``dashboard_dots``). The menu has no
+panel of its own. Text wears light steps of the colours (4.5:1 on a card); a block wears dark ink or
+white; the chart marks were checked with the dataviz palette validator in dark mode.
 """
 
 from html import escape
 from typing import Any
 
-BG = "#FBF3E1"  # plombir: the cream of vanilla ice cream, the page everywhere
-CARD = "#FFFDF7"
-LINE = "#E9DDC8"  # hairlines
-GRID = "#EFE4D0"  # chart grid, unlit dots, tracks of meters
-INK = "#22252B"
-INK_2 = "#474A52"
-INK_3 = "#68635C"  # muted text: 4.9:1 on the page, 5.8:1 on the card
-POWDER = "#C0D8E6"  # the three colours of the study, worn as blocks
+BG = "#0D1117"  # the page: GitHub's dark canvas
+CARD = "#161B22"
+LINE = "#30363D"  # hairlines
+GRID = "#21262D"  # chart grid, unlit dots, tracks of meters
+INK = "#E6EDF3"
+INK_2 = "#C9D1D9"
+INK_3 = "#8B949E"  # muted text: 5.9:1 on the card
+POWDER = "#C0D8E6"  # three bright colours, worn as whole blocks (dark ink on them)
 LAVENDER = "#B7A3EA"
-VIOLET = "#5B3FB5"
-ACCENT = VIOLET  # links, the open page, lit dots, the mark
+VIOLET = "#5B3FB5"  # a block and the open page: white text on it
+ON_BLOCK = "#0D1117"  # the ink of a powder or lavender block
+ACCENT = "#A78BFA"  # links, labels, lit dots: the violet step that reads on dark (6:1)
 
 # Chart colours, in a fixed order (an entity keeps its colour whatever the filter shows). All four
-# passed the palette validator on the card surface; a chart never needs a fifth (the tail is folded
-# into "Інші"). Violet, blue, gold and rose; the violet of the accent leads.
-SERIES = ("#6D4FC8", "#3F8FC9", "#B8860B", "#D9668F")
+# passed the palette validator in dark mode on the card; a chart never needs a fifth (the tail is
+# folded into "Інші"). Violet, blue, gold and rose; the violet of the accent leads.
+SERIES = ("#7A5AE0", "#2E8FD0", "#C08A10", "#DB5F93")
 SOURCE_ORDER = ("dou", "djinni")  # the sources always wear the first two colours in this order
 MARK = SERIES[0]  # one-series bars and lines
 # Each part of the product has its own colour, so a glance says where you are. Small text wears
-# them, so they are dark steps (4.5:1 on the card); the page tints them itself.
+# them, so they are light steps (4.5:1 on the card); the page tints them itself.
 DOMAINS = {  # a colour per part of the product
-    "jobs": "#2F6F94",  # vacancies: the deep step of powder
-    "grow": "#5B3FB5",  # learning: the violet of the accent
-    "market": "#B0457A",  # analytics: a deep rose
-    "system": "#8A6A12",  # state of the system: ochre
+    "jobs": "#5BB5E6",  # vacancies: sky
+    "grow": "#A78BFA",  # learning: the violet of the accent
+    "market": "#F07FB1",  # analytics: rose
+    "system": "#E3B341",  # state of the system: amber
 }  # fmt: skip
-MUTED_MARK = "#8F8A80"  # context marks next to an emphasised one (3:1 on the card)
+MUTED_MARK = "#6E7681"  # context marks next to an emphasised one (3:1 on the card)
 
 FONT_BODY = "'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif"
 FONT_DISPLAY = FONT_BODY  # titles are the same grotesque, heavy
@@ -203,7 +204,7 @@ html.dw-enter .dw-typed { overflow: hidden; white-space: nowrap; width: var(--ch
   border-color 0.15s ease, box-shadow 0.15s ease; }
 .dw-dir:hover, .dw-vac:hover, [data-testid="stMetric"]:hover {
   transform: translateY(-2px); border-color: var(--line-2);
-  box-shadow: 0 6px 18px rgba(31, 30, 28, 0.07); }
+  box-shadow: 0 6px 18px rgba(1, 4, 9, 0.6); }
 @keyframes dw-bob { 0%, 100% { transform: translateY(0); }
   50% { transform: translateY(-3px); } }
 @keyframes dw-blink-lid { 0%, 91% { opacity: 0; } 92%, 96% { opacity: 1; }
@@ -291,16 +292,16 @@ _BLOCKS = """
 [data-baseweb="select"]:not(:has([data-baseweb="tag"])) > div { border-style: dashed !important; }
 [data-baseweb="select"]:has([data-baseweb="tag"]) > div { border-color: var(--accent) !important;
   background: color-mix(in srgb, var(--accent) 8%, transparent) !important; }
-[data-baseweb="tag"] { background: var(--accent) !important; color: #FFFFFF !important;
+[data-baseweb="tag"] { background: var(--violet) !important; color: #FFFFFF !important;
   border-radius: var(--r) !important; }
 [data-baseweb="tag"] span { color: #FFFFFF !important; }
-button[kind="pillsActive"] { background: var(--accent) !important; color: #FFFFFF !important;
-  border-color: var(--accent) !important; }
+button[kind="pillsActive"] { background: var(--violet) !important; color: #FFFFFF !important;
+  border-color: var(--violet) !important; }
 button[kind="pills"], button[kind="pillsActive"],
 [data-testid="stBaseButton-pills"], [data-testid="stBaseButton-pillsActive"] {
   border-radius: var(--r) !important; border-width: 2px !important; }
-[data-testid="stBaseButton-pillsActive"] { background: var(--accent) !important;
-  color: #FFFFFF !important; border-color: var(--accent) !important; }
+[data-testid="stBaseButton-pillsActive"] { background: var(--violet) !important;
+  color: #FFFFFF !important; border-color: var(--violet) !important; }
 [data-testid="stBaseButton-pillsActive"] * { color: #FFFFFF !important; }
 .dw-active { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center;
   margin: 0.4rem 0 1rem; font-size: var(--fs-xs); }
@@ -328,7 +329,7 @@ button[kind="pills"], button[kind="pillsActive"],
 .dw-fl { font-family: var(--display); font-size: var(--fs-md); color: var(--ink-2);
   margin-bottom: 0.3rem; }
 .dw-badge { display: inline-block; min-width: 1.3rem; padding: 0 0.35rem; margin-left: 0.5rem;
-  background: var(--accent); color: #FFFFFF; text-align: center; font-size: var(--fs-xs); }
+  background: var(--violet); color: #FFFFFF; text-align: center; font-size: var(--fs-xs); }
 """
 
 _PHONE = """
@@ -533,7 +534,7 @@ _WORKSPACE = """
 .dw-todo-text { font-size: var(--fs-md); color: var(--ink); margin-top: 0.15rem; }
 
 /* a key chip row for the help overlay and the command palette (built by dashboard_keys) */
-#dw-overlay { position: fixed; inset: 0; z-index: 100000; background: rgba(20, 20, 22, 0.72);
+#dw-overlay { position: fixed; inset: 0; z-index: 100000; background: rgba(1, 4, 9, 0.72);
   display: flex; align-items: flex-start; justify-content: center; padding-top: 12vh; }
 #dw-overlay .dw-box { width: min(640px, 92vw); background: var(--card);
   border: 2px solid var(--accent);
@@ -594,8 +595,11 @@ _CALM = """
   background: var(--card); box-shadow: inset 0 0 0 1px var(--line); }
 .dw-stat:nth-child(4n + 1) { background: var(--powder); box-shadow: none; }
 .dw-stat:nth-child(4n + 2) { background: var(--lavender); box-shadow: none; }
-.dw-stat:nth-child(4n + 3) { background: var(--violet); box-shadow: none; color: var(--bg); }
-.dw-stat:nth-child(4n + 3) b, .dw-stat:nth-child(4n + 3) em { color: var(--bg); }
+.dw-stat:nth-child(4n + 1), .dw-stat:nth-child(4n + 2) { color: var(--on-block); }
+.dw-stat:nth-child(4n + 1) b, .dw-stat:nth-child(4n + 1) em,
+.dw-stat:nth-child(4n + 2) b, .dw-stat:nth-child(4n + 2) em { color: var(--on-block); }
+.dw-stat:nth-child(4n + 3) { background: var(--violet); box-shadow: none; color: #FFFFFF; }
+.dw-stat:nth-child(4n + 3) b, .dw-stat:nth-child(4n + 3) em { color: #FFFFFF; }
 .dw-stat i, .dw-leg i { display: none; }
 .dw-stat b { font-size: var(--fs-xl); line-height: 1; color: var(--ink); }
 .dw-stat em { color: var(--ink-2); white-space: nowrap; letter-spacing: 0.08em; }
@@ -607,7 +611,7 @@ _CALM = """
 button[kind="pills"], button[kind="pillsActive"], [data-testid="stBaseButton-pills"],
 [data-testid="stBaseButton-pillsActive"] { border-radius: 999px !important;
   border-width: 1px !important; }
-.dw-chip.req { background: var(--powder); border-color: var(--powder); color: var(--ink); }
+.dw-chip.req { background: var(--powder); border-color: var(--powder); color: var(--on-block); }
 .dw-xp, .dw-meter, .dw-skillrow .dw-bar { border-radius: 999px; background: var(--grid);
   overflow: hidden; }
 .dw-xp span, .dw-meter span, .dw-skillrow .dw-bar span { border-radius: 999px; }
@@ -618,10 +622,10 @@ button[kind="pills"], button[kind="pillsActive"], [data-testid="stBaseButton-pil
 [data-testid="stSidebar"] { background: transparent; border-right: 0; }
 [data-testid="stSidebarNavLink"] { border-radius: 999px !important; border-left: 0 !important;
   margin: 1px 0; padding-left: 0.9rem; }
-[data-testid="stSidebarNavLink"]:hover { background: color-mix(in srgb, var(--violet) 8%,
+[data-testid="stSidebarNavLink"]:hover { background: color-mix(in srgb, var(--accent) 12%,
   transparent); }
 [data-testid="stSidebarNavItems"] a[aria-current="page"] { background: var(--violet) !important; }
-[data-testid="stSidebarNavItems"] a[aria-current="page"] * { color: var(--bg) !important; }
+[data-testid="stSidebarNavItems"] a[aria-current="page"] * { color: #FFFFFF !important; }
 [data-testid="stNavSectionHeader"] { border-left: 0 !important; padding-left: 0.9rem;
   color: var(--dom, var(--ink-3)); }
 .st-key-dw_avatar { background: transparent; }
@@ -640,31 +644,32 @@ button[data-baseweb="tab"] { font-family: var(--body); font-weight: 600; }
   border-width: 1px; border-left-width: 1px; }
 .st-key-cat_rows button[kind="primary"], .st-key-mkt_rows button[kind="primary"] {
   background: var(--powder); border-color: var(--powder); }
-.st-key-cat_rows button[kind="primary"] p, .st-key-mkt_rows button[kind="primary"] p {
-  color: var(--ink-2); }
+.st-key-cat_rows button[kind="primary"] p, .st-key-mkt_rows button[kind="primary"] p,
+.st-key-cat_rows button[kind="primary"] p strong, .st-key-mkt_rows button[kind="primary"] p strong {
+  color: var(--on-block); }
 .st-key-dw_undo { border-radius: var(--r); border-width: 1px; }
-#dw-overlay { background: color-mix(in srgb, var(--violet) 35%, transparent); }
+#dw-overlay { background: rgba(1, 4, 9, 0.72); }
 #dw-overlay .dw-box { border: 0; border-radius: var(--r);
-  box-shadow: 0 24px 60px color-mix(in srgb, var(--violet) 30%, transparent); }
+  box-shadow: 0 24px 60px rgba(1, 4, 9, 0.7); }
 .dw-kbd { border-radius: 6px; border-width: 1px; border-bottom-width: 2px; }
 
 /* a phone: the menu is a drawer over the page, so it is frosted glass, not nothing (on a desktop it
    sits on the page with no panel). A translucent cream, a strong blur, a bright rim and a soft
    shadow; where the browser cannot blur, the cream is opaque enough to read. */
 @media (max-width: 768px) {
-  [data-testid="stSidebar"] { background: rgba(251, 243, 225, 0.94);
-    border-right: 1px solid rgba(255, 255, 255, 0.7); border-radius: 0 28px 28px 0;
-    box-shadow: inset -1px 0 0 rgba(255, 255, 255, 0.55), 0 18px 60px rgba(34, 37, 43, 0.22); }
+  [data-testid="stSidebar"] { background: rgba(13, 17, 23, 0.9);
+    border-right: 1px solid rgba(255, 255, 255, 0.14); border-radius: 0 28px 28px 0;
+    box-shadow: inset -1px 0 0 rgba(255, 255, 255, 0.08), 0 18px 60px rgba(1, 4, 9, 0.7); }
   [data-testid="stSidebarContent"] { background: transparent; }
 
   /* the top bar (with the button that opens the menu): the same glass, a slim strip */
-  [data-testid="stHeader"] { background: rgba(251, 243, 225, 0.94);
-    border-bottom: 1px solid rgba(255, 255, 255, 0.7);
-    box-shadow: 0 8px 28px rgba(34, 37, 43, 0.08); }
+  [data-testid="stHeader"] { background: rgba(13, 17, 23, 0.9);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 8px 28px rgba(1, 4, 9, 0.5); }
 }
 @supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
   @media (max-width: 768px) {
-    [data-testid="stSidebar"], [data-testid="stHeader"] { background: rgba(251, 243, 225, 0.55);
+    [data-testid="stSidebar"], [data-testid="stHeader"] { background: rgba(13, 17, 23, 0.55);
       -webkit-backdrop-filter: blur(28px) saturate(1.7);
       backdrop-filter: blur(28px) saturate(1.7); }
   }
@@ -764,6 +769,30 @@ button[data-baseweb="tab"] { font-family: var(--body); font-weight: 600; }
   .st-key-cat_rows button, .st-key-mkt_rows button { min-height: 3.4rem; }
   .st-key-cat_detail, .st-key-mkt_detail { position: static; }
 }
+
+/* a phone: the menu opens from a button that says what it is (three lines and "Меню"), not from a
+   bare arrow; inside the open menu the way out is a clear cross */
+@media (max-width: 768px) {
+  [data-testid="stExpandSidebarButton"] { display: inline-flex; align-items: center;
+    justify-content: center; gap: 0.55rem; min-width: 0;
+    width: auto; height: 2.5rem; padding: 0 0.95rem; border-radius: 999px; color: var(--ink);
+    background: var(--card); border: 1px solid var(--line-2); }
+  [data-testid="stExpandSidebarButton"] [data-testid="stIconMaterial"],
+  [data-testid="stExpandSidebarButton"] svg { display: none; }
+  [data-testid="stExpandSidebarButton"]::before { content: ""; width: 1.15rem; height: 0.85rem;
+    background:
+      linear-gradient(currentColor 0 0) 0 0 / 100% 2px no-repeat,
+      linear-gradient(currentColor 0 0) 0 50% / 100% 2px no-repeat,
+      linear-gradient(currentColor 0 0) 0 100% / 100% 2px no-repeat; }
+  [data-testid="stExpandSidebarButton"]::after { content: "Меню"; font-family: var(--body);
+    font-size: var(--fs-sm); font-weight: 600; }
+  [data-testid="stSidebar"] button[data-testid="stBaseButton-headerNoPadding"] {
+    width: 2.5rem; height: 2.5rem; border-radius: 50%; color: var(--ink);
+    background: var(--card); border: 1px solid var(--line-2); }
+  [data-testid="stSidebar"] button[data-testid="stBaseButton-headerNoPadding"] * { display: none; }
+  [data-testid="stSidebar"] button[data-testid="stBaseButton-headerNoPadding"]::before {
+    content: "✕"; font-family: var(--body); font-size: var(--fs-md); font-weight: 600; }
+}
 """
 
 
@@ -771,9 +800,10 @@ def css() -> str:
     """The stylesheet, ready for a <style> tag."""
     variables = (
         f":root {{ --bg: {BG}; --card: {CARD}; --line: {LINE}; --ink: {INK}; --ink-2: {INK_2};"
-        f" --ink-3: {INK_3}; --accent: {ACCENT}; --cursor: {SERIES[1]}; --ok: #2E7D5B;"
-        f" --warn: #A8650A; --bad: #C0392B; --grid: {GRID}; --line-2: #D8CEBC; --r: 22px;"
-        f" --powder: {POWDER}; --lavender: {LAVENDER}; --violet: {VIOLET}; --dots: {FONT_DOTS};"
+        f" --ink-3: {INK_3}; --accent: {ACCENT}; --cursor: {SERIES[1]}; --ok: #3FB950;"
+        f" --warn: #D29922; --bad: #F85149; --grid: {GRID}; --line-2: #484F58; --r: 22px;"
+        f" --on-block: {ON_BLOCK}; --powder: {POWDER}; --lavender: {LAVENDER};"
+        f" --violet: {VIOLET}; --dots: {FONT_DOTS};"
         f" --dot-rest: {GRID};"
         f" --body: {FONT_BODY}; --display: {FONT_DISPLAY};"
         f" --fs-xs: 0.75rem; --fs-sm: 0.85rem; --fs-md: 1rem; --fs-lg: 1.25rem; --fs-xl: 1.75rem;"

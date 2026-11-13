@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+### Changed (dark, like GitHub)
+- The page is **GitHub's dark surface** (`#0D1117`, cards `#161B22`) instead of cream. Text and labels wear
+  light steps of the colours, the powder and lavender blocks carry dark ink, the violet block and the open
+  menu page white; statuses use GitHub's green, amber and red. Chart marks, the heat ramp, the logo and
+  the tab icon were redone for a dark page (the marks pass the palette validator in dark mode).
+- **A burger menu on a phone**: a button with three lines and "Меню" opens it, a cross closes it, instead of
+  the unlabelled double arrow.
+
 ### Changed (violet accent)
 - The accent is **violet** (`#5B3FB5`, from the owner's reference) instead of wine: links, the open menu
   page, lit dots, the mark and the tab icon. The three blocks are powder blue, lavender and violet. Chart

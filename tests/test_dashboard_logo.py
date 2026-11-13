@@ -72,8 +72,8 @@ def test_the_favicon_is_a_round_badge_a_multiple_of_48_px_in_the_brand_colours()
     assert image.size == (logo.FAVICON_SIZE,) * 2 and logo.FAVICON_SIZE % 48 == 0
     assert image.getpixel((0, 0))[3] == 0  # a corner is transparent: a circle in a tab
     centre = image.getpixel((logo.FAVICON_SIZE // 2, 6))[:3]  # on the disc, above the bars
-    assert f"#{centre[0]:02X}{centre[1]:02X}{centre[2]:02X}" == t.ACCENT
-    wanted = {t.BG, logo.DOT_COLOUR}
+    assert f"#{centre[0]:02X}{centre[1]:02X}{centre[2]:02X}" == t.VIOLET
+    wanted = {t.INK, logo.DOT_COLOUR}
     found = {
         f"#{r:02X}{g:02X}{b:02X}" for n, (r, g, b, a) in image.getcolors(100000) if a and n > 50
     }
