@@ -718,9 +718,9 @@ button[data-baseweb="tab"] { font-family: var(--body); font-weight: 600; }
 [data-testid="stColumn"] > [data-testid="stVerticalBlock"] > :only-child > :only-child >
   :only-child { height: 100%; }
 
-/* tiles of a row are one size: tags are cut at two rows rather than make one tile taller */
+/* tiles of a row are one size: two tags each, never a tag cut in half */
 .dw-dir, .dw-vac { min-height: 16rem; }
-.dw-dir .dw-chips, .dw-vac .dw-chips { max-height: 4.6rem; overflow: hidden; }
+.dw-dir .dw-chip:nth-child(n + 3), .dw-vac .dw-chip:nth-child(n + 3) { display: none; }
 .dw-pills { margin-bottom: var(--s5); }
 
 /* a phone: nothing may be wider than the screen (the page was wider and wandered sideways).
@@ -735,13 +735,34 @@ button[data-baseweb="tab"] { font-family: var(--body); font-weight: 600; }
   [data-testid="stMain"] { max-width: 100vw; overflow-x: hidden; }
   [data-testid="stMainBlockContainer"] { max-width: 100%; overflow-x: clip;
     padding-left: 1rem; padding-right: 1rem; }
-  [data-testid="stMainBlockContainer"] * { min-width: 0; }
   .dw-dots, .dw-flow, .dw-key, .dw-stats, [data-testid="stDataFrame"],
   [data-testid="stVegaLiteChart"], [data-testid="stArrowVegaLiteChart"] { max-width: 100%; }
   .dw-flow-head, .dw-flow-row { gap: 4px;
     grid-template-columns: 2.2rem 2.4rem minmax(0, 1fr) 2px minmax(0, 1fr) 2.4rem; }
   .dw-key-row { grid-template-columns: 0.8rem 1fr auto auto; }
   .dw-tip::after { max-width: 70vw; }
+}
+
+/* a phone: every part sized for a thumb and a narrow column. Streamlit puts columns one under
+   another below 640 px; the tiles, figures and tables then take the full width. */
+@media (max-width: 640px) {
+  .dw-dir, .dw-vac { min-height: 0; height: auto; }
+  .dw-dir .dw-chip:nth-child(n + 3), .dw-vac .dw-chip:nth-child(n + 3) { display: inline-block; }
+  .dw-vac-title, .dw-dir-name { -webkit-line-clamp: 3; }
+  .dw-dir-count { font-size: var(--fs-lg); }
+  .dw-stat { padding: var(--s3); }
+  .dw-stat b { font-size: var(--fs-lg); }
+  .dw-dot-ring { max-width: 8rem; }
+  .dw-dot-waffle { max-width: 10rem; }
+  .dw-dot-cols { max-height: none; }
+  .dw-key-row { grid-template-columns: 0.8rem 1fr auto auto; gap: var(--s2); }
+  .dw-flow-head, .dw-flow-row {
+    grid-template-columns: 2.2rem 2.4rem minmax(0, 1fr) 2px minmax(0, 1fr) 2.4rem; }
+  .dw-section { margin-top: var(--s5); }
+  .dw-title { font-size: 2rem; }
+  [data-baseweb="select"] > div { min-height: 2.75rem; }
+  .st-key-cat_rows button, .st-key-mkt_rows button { min-height: 3.4rem; }
+  .st-key-cat_detail, .st-key-mkt_detail { position: static; }
 }
 """
 
