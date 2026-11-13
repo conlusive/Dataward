@@ -299,6 +299,13 @@ def no_catalog(subject: str) -> None:
         )
 
 
+DAILY_NOTE = (  # one explanation for the "vacancies by day" card on the home and the market page
+    "Скільки вакансій було кожного дня. Один стовпчик — один день, число над ним — разом за день. "
+    "Кольори — з яких частин воно складається: оберіть праворуч, що рахувати (відкриті, нові чи "
+    "закриті) і за чим ділити (джерело, рівень чи напрямок)."
+)
+
+
 def explain(text: str, label: str = "Як читати") -> None:
     """An explanation as a small label with a "?" that shows ``text`` when pointed at."""
     st.markdown(

@@ -1336,3 +1336,28 @@ def test_new_and_closed_are_drawn_from_one_axis_without_the_first_day(export: Pa
 
     assert "dw-flow-row" in html and "одна крапка ≈" in html  # a row per day, not a bar chart
     assert "Початок збору не показано" in html  # and why the first days are left out
+
+
+def test_no_two_tips_on_a_page_share_a_label_so_each_says_what_it_is_about(
+    export: Path,
+) -> None:
+    import re
+
+    from tests.dashboard_fixtures import write_grid
+
+    write_grid(export)
+    html = _markdown(_run("salary"))
+
+    labels = re.findall(r'<div class="dw-tipline">([^<]*)<span', html)
+    assert len(labels) >= 2 and len(set(labels)) == len(labels)  # not "Як читати" twice
+
+
+def test_the_daily_card_speaks_plainly_on_both_pages(export: Path) -> None:
+    for page in ("home", "market"):
+        app = _run(page)
+        html = _markdown(app)
+
+        assert "Вакансії по днях" in html, page
+        assert "оберіть праворуч, що рахувати" in html, page  # the tip says what the card is
+        key = "home_metric" if page == "home" else "mk_metric"
+        assert app.selectbox(key=key).label == "Що рахувати", page

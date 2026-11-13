@@ -111,14 +111,14 @@ with dynamics:
         @st.fragment
         def breakdown_panel() -> None:
             """Only this panel reruns when a selector changes."""
-            title = "Розріз за днями"
+            title = "Вакансії по днях"
             with ui.card(
                 title,
-                "Стовпчик — один день, число над ним — разом за день, кольори — частини розрізу.",
+                ui.DAILY_NOTE,
             ):
                 pick_metric, pick_split = st.columns(2)
-                metric = pick_metric.selectbox("Показник", list(dd.METRICS), key="mk_metric")
-                split = pick_split.selectbox("Розріз", list(dd.BREAKDOWNS), key="mk_split")
+                metric = pick_metric.selectbox("Що рахувати", list(dd.METRICS), key="mk_metric")
+                split = pick_split.selectbox("Ділити за", list(dd.BREAKDOWNS), key="mk_split")
                 daily, order = dd.daily_breakdown(
                     selected, dd.METRICS[metric], dd.BREAKDOWNS[split]
                 )

@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+### Changed (plain words)
+- "Розріз ринку за днями" is **"Вакансії по днях"** with a tip that says what it is, and its selectors read
+  "Що рахувати" and "Ділити за". On "Зарплати" the tips no longer all say "Як читати": each has its own
+  label (how accurate it is, units, the sample, the survey).
+
 ### Changed (the site icon)
 - The tab and search-result icon is a **round badge with our mark** (three rising bars and a dot) of
   192 px, with a `favicon.ico` and a full-square touch icon; the image copies all three over Streamlit's
