@@ -1,20 +1,20 @@
 # The dashboard's look (read when `streamlit run` starts in the repository root; the dashboard image
-# copies this file too). "Soft signal": a plombir page, powder, lavender and violet, a heavy grotesque. The chart
+# copies this file too). "Soft signal": GitHub's dark surface, powder, lavender and violet, a heavy grotesque. The chart
 # colours were checked with the dataviz palette validator on the white card.
 [theme]
-base = "light"
-primaryColor = "#5B3FB5"
-backgroundColor = "#FBF3E1"
-secondaryBackgroundColor = "#F4EAD5"
-textColor = "#22252B"
-borderColor = "#E9DDC8"
-dataframeBorderColor = "#E9DDC8"
-dataframeHeaderBackgroundColor = "#F4EAD5"
-linkColor = "#5B3FB5"
-greenColor = "#2E7D5B"
-orangeColor = "#A8650A"
-redColor = "#C0392B"
-blueColor = "#3F8FC9"
+base = "dark"
+primaryColor = "#A78BFA"
+backgroundColor = "#0D1117"
+secondaryBackgroundColor = "#161B22"
+textColor = "#E6EDF3"
+borderColor = "#30363D"
+dataframeBorderColor = "#30363D"
+dataframeHeaderBackgroundColor = "#161B22"
+linkColor = "#A78BFA"
+greenColor = "#3FB950"
+orangeColor = "#D29922"
+redColor = "#F85149"
+blueColor = "#58A6FF"
 baseRadius = "large"
 buttonRadius = "full"
 showSidebarBorder = false
@@ -26,7 +26,7 @@ codeFont = "JetBrains Mono, ui-monospace, monospace"
 headingFontWeights = [800, 800, 700, 700, 700, 700]
 metricValueFontSize = "1.75rem"
 metricValueFontWeight = 600
-chartCategoricalColors = ["#6D4FC8", "#3F8FC9", "#B8860B", "#D9668F"]
+chartCategoricalColors = ["#7A5AE0", "#2E8FD0", "#C08A10", "#DB5F93"]
 
 [server]
 # dashboard/static (the logo and the tab icons) is served at /app/static, see dashboard_icon.py

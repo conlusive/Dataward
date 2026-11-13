@@ -47,7 +47,7 @@ def test_a_section_label_is_numbered_with_two_digits() -> None:
 
 
 def test_chart_colours_are_four_fixed_ones_and_the_muted_mark_is_not_one_of_them() -> None:
-    assert t.SERIES == ("#6D4FC8", "#3F8FC9", "#B8860B", "#D9668F")  # passed the validator
+    assert t.SERIES == ("#7A5AE0", "#2E8FD0", "#C08A10", "#DB5F93")  # passed the validator
     assert t.MUTED_MARK not in t.SERIES and len(set(t.SERIES)) == 4
     assert all(re.fullmatch(r"#[0-9A-F]{6}", colour) for colour in (*t.SERIES, t.ACCENT, t.BG))
 
@@ -73,9 +73,15 @@ def test_text_and_marks_are_readable_on_the_surfaces() -> None:
         assert _contrast(text_colour, t.CARD) >= 4.5  # these are worn by small text
 
 
-def test_the_page_is_light_and_the_text_dark() -> None:
-    assert _luminance(t.BG) > 0.9 and _luminance(t.CARD) > 0.95  # an off-white page, white cards
-    assert _luminance(t.INK) < 0.05
+def test_the_page_is_near_black_like_githubs_and_the_text_light() -> None:
+    assert t.BG == "#0D1117" and t.CARD == "#161B22"  # GitHub's canvas and its card
+    assert _luminance(t.BG) < 0.01 and _luminance(t.CARD) < 0.02
+    assert _luminance(t.INK) > 0.8  # light text on it
+
+
+def test_a_block_has_the_ink_that_reads_on_it() -> None:
+    assert _contrast(t.ON_BLOCK, t.POWDER) >= 7 and _contrast(t.ON_BLOCK, t.LAVENDER) >= 7
+    assert _contrast("#FFFFFF", t.VIOLET) >= 7  # the violet block and the open menu page: white
 
 
 def test_skill_tags_mark_the_required_ones_and_escape_the_text() -> None:
@@ -102,7 +108,8 @@ def test_the_style_is_soft_signal_a_heavy_grotesque_dot_numbers_and_three_colour
 
     assert "'Inter'" in css and "'Doto'" in css and "font-weight: 800" in css
     assert (t.POWDER, t.LAVENDER, t.VIOLET) == ("#C0D8E6", "#B7A3EA", "#5B3FB5")  # three colours
-    assert t.ACCENT == t.VIOLET  # the accent is the violet the owner picked
+    assert t.ACCENT == "#A78BFA"  # the violet step that reads as text on dark
+    assert _contrast(t.ACCENT, t.CARD) >= 6  # well over the 4.5 that small text needs
     assert f"--powder: {t.POWDER}" in css and f"--violet: {t.VIOLET}" in css
     assert "clip-path: polygon" not in css  # no stepped corners
     assert 'content: "$ "' not in css and 'content: "// "' not in css  # no terminal props
@@ -376,3 +383,19 @@ def test_a_tip_shows_on_hover_and_on_focus_and_tiles_are_not_cut() -> None:
     assert ".dw-tip:hover::after, .dw-tip:focus::after { opacity: 1; }" in css
     assert ".dw-dir { min-height: 12rem; }" in css and ".dw-vac { min-height: 11rem; }" in css
     assert "overflow: hidden; }\n.dw-vac" not in css  # a tile grows with its tags
+
+
+def test_a_phone_gets_a_burger_that_says_menu_and_a_cross_to_close_it() -> None:
+    css = t.css()
+
+    assert 'content: "Меню"' in css and "linear-gradient(currentColor 0 0)" in css  # three lines
+    assert 'stExpandSidebarButton"] [data-testid="stIconMaterial"]' in css  # the bare arrow is gone
+    assert 'content: "✕"' in css  # inside the open menu
+    assert css.index('content: "Меню"') > css.index("@media (max-width: 768px)")  # a phone only
+
+
+def test_nothing_on_a_dark_page_keeps_a_light_theme_colour() -> None:
+    css = t.css()
+
+    assert "251, 243, 225" not in css  # the cream of the old page
+    assert "background: var(--accent) !important" not in css  # white text on a light violet
