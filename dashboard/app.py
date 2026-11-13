@@ -17,7 +17,8 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="expanded",
 )
-st.logo(str(STATIC / "wordmark.svg"), size="large", icon_image=str(STATIC / "icon.svg"))
+# the same mark with the name in the menu and in the phone's top bar (where the menu is closed)
+st.logo(str(STATIC / "wordmark.svg"), size="large", icon_image=str(STATIC / "wordmark.svg"))
 ui.setup()
 ui.keep_data_fresh()  # a hosted copy re-fetches the nightly export (no-op without a URL)
 
