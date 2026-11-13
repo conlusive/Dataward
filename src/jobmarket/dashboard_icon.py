@@ -33,7 +33,7 @@ _SCRIPT: Final = """
     document.head.querySelectorAll(ours)
       .forEach((link) => { if (!link.dataset.dwIcon) link.remove(); });
     if (!document.head.querySelector('link[data-dw-icon]')) {
-      add('icon', 'favicon.png', '64x64');
+      add('icon', 'favicon.png', '%(icon)dx%(icon)d');
       add('apple-touch-icon', 'apple-touch-icon.png', '%(apple)dx%(apple)d');
     }
   };
@@ -50,5 +50,10 @@ def version(directory: Path = logo.STATIC) -> str:
 
 def script() -> str:
     """The code to inject once per page load."""
-    values = {"base": STATIC_URL, "version": version(), "apple": logo.APPLE_TOUCH_SIZE}
+    values = {
+        "base": STATIC_URL,
+        "version": version(),
+        "apple": logo.APPLE_TOUCH_SIZE,
+        "icon": logo.FAVICON_SIZE,
+    }
     return f"<script>{_SCRIPT % values}</script>"

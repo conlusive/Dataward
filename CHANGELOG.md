@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+### Changed (the site icon)
+- The tab and search-result icon is a **round badge with our mark** (three rising bars and a dot) of
+  192 px, with a `favicon.ico` and a full-square touch icon; the image copies all three over Streamlit's
+  own. The deploy hook and how to set it up are described under "Public hosting".
+
 ### Fixed (tips, phone menu)
 - A "?" tip near the right edge ran past the screen and made the page scroll sideways; a small script
   (`dashboard_tips.py`) now shifts its text left by exactly as much as needed. The labels of the figures

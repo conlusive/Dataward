@@ -65,16 +65,30 @@ def test_the_committed_assets_are_what_the_generator_writes() -> None:
     assert (logo.STATIC / "icon.svg").read_text(encoding="utf-8") == logo.icon_svg()
 
 
-def test_the_favicon_is_a_square_png_in_the_dashboard_colours() -> None:
+def test_the_favicon_is_a_round_badge_a_multiple_of_48_px_in_the_brand_colours() -> None:
     pil = pytest.importorskip("PIL.Image")
-    data = (logo.STATIC / "favicon.png").read_bytes()
+    image = pil.open(io.BytesIO((logo.STATIC / "favicon.png").read_bytes())).convert("RGBA")
 
-    image = pil.open(io.BytesIO(data)).convert("RGB")
+    assert image.size == (logo.FAVICON_SIZE,) * 2 and logo.FAVICON_SIZE % 48 == 0
+    assert image.getpixel((0, 0))[3] == 0  # a corner is transparent: a circle in a tab
+    centre = image.getpixel((logo.FAVICON_SIZE // 2, 6))[:3]  # on the disc, above the bars
+    assert f"#{centre[0]:02X}{centre[1]:02X}{centre[2]:02X}" == t.ACCENT
+    wanted = {t.BG, logo.DOT_COLOUR}
+    found = {
+        f"#{r:02X}{g:02X}{b:02X}" for n, (r, g, b, a) in image.getcolors(100000) if a and n > 50
+    }
+    assert wanted <= found  # the bars and the dot are drawn
 
-    assert image.size == (64, 64)
-    colours = {colour for _, colour in image.getcolors()}
-    hexes = {f"#{r:02X}{g:02X}{b:02X}" for r, g, b in colours}
-    assert hexes == {t.BG, t.ACCENT, logo.DOT_COLOUR}
+
+def test_the_touch_icon_is_a_full_square_and_the_ico_has_three_sizes() -> None:
+    pil = pytest.importorskip("PIL.Image")
+    touch = pil.open(io.BytesIO((logo.STATIC / "apple-touch-icon.png").read_bytes())).convert(
+        "RGBA"
+    )
+    ico = pil.open(io.BytesIO((logo.STATIC / "favicon.ico").read_bytes()))
+
+    assert touch.getpixel((0, 0))[3] == 255  # no transparent corner: the system rounds it
+    assert set(ico.info["sizes"]) == set(logo.ICO_SIZES)
 
 
 def test_the_assets_can_be_rewritten(tmp_path: Path) -> None:
@@ -83,7 +97,8 @@ def test_the_assets_can_be_rewritten(tmp_path: Path) -> None:
     written = logo.write_assets(tmp_path)
 
     assert sorted(p.name for p in written) == [
-        "apple-touch-icon.png", "favicon.png", "icon.svg", "logo.svg", "wordmark.svg",
+        "apple-touch-icon.png", "favicon.ico", "favicon.png", "icon.svg", "logo.svg",
+        "wordmark.svg",
     ]  # fmt: skip
     assert (tmp_path / "logo.svg").read_text(encoding="utf-8") == logo.wordmark_svg()
 
@@ -99,9 +114,12 @@ def test_the_committed_png_icons_are_what_the_generator_draws() -> None:
     pytest.importorskip("PIL.Image")
 
     # the pixels, not the bytes: the compression of a PNG differs between machines
-    for name, size in (("favicon.png", 64), ("apple-touch-icon.png", logo.APPLE_TOUCH_SIZE)):
-        committed = _pixels((logo.STATIC / name).read_bytes())
-        assert committed == _pixels(logo.favicon_png(size)), name
+    drawn = {
+        "favicon.png": logo.favicon_png(),
+        "apple-touch-icon.png": logo.favicon_png(logo.APPLE_TOUCH_SIZE, round_badge=False),
+    }
+    for name, png in drawn.items():
+        assert _pixels((logo.STATIC / name).read_bytes()) == _pixels(png), name
 
 
 def test_the_calm_wordmark_is_real_text_with_the_rising_bars_and_is_committed() -> None:

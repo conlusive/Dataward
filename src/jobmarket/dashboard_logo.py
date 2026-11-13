@@ -93,27 +93,50 @@ def icon_svg() -> str:
 APPLE_TOUCH_SIZE = 180  # what Safari asks for (start page, favourites, home screen)
 
 
-def favicon_png(size: int = 64) -> bytes:
-    """A square tab icon: the rising bars and the stop on the dashboard surface."""
-    from PIL import Image, ImageDraw  # Pillow comes with Streamlit; only this function needs it
+FAVICON_SIZE = 192  # a multiple of 48 px, as search engines ask for a site icon
+ICO_SIZES = ((16, 16), (32, 32), (48, 48))
 
-    columns = EMBLEM_WIDTH + 1 + DOT
-    cell = size // (columns + 3)
-    canvas = Image.new("RGB", (size, size), t.BG)
+
+def favicon_png(size: int = FAVICON_SIZE, *, round_badge: bool = True) -> bytes:
+    """The site icon: three rising bars and a dot, cream on a wine disc (a round badge).
+
+    The corners of a round badge are transparent, so a tab or a search result shows a circle; the
+    icon of a home screen (``round_badge=False``) is a full square, which the system rounds itself.
+    Drawn four times larger and scaled down, so the edges are smooth.
+    """
+    from PIL import Image, ImageDraw  # Pillow comes with Streamlit; only these functions need it
+
+    big = size * 4
+    canvas = Image.new("RGBA", (big, big), (0, 0, 0, 0))
     draw = ImageDraw.Draw(canvas)
-    left = (size - columns * cell) // 2
-    top = (size - HEIGHT * cell) // 2
-
-    def fill(x: int, y: int, wide: int, colour: str) -> None:
-        box = [left + x * cell, top + y * cell, left + (x + wide) * cell - 1]
-        draw.rectangle([*box, top + (y + 1) * cell - 1], fill=colour)
-
-    for x, y in _emblem():
-        fill(x, y, 1, t.ACCENT)
-    for row in range(DOT):
-        fill(EMBLEM_WIDTH + 1, HEIGHT - DOT + row, DOT, DOT_COLOUR)
+    disc = [0, 0, big - 1, big - 1]
+    if round_badge:
+        draw.ellipse(disc, fill=t.ACCENT)
+    else:
+        draw.rectangle(disc, fill=t.ACCENT)
+    unit = big * 0.075  # the height of the shortest step of the bars
+    wide, gap = big * 0.11, big * 0.06
+    left = (big - (4 * wide + 3 * gap)) / 2
+    base = (big + max(BARS) * unit) / 2
+    for i, height in enumerate(BARS):
+        x = left + i * (wide + gap)
+        draw.rounded_rectangle(
+            [x, base - height * unit, x + wide, base], radius=wide / 2, fill=t.BG
+        )
+    x = left + 3 * (wide + gap)
+    draw.ellipse([x, base - wide, x + wide, base], fill=DOT_COLOUR)
     buffer = io.BytesIO()
-    canvas.save(buffer, format="PNG")
+    canvas.resize((size, size), Image.Resampling.LANCZOS).save(buffer, format="PNG")
+    return buffer.getvalue()
+
+
+def favicon_ico() -> bytes:
+    """``favicon.ico`` (16, 32 and 48 px) for the browsers that ask for that name by default."""
+    from PIL import Image
+
+    image = Image.open(io.BytesIO(favicon_png())).convert("RGBA")
+    buffer = io.BytesIO()
+    image.save(buffer, format="ICO", sizes=list(ICO_SIZES))
     return buffer.getvalue()
 
 
@@ -142,14 +165,15 @@ def calm_wordmark_svg(text: str = "Dataward") -> str:
 
 
 def write_assets(directory: Path = STATIC) -> list[Path]:
-    """Write the wordmark, ``logo.svg``, ``icon.svg``, ``favicon.png``, ``apple-touch-icon.png``."""
+    """Write the wordmark, the pixel marks, ``favicon.png``, ``favicon.ico``, the touch icon."""
     directory.mkdir(parents=True, exist_ok=True)
     files = {
         "wordmark.svg": calm_wordmark_svg().encode("utf-8"),
         "logo.svg": wordmark_svg().encode("utf-8"),
         "icon.svg": icon_svg().encode("utf-8"),
         "favicon.png": favicon_png(),
-        "apple-touch-icon.png": favicon_png(APPLE_TOUCH_SIZE),
+        "favicon.ico": favicon_ico(),
+        "apple-touch-icon.png": favicon_png(APPLE_TOUCH_SIZE, round_badge=False),
     }
     paths = []
     for name, content in files.items():
