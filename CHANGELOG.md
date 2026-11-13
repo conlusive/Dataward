@@ -2,6 +2,17 @@
 
 ## Unreleased
 
+### Changed (hints, charts, calculator)
+- Long grey explanations became a small **"?" that shows its text when pointed at** (or focused with the
+  keyboard); card notes sit beside the card title the same way.
+- **Market page**: the stacked bars are columns of dots with the total over each; "new and closed" is one
+  axis with arrivals above and departures below, and the first day (where "new" is everything) is left
+  out and explained in a tip.
+- **Skills table** fits its box (fewer, narrower columns). The two selects on the home page show their
+  whole value. Direction and vacancy tiles grow with their tags instead of cutting them.
+- **The salary calculator works on the public site**: the trained grid ships with the app
+  (`dashboard/model/`), used when the export has none; `make train` on your machine still wins.
+
 ### Changed (clearer figures)
 - The page is a creamier plombir (`#FBF3E1`). The dot columns now carry **the total over every column, the
   day under it and what one dot is worth**; the waffle has a key with each part's share and value. Softer

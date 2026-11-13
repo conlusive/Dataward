@@ -2,6 +2,7 @@ import streamlit as st
 
 from jobmarket import dashboard_charts as charts
 from jobmarket import dashboard_data as dd
+from jobmarket import dashboard_dots as dots
 from jobmarket import dashboard_theme as theme
 from jobmarket import dashboard_ui as ui
 
@@ -91,7 +92,7 @@ with three:
         history=totals["closed_vacancies"].astype(float).tolist(), direction="neutral",
     )  # fmt: skip
 if selected["date"].max() == market["date"].min():
-    st.caption(
+    ui.explain(
         "Це перший день спостереження: усі вакансії позначено «новими», бо раніше ми їх не бачили. "
         "Реальні нові й закриті з'являться з другого дня."
     )
@@ -111,7 +112,10 @@ with dynamics:
         def breakdown_panel() -> None:
             """Only this panel reruns when a selector changes."""
             title = "Розріз за днями"
-            with ui.card(title, "тонкий стовпчик — один день; кольори — частини розрізу."):
+            with ui.card(
+                title,
+                "Стовпчик — один день, число над ним — разом за день, кольори — частини розрізу.",
+            ):
                 pick_metric, pick_split = st.columns(2)
                 metric = pick_metric.selectbox("Показник", list(dd.METRICS), key="mk_metric")
                 split = pick_split.selectbox("Розріз", list(dd.BREAKDOWNS), key="mk_split")
@@ -120,19 +124,34 @@ with dynamics:
                 )
                 names, colours = charts.series_domain(order, keep_order=True)
                 ui.html(theme.legend(names, colours))
-                ui.chart(charts.stacked_bars(daily, order=order, unit=metric))
+                wide = daily.pivot_table(
+                    index="date", columns="series", values="value", fill_value=0
+                )
+                days = [f"{day:%d.%m}" for day in wide.index]
+                parts = [
+                    (n, c, wide[n].tolist() if n in wide else [0.0] * len(days))
+                    for n, c in zip(names, colours, strict=True)
+                ]
+                ui.html(dots.columns(days, parts, unit=metric.lower()))
 
         breakdown_panel()
-        flow = totals.melt(
-            id_vars="date", value_vars=["new_vacancies", "closed_vacancies"], var_name="series"
-        ).replace({"new_vacancies": "Нові", "closed_vacancies": "Закриті"})
         started = selected["date"].min() == market["date"].min() and len(totals) > 1
-        flow_note = "скільки вакансій з'явилося і скільки зникло з сайтів."
+        shown_days = totals.iloc[1:] if started else totals  # day one has "new" = everything
+        flow_note = "Скільки вакансій з'явилося (угору) і скільки зникло з сайтів (вниз)."
         if started:
-            flow_note += " Перші дні завищують «нові»: збір почався з порожньої бази."
+            flow_note += (
+                " Перший день не показано: збір почався з порожньої бази,"
+                " і всі вакансії були «новими»."
+            )
         with ui.card("Нові й закриті за днями", flow_note):
+            ui.html(
+                dots.balance(
+                    [f"{day:%d.%m}" for day in shown_days["date"]],
+                    ("Нові", theme.SERIES[0], shown_days["new_vacancies"].tolist()),
+                    ("Закриті", theme.SERIES[1], shown_days["closed_vacancies"].tolist()),
+                )
+            )
             ui.html(theme.legend(["Нові", "Закриті"], list(theme.SERIES[:2])))
-            ui.chart(charts.grouped_columns(flow, order=["Нові", "Закриті"]))
 
 with vacancies_tab:
     if vacancies_tab.open:
@@ -141,7 +160,7 @@ with vacancies_tab:
             ui.no_catalog("Список вакансій береться з каталогу.")
         else:
             demand, skill_table = ui.table("fct_skill_demand_monthly"), ui.table("dim_skill")
-            st.caption(
+            ui.explain(
                 "Вакансії за фільтрами ринку. Перша вже відкрита праворуч, клік по рядку "
                 "відкриває іншу: оголошення, порівняння з ринком."
             )
@@ -188,7 +207,7 @@ with table_tab:
                 "closed_vacancies": "Закриті",
             }
         )  # fmt: skip
-        st.caption(
+        ui.explain(
             f"{len(shown):,} рядків за вибраними фільтрами; клік по заголовку сортує колонку."
         )
         st.dataframe(shown, hide_index=True, height=420)

@@ -48,7 +48,7 @@ def test_the_card_of_a_tapped_vacancy_covers_the_screen_only_on_a_phone() -> Non
 def test_figures_go_in_pairs_and_every_phone_rule_is_after_the_desktop_ones() -> None:
     css = t.css()
 
-    assert css.rindex("@media (max-width: 640px)") > css.index(".dw-dir { height: 12rem")
+    assert css.rindex("@media (max-width: 640px)") > css.index(".dw-dir { min-height: 12rem")
     assert "calc(50% - 8px) !important" in css  # two metrics to a row
 
 

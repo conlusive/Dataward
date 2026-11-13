@@ -102,3 +102,21 @@ def test_the_key_names_each_part_with_its_share_and_value() -> None:
     assert html.count("dw-key-row") == 2 and ">85%</b>" in html and "6\u00a0271" in html
     assert "<b>dou</b>" not in html and "&lt;b&gt;dou&lt;/b&gt;" in html
     assert dots.key([]) == ""
+
+
+def test_a_balance_puts_arrivals_above_the_axis_and_departures_below_it() -> None:
+    svg = dots.balance(
+        ["01.11", "02.11"], ("Нові", "#111111", [20, 0]), ("Закриті", "#222222", [10, 30]), rows=6
+    )
+
+    ups = [float(y) for y in re.findall(r'cy="([\d.]+)"[^>]* fill="#111111"', svg)]
+    downs = [float(y) for y in re.findall(r'cy="([\d.]+)"[^>]* fill="#222222"', svg)]
+    axis = float(re.search(r'<line [^>]*y1="([\d.]+)"', svg).group(1))  # type: ignore[union-attr]
+    assert ups and all(y < axis for y in ups) and downs and all(y > axis for y in downs)
+    assert len(downs) == 2 + 6  # 10 is a third of the peak 30: two dots; 30 fills six
+    assert ">30</text>" in svg and "02.11 · Закриті: 30" in svg
+
+
+def test_a_balance_without_data_is_an_empty_figure() -> None:
+    assert "<circle" not in dots.balance([], ("a", "#1", []), ("b", "#2", []))
+    assert "<circle" not in dots.balance(["d"], ("a", "#1", [0]), ("b", "#2", [0]))

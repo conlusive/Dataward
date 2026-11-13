@@ -82,6 +82,7 @@ CATALOG_COLUMNS = {
 # The salary model's grid is optional: it exists only after `make train`.
 GRID_FILE = "salary_model_grid.parquet"
 GRID_INFO_FILE = "salary_model.json"
+MODEL_DIR = Path("dashboard/model")  # the trained grid that ships with the app
 GRID_COLUMNS = {
     "role", "seniority", "experience_years", "english", "city_group", "survey_year",
     "salary_p10", "salary_p50", "salary_p90",
@@ -117,15 +118,21 @@ def read_json(directory: Path, name: str) -> dict[str, Any]:
 
 # ---- salary calculator ---------------------------------------------------------------------------
 def read_grid(directory: Path) -> tuple[pd.DataFrame, dict[str, Any]] | None:
-    """The model's grid and its description, or None when no model has been trained yet."""
-    path = directory / GRID_FILE
-    if not path.exists():
-        return None
-    grid = duckdb.connect().execute("SELECT * FROM read_parquet(?)", [str(path)]).df()
-    missing = GRID_COLUMNS - set(grid.columns)
-    if missing:
-        raise DataError(f"{GRID_FILE} lacks the columns {sorted(missing)}: run `make train` again")
-    return grid, read_json(directory, GRID_INFO_FILE)
+    """The model's grid and its description, or None when no model has been trained yet.
+
+    The export's own copy wins (``make train`` on this machine); otherwise the grid committed with
+    the app, so the public site, which has no model to train, still has a calculator.
+    """
+    for folder in (directory, MODEL_DIR):
+        path = folder / GRID_FILE
+        if not path.exists():
+            continue
+        grid = duckdb.connect().execute("SELECT * FROM read_parquet(?)", [str(path)]).df()
+        missing = GRID_COLUMNS - set(grid.columns)
+        if missing:
+            raise DataError(f"{path} lacks the columns {sorted(missing)}: run `make train` again")
+        return grid, read_json(folder, GRID_INFO_FILE)
+    return None
 
 
 def grid_lookup(

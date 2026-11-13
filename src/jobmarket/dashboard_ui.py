@@ -297,12 +297,20 @@ def no_catalog(subject: str) -> None:
         )
 
 
+def explain(text: str, label: str = "Як читати") -> None:
+    """An explanation as a small label with a "?" that shows ``text`` when pointed at."""
+    st.markdown(
+        f'<div class="dw-tipline">{escape(label)}{theme.tip(text)}</div>', unsafe_allow_html=True
+    )
+
+
 def listing_note() -> None:
-    """Where the vacancies come from and whose they are, under the heading of a vacancy list."""
-    st.caption(
+    """Where the vacancies come from and whose they are, as a tip under a vacancy list's heading."""
+    explain(
         "Оголошення зібрані з відкритих сторінок DOU і Djinni й належать їхнім авторам: тут лише "
-        "назва, компанія, рівень, зарплата, навички й дати, а кнопка «Відкрити оголошення» веде на "
-        "оригінал."
+        "назва, компанія, рівень, зарплата, навички й дати, а кнопка «Відкрити оголошення» веде "
+        "на оригінал.",
+        "Джерело оголошень",
     )
 
 
