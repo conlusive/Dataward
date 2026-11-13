@@ -107,12 +107,12 @@ ui.section("Ринок зараз", domain="market")
 def breakdown_panel() -> None:
     """Only this panel reruns when a selector changes."""
     with ui.card(
-        "Розріз ринку за днями",
-        "стовпчик — день, число над ним — разом за день; кольори — частини.",
+        "Вакансії по днях",
+        ui.DAILY_NOTE,
     ):
         left, middle, right = st.columns([1, 2, 2])
-        metric = middle.selectbox("Показник", list(dd.METRICS), key="home_metric")
-        split = right.selectbox("Розріз", list(dd.BREAKDOWNS), key="home_split")
+        metric = middle.selectbox("Що рахувати", list(dd.METRICS), key="home_metric")
+        split = right.selectbox("Ділити за", list(dd.BREAKDOWNS), key="home_split")
         daily, order = dd.daily_breakdown(market, dd.METRICS[metric], dd.BREAKDOWNS[split])
         names, colours = charts.series_domain(order, keep_order=True)
         left.markdown("")
