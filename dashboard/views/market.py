@@ -135,23 +135,30 @@ with dynamics:
                 ui.html(dots.columns(days, parts, unit=metric.lower()))
 
         breakdown_panel()
-        started = selected["date"].min() == market["date"].min() and len(totals) > 1
-        shown_days = totals.iloc[1:] if started else totals  # day one has "new" = everything
-        flow_note = "Скільки вакансій з'явилося (угору) і скільки зникло з сайтів (вниз)."
+        # the start of collection: every vacancy is "new" while the base fills (not news)
+        lead = 0
+        while lead < len(totals) - 1 and (
+            totals["new_vacancies"].iloc[lead] >= 0.5 * totals["open_vacancies"].iloc[lead]
+        ):
+            lead += 1
+        started = lead > 0 and selected["date"].min() == market["date"].min()
+        shown_days = totals.iloc[lead:] if started else totals
+        flow_note = "Скільки вакансій з'явилося (праворуч) і скільки зникло з сайтів (ліворуч)."
         if started:
             flow_note += (
-                " Перший день не показано: збір почався з порожньої бази,"
-                " і всі вакансії були «новими»."
+                " Початок збору не показано: база була порожня, і всі вакансії були «новими»."
             )
         with ui.card("Нові й закриті за днями", flow_note):
             ui.html(
-                dots.balance(
+                dots.flow(
                     [f"{day:%d.%m}" for day in shown_days["date"]],
-                    ("Нові", theme.SERIES[0], shown_days["new_vacancies"].tolist()),
-                    ("Закриті", theme.SERIES[1], shown_days["closed_vacancies"].tolist()),
+                    shown_days["new_vacancies"].tolist(),
+                    shown_days["closed_vacancies"].tolist(),
+                    new_colour=theme.SERIES[0],
+                    closed_colour=theme.SERIES[1],
                 )
             )
-            ui.html(theme.legend(["Нові", "Закриті"], list(theme.SERIES[:2])))
+            ui.html(theme.legend(["Нові", "Закриті"], [theme.SERIES[0], theme.SERIES[1]]))
 
 with vacancies_tab:
     if vacancies_tab.open:

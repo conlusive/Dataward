@@ -1334,5 +1334,5 @@ def test_new_and_closed_are_drawn_from_one_axis_without_the_first_day(export: Pa
     app = _run("market")
     html = _markdown(app)
 
-    assert "одна крапка ≈" in html and "угору" in html  # the balance figure, not a bar chart
-    assert "Перший день не показано" in html  # and why day one is left out
+    assert "dw-flow-row" in html and "одна крапка ≈" in html  # a row per day, not a bar chart
+    assert "Початок збору не показано" in html  # and why the first days are left out

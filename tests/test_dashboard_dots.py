@@ -120,3 +120,19 @@ def test_a_balance_puts_arrivals_above_the_axis_and_departures_below_it() -> Non
 def test_a_balance_without_data_is_an_empty_figure() -> None:
     assert "<circle" not in dots.balance([], ("a", "#1", []), ("b", "#2", []))
     assert "<circle" not in dots.balance(["d"], ("a", "#1", [0]), ("b", "#2", [0]))
+
+
+def test_a_flow_row_has_closed_on_the_left_new_on_the_right_and_the_numbers_at_the_ends() -> None:
+    html = dots.flow(
+        ["12.11", "13.11"], [361, 20], [163, 0], new_colour="#111111", closed_colour="#222222"
+    )
+
+    assert html.count("dw-flow-row") == 2 and "одна крапка ≈ 26" in html  # 361 / 14
+    assert html.count("background:#111111") == 14 + 1  # the peak fills 14, 20 keeps one
+    assert html.count("background:#222222") == 6  # 163 is 6 dots, 0 has none
+    assert ">361</b>" in html and ">163</b>" in html
+
+
+def test_a_flow_without_data_is_empty_and_names_are_escaped() -> None:
+    assert dots.flow([], [], [], new_colour="#1", closed_colour="#2") == ""
+    assert "<b>d</b>" not in dots.flow(["<b>d</b>"], [1], [1], new_colour="#1", closed_colour="#2")
