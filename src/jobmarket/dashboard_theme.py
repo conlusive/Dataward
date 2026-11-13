@@ -710,6 +710,39 @@ button[data-baseweb="tab"] { font-family: var(--body); font-weight: 600; }
 .dw-dot-spark { max-height: 2.2rem; }
 .dw-dots .dw-num { font-family: var(--dots); font-weight: 800; fill: var(--ink); }
 .dw-dots .dw-dot-axis { font-family: var(--body); font-weight: 500; fill: var(--ink-3); }
+
+/* two cards side by side are one height, whatever wraps in them: the chain of single children from
+   the column down to the card (a fragment or a keyed block adds a level) is stretched */
+[data-testid="stColumn"] > [data-testid="stVerticalBlock"] > :only-child,
+[data-testid="stColumn"] > [data-testid="stVerticalBlock"] > :only-child > :only-child,
+[data-testid="stColumn"] > [data-testid="stVerticalBlock"] > :only-child > :only-child >
+  :only-child { height: 100%; }
+
+/* tiles of a row are one size: tags are cut at two rows rather than make one tile taller */
+.dw-dir, .dw-vac { min-height: 16rem; }
+.dw-dir .dw-chips, .dw-vac .dw-chips { max-height: 4.6rem; overflow: hidden; }
+.dw-pills { margin-bottom: var(--s5); }
+
+/* a phone: nothing may be wider than the screen (the page was wider and wandered sideways).
+   The dots of a flow row shrink to fit, grid cells may be narrower than their content, and the
+   page itself is clipped at the screen's edge as the last guard. */
+.dw-flow-head, .dw-flow-row {
+  grid-template-columns: 2.6rem 2.6rem minmax(0, 1fr) 2px minmax(0, 1fr) 2.6rem; }
+.dw-flow-side { min-width: 0; overflow: hidden; }
+.dw-flow-side i { flex: 0 1 0.7rem; min-width: 3px; height: auto; aspect-ratio: 1; }
+@media (max-width: 768px) {
+  html, body, .stApp, [data-testid="stApp"], [data-testid="stAppViewContainer"],
+  [data-testid="stMain"] { max-width: 100vw; overflow-x: hidden; }
+  [data-testid="stMainBlockContainer"] { max-width: 100%; overflow-x: clip;
+    padding-left: 1rem; padding-right: 1rem; }
+  [data-testid="stMainBlockContainer"] * { min-width: 0; }
+  .dw-dots, .dw-flow, .dw-key, .dw-stats, [data-testid="stDataFrame"],
+  [data-testid="stVegaLiteChart"], [data-testid="stArrowVegaLiteChart"] { max-width: 100%; }
+  .dw-flow-head, .dw-flow-row { gap: 4px;
+    grid-template-columns: 2.2rem 2.4rem minmax(0, 1fr) 2px minmax(0, 1fr) 2.4rem; }
+  .dw-key-row { grid-template-columns: 0.8rem 1fr auto auto; }
+  .dw-tip::after { max-width: 70vw; }
+}
 """
 
 
