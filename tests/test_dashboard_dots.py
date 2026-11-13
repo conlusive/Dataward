@@ -77,3 +77,28 @@ def test_a_spark_line_marks_now_with_a_bigger_dot_and_survives_a_flat_series() -
     radii = re.findall(r' r="([^"]+)"', svg)
     assert len(radii) == 3 and float(radii[-1]) > float(radii[0])
     assert "<circle" not in dots.spark([])
+
+
+def test_every_column_carries_its_total_and_its_day_so_nobody_counts_dots() -> None:
+    svg = dots.columns(
+        ["01.11", "02.11"], [("dou", "#111111", [6000, 3000]), ("djinni", "#222222", [1378, 0])]
+    )
+
+    assert ">7\u00a0378</text>" in svg and ">3\u00a0000</text>" in svg  # the fact, in digits
+    assert ">01.11</text>" in svg and ">02.11</text>" in svg  # every day is named
+    assert "одна крапка ≈ 615" in svg  # and what one dot is worth is written on the figure
+
+
+def test_many_columns_label_every_nth_but_always_the_last() -> None:
+    days = [f"{d:02d}.11" for d in range(1, 31)]
+    svg = dots.columns(days, [("a", "#111111", [10.0] * 30)])
+
+    assert ">30.11</text>" in svg and ">01.11</text>" in svg and ">02.11</text>" not in svg
+
+
+def test_the_key_names_each_part_with_its_share_and_value() -> None:
+    html = dots.key([("djinni", "#111111", 6271), ("<b>dou</b>", "#222222", 1107)])
+
+    assert html.count("dw-key-row") == 2 and ">85%</b>" in html and "6\u00a0271" in html
+    assert "<b>dou</b>" not in html and "&lt;b&gt;dou&lt;/b&gt;" in html
+    assert dots.key([]) == ""

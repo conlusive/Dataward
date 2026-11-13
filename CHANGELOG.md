@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+### Changed (clearer figures)
+- The page is a creamier plombir (`#FBF3E1`). The dot columns now carry **the total over every column, the
+  day under it and what one dot is worth**; the waffle has a key with each part's share and value. Softer
+  chart colours (berry, periwinkle, gold, rose) that still pass the palette validator.
+
 ### Changed (the look, second pass)
 - **"Soft signal"** replaces the calm serif design the owner did not like: a plombir page, powder, mauve
   and wine worn as whole blocks, a heavy grotesque, small-capital labels, self-numbering sections, a menu

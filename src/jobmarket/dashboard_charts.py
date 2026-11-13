@@ -433,7 +433,7 @@ def stacked_bars(
     return _finish(bars, height)
 
 
-HEAT = ("#EFE8DB", "#E7C3D2", "#D08FAE", "#96396A", "#5B3044")  # no answers, then four steps
+HEAT = ("#EFE4D0", "#E7C3D2", "#D08FAE", "#9A3F6C", "#5B3044")  # no answers, then four steps
 _WEEKDAY_LABELS = "['Пн','Вт','Ср','Чт','Пт','Сб','Нд']"
 
 

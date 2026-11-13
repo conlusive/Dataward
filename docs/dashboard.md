@@ -127,7 +127,7 @@ is shown as a tag too.
 "Soft signal" (`dashboard_theme.py`, `dashboard_dots.py`, `.streamlit/config.toml`), after the owner's two
 references: a three-colour study (powder, mauve, wine) and a dot-matrix dashboard.
 
-- **Page**: plombir (`#FFFBF3`) everywhere; white cards with 22 px corners and a hairline. The menu has no
+- **Page**: plombir, the cream of vanilla ice cream (`#FBF3E1`), everywhere; near-white cards with 22 px corners and a hairline. The menu has no
   panel of its own: it sits on the page, and the open page is a wine pill.
 - **Colour**: powder `#C0D8E6`, mauve `#C77E96` and wine `#5B3044` are worn as whole blocks (the row of
   figures, the chosen vacancy, the required skills). A part of the product has a dark step of the same
@@ -137,7 +137,9 @@ references: a three-colour study (powder, mauve, wine) and a dot-matrix dashboar
 - **Sections number themselves** (`01`, `02`, a CSS counter), under a hairline rule.
 - **Figures made of dots** (plain SVG, no chart library, each dot a unit you can count): a ring of dots for
   a share, stacked **columns of dots** for a metric per day (the tallest column fills the grid, so a dot
-  means the same amount everywhere), a **waffle of 100 dots** for parts of a whole. Tooltips carry the
+  means the same amount everywhere; the total stands over every column, the day under it, and the figure
+  says what one dot is worth), a **waffle of 100 dots** for parts of a whole with a key (name, share,
+  value). Tooltips carry the
   real numbers; a part that exists never rounds to no dot. The Altair charts on the other pages use the
   same four colours, relatives of the study that passed the palette validator on the card (the three
   originals are too pale or too dark to be marks).

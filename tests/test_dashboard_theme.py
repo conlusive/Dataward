@@ -47,7 +47,7 @@ def test_a_section_label_is_numbered_with_two_digits() -> None:
 
 
 def test_chart_colours_are_four_fixed_ones_and_the_muted_mark_is_not_one_of_them() -> None:
-    assert t.SERIES == ("#96396A", "#3F8FC9", "#B8860B", "#D9668F")  # passed the validator
+    assert t.SERIES == ("#9A3F6C", "#6C8FD8", "#B98A1E", "#D76C8E")  # passed the validator
     assert t.MUTED_MARK not in t.SERIES and len(set(t.SERIES)) == 4
     assert all(re.fullmatch(r"#[0-9A-F]{6}", colour) for colour in (*t.SERIES, t.ACCENT, t.BG))
 
