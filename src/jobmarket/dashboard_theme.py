@@ -722,6 +722,27 @@ button[data-baseweb="tab"] { font-family: var(--body); font-weight: 600; }
 .dw-dir, .dw-vac { min-height: 16rem; }
 .dw-dir .dw-chips, .dw-vac .dw-chips { max-height: 4.6rem; overflow: hidden; }
 .dw-pills { margin-bottom: var(--s5); }
+
+/* a phone: nothing may be wider than the screen (the page was wider and wandered sideways).
+   The dots of a flow row shrink to fit, grid cells may be narrower than their content, and the
+   page itself is clipped at the screen's edge as the last guard. */
+.dw-flow-head, .dw-flow-row {
+  grid-template-columns: 2.6rem 2.6rem minmax(0, 1fr) 2px minmax(0, 1fr) 2.6rem; }
+.dw-flow-side { min-width: 0; overflow: hidden; }
+.dw-flow-side i { flex: 0 1 0.7rem; min-width: 3px; height: auto; aspect-ratio: 1; }
+@media (max-width: 768px) {
+  html, body, .stApp, [data-testid="stApp"], [data-testid="stAppViewContainer"],
+  [data-testid="stMain"] { max-width: 100vw; overflow-x: hidden; }
+  [data-testid="stMainBlockContainer"] { max-width: 100%; overflow-x: clip;
+    padding-left: 1rem; padding-right: 1rem; }
+  [data-testid="stMainBlockContainer"] * { min-width: 0; }
+  .dw-dots, .dw-flow, .dw-key, .dw-stats, [data-testid="stDataFrame"],
+  [data-testid="stVegaLiteChart"], [data-testid="stArrowVegaLiteChart"] { max-width: 100%; }
+  .dw-flow-head, .dw-flow-row { gap: 4px;
+    grid-template-columns: 2.2rem 2.4rem minmax(0, 1fr) 2px minmax(0, 1fr) 2.4rem; }
+  .dw-key-row { grid-template-columns: 0.8rem 1fr auto auto; }
+  .dw-tip::after { max-width: 70vw; }
+}
 """
 
 
