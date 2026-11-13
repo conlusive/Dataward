@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+### Changed (the salary calculator in words)
+- The calculator showed the survey's codes (`analyst`, `unknown`, `advanced`, `abroad`) and started on the
+  first one in alphabetical order. It now shows **words** (Розробник, Middle, Вище середнього (B2), В
+  Україні), orders levels and English by meaning, starts on a developer at Middle level with B2 English in
+  Ukraine, and explains "Не вказано". The tiles read "Нижня межа / Типова / Верхня межа" with the unit and
+  the meaning of p10, p50 and p90 in a tip, so their labels are no longer cut off.
+
 ### Changed (plain words)
 - "Розріз ринку за днями" is **"Вакансії по днях"** with a tip that says what it is, and its selectors read
   "Що рахувати" and "Ділити за". On "Зарплати" the tips no longer all say "Як читати": each has its own

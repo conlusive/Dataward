@@ -7,6 +7,7 @@ a clear message instead of a stack trace; a test keeps `REQUIRED` inside the dbt
 
 import json
 import os
+from collections.abc import Sequence
 from pathlib import Path
 from typing import Any
 
@@ -117,6 +118,47 @@ def read_json(directory: Path, name: str) -> dict[str, Any]:
 
 
 # ---- salary calculator ---------------------------------------------------------------------------
+# ---- the calculator's choices in words ---------------------------------------------------------
+# The grid carries the survey's own codes; the page shows these and keeps the codes as values.
+ROLE_LABELS = {
+    "software_engineer": "Розробник", "qa": "QA, тестувальник", "devops": "DevOps",
+    "data": "Дані, ML", "database": "Бази даних", "analyst": "Аналітик",
+    "frontend_coder": "Frontend, верстка", "security": "Безпека", "designer": "Дизайнер",
+    "project_manager": "Проєкт-менеджер", "management": "Керівник", "hr": "HR",
+    "marketing": "Маркетинг", "sales": "Продажі", "support": "Підтримка",
+    "technical_writer": "Технічний письменник", "other": "Інша роль",
+}  # fmt: skip
+LEVEL_ORDER = ("intern", "junior", "middle", "senior", "lead", "unknown")
+LEVEL_LABELS = {
+    "intern": "Стажер", "junior": "Junior", "middle": "Middle", "senior": "Senior",
+    "lead": "Lead, керівник", "unknown": "Не вказано",
+}  # fmt: skip
+ENGLISH_ORDER = ("elementary", "pre-intermediate", "intermediate", "upper-intermediate", "advanced")
+ENGLISH_LABELS = {
+    "elementary": "Початковий (A1–A2)", "pre-intermediate": "Нижче середнього (A2+)",
+    "intermediate": "Середній (B1)", "upper-intermediate": "Вище середнього (B2)",
+    "advanced": "Просунутий (C1 і вище)",
+}  # fmt: skip
+CITY_ORDER = ("ukraine", "remote", "abroad", "unspecified")
+CITY_LABELS = {
+    "ukraine": "В Україні", "remote": "Віддалено", "abroad": "За кордоном",
+    "unspecified": "Не вказано",
+}  # fmt: skip
+CALC_DEFAULTS = {"role": "software_engineer", "level": "middle", "english": "upper-intermediate",
+                 "city": "ukraine"}  # fmt: skip
+
+
+def ordered(values: Sequence[str], order: Sequence[str] = ()) -> list[str]:
+    """``values`` without repeats: those named in ``order`` first (in that order), then the rest."""
+    present = list(dict.fromkeys(values))
+    return [v for v in order if v in present] + sorted(v for v in present if v not in order)
+
+
+def default_index(options: Sequence[str], wanted: str) -> int:
+    """Where ``wanted`` stands in ``options`` (the first one when it is not there)."""
+    return list(options).index(wanted) if wanted in options else 0
+
+
 def read_grid(directory: Path) -> tuple[pd.DataFrame, dict[str, Any]] | None:
     """The model's grid and its description, or None when no model has been trained yet.
 
