@@ -266,3 +266,15 @@ def test_the_make_targets_of_the_hourly_flow_exist_and_pass_the_fresh_flag() -> 
     assert "scrape-fresh:\n\tuv run jobmarket scrape all --fresh" in makefile
     assert "parse-today:\n\tuv run jobmarket parse all $(if" in makefile  # today, not --missing
     assert "pipeline-fresh:\n\tuv run jobmarket flow fresh" in makefile
+
+
+def test_the_full_parse_goes_over_the_last_days_again_so_an_hourly_run_cannot_hide_a_sweep() -> (
+    None
+):
+    makefile = Path("Makefile").read_text(encoding="utf-8")
+    parse = makefile[makefile.index("\nparse:") : makefile.index("\nparse-recent:")]
+
+    assert "$(MAKE) parse-recent" in parse  # after --missing, which skips a day an hourly run did
+    assert "parse-recent:" in makefile and "timedelta" in makefile
+    assert "for n in (2, 1, 0)" in makefile  # today and the two days before it
+    assert "|| exit 1" in makefile  # a day that fails to parse fails the step, not silently
