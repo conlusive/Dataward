@@ -15,7 +15,7 @@ STATIC = Path(__file__).parent / "static"  # the wordmark and the favicon (dashb
 st.set_page_config(
     page_title="Dataward · ринок праці в ІТ України",
     layout="wide",
-    initial_sidebar_state="expanded",
+    initial_sidebar_state="collapsed",
 )
 # the same mark with the name in the menu and in the phone's top bar (where the menu is closed)
 st.logo(str(STATIC / "wordmark.svg"), size="large", icon_image=str(STATIC / "wordmark.svg"))
@@ -24,34 +24,36 @@ ui.keep_data_fresh()  # a hosted copy re-fetches the nightly export (no-op witho
 
 personal = not ui.public_demo()  # a profile and what is built on it are for the owner only
 
-sections = {
-    "": [  # no heading: the home page is the root of the menu
-        st.Page("views/home.py", title="Головна", icon=":material/home:", default=True),
-    ],
-}
-sections["Вакансії"] = [st.Page("views/catalog.py", title="Каталог", icon=":material/list_alt:")]
-if personal:
-    sections["Вакансії"] += [
+home = st.Page("views/home.py", title="Головна", icon=":material/home:", default=True)
+catalog = st.Page("views/catalog.py", title="Каталог", icon=":material/list_alt:")
+market = st.Page("views/market.py", title="Ринок", icon=":material/monitoring:")
+skills = st.Page("views/skills.py", title="Навички", icon=":material/psychology:")
+salary = st.Page("views/salary.py", title="Зарплати", icon=":material/payments:")
+system = st.Page("views/system.py", title="Стан системи", icon=":material/health_and_safety:")
+
+pages: list[st.Page] | dict[str, list[st.Page]]
+grouped: list[st.Page] = []  # pages inside menus: the shortcuts reach them through hidden links
+if personal:  # twelve entries would not fit in a row: groups open as menus
+    grouped = [
+        catalog,
         st.Page("views/fit.py", title="Для мене", icon=":material/person_search:"),
         st.Page("views/saved.py", title="Збережені", icon=":material/bookmark:"),
-    ]
-    sections["Розвиток"] = [
         st.Page("views/profile.py", title="Профіль", icon=":material/account_circle:"),
         st.Page("views/learn.py", title="Навчання", icon=":material/school:"),
         st.Page("views/practice.py", title="Практика", icon=":material/quiz:"),
     ]
-sections["Аналітика"] = [
-    st.Page("views/market.py", title="Ринок", icon=":material/monitoring:"),
-    st.Page("views/skills.py", title="Навички", icon=":material/psychology:"),
-    st.Page("views/salary.py", title="Зарплати", icon=":material/payments:"),
-]
-sections["\u200b"] = [  # no visible heading: a heading over one item looked like a button
-    st.Page("views/system.py", title="Стан системи", icon=":material/health_and_safety:"),
-]
-navigation = st.navigation(sections, expanded=True)  # every item visible, never behind "View more"
+    pages = {
+        "": [home],
+        "Вакансії": grouped[:3],
+        "Розвиток": grouped[3:],
+        "Аналітика": [market, skills, salary, system],
+    }
+else:  # six pages sit in one row
+    pages = [home, catalog, market, skills, salary, system]
+navigation = st.navigation(pages, position="top")
 if personal:
     ui.undo_bar()  # a slim bar while the last action can be taken back (also `z`)
-ui.scripts()  # shortcuts (`?` lists them, pages do not print them) and the page-enter motion
+ui.scripts(grouped)  # shortcuts (`?` lists them, pages do not print them) and the page-enter motion
 if personal:
     ui.avatar_card()  # you, at the foot of the sidebar, on every page
 navigation.run()
