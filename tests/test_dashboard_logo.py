@@ -124,12 +124,12 @@ def test_the_committed_png_icons_are_what_the_generator_draws() -> None:
         assert _pixels((logo.STATIC / name).read_bytes()) == _pixels(png), name
 
 
-def test_the_calm_wordmark_is_real_text_with_the_rising_bars_and_is_committed() -> None:
+def test_the_wordmark_is_real_text_with_rising_dot_columns_and_is_committed() -> None:
     svg = logo.calm_wordmark_svg()
 
-    # the glass tile (three rects) and the rising bars; the name is text, its end in the accent
-    assert svg.count("<rect") == 3 + len(logo.BARS) and ">Data<tspan" in svg
-    assert 'aria-label="Dataward"' in svg and t.LAVENDER in svg and logo.TILE_STOP in svg
-    assert logo.TILE_TOP in svg and logo.TILE_BOTTOM in svg  # the tile is a gradient
+    # rising columns of dots and a one-dot stop; the name is text beside them
+    assert svg.count("<circle") == sum(logo.COLUMNS) + 1 and "<rect" not in svg
+    assert ">Dataward</text>" in svg and 'aria-label="Dataward"' in svg
+    assert t.ACCENT in svg and logo.TILE_STOP in svg  # the columns and the stop
     assert "&lt;b&gt;" in logo.calm_wordmark_svg("<b>")  # a name is escaped
     assert (logo.STATIC / "wordmark.svg").read_text(encoding="utf-8") == svg
