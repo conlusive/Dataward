@@ -1,4 +1,4 @@
-.PHONY: install lint test test-all scrape scrape-fresh scrape-surveys parse parse-today backfill dbt-build dq dq-silver dq-gold pipeline pipeline-fresh export docker-build docker-pipeline dashboard docker-dashboard train lineage gold
+.PHONY: install lint test test-all scrape scrape-fresh scrape-surveys parse parse-recent parse-today backfill dbt-build dq dq-silver dq-gold pipeline pipeline-fresh export docker-build docker-pipeline dashboard docker-dashboard train lineage gold
 
 install:
 	uv sync --group dashboard --group ml
@@ -31,7 +31,16 @@ parse:
 	uv run jobmarket parse all --missing
 	uv run jobmarket fetch-rates
 	uv run jobmarket parse all --missing
+	$(MAKE) parse-recent
 	uv run jobmarket parse-surveys
+
+# The last three days again, whatever finished them before. An hourly run parses only the first
+# listing pages of today and marks the day done, so the nightly sweep's full listings would never
+# reach silver (a day of 900 vacancies against the usual 6 800). Parsing a day twice is harmless.
+parse-recent:
+	for day in $$(uv run python -c "from datetime import UTC, datetime, timedelta as d; t = datetime.now(UTC).date(); print(*[(t - d(days=n)).isoformat() for n in (2, 1, 0)])"); do \
+		uv run jobmarket parse all --run-date $$day || exit 1; \
+	done
 
 # Today again as a whole (a finished day is skipped by --missing), then rates for new salaries.
 parse-today:
