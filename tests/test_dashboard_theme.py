@@ -407,3 +407,29 @@ def test_nothing_on_a_dark_page_keeps_a_light_theme_colour() -> None:
 
     assert "251, 243, 225" not in css  # the cream of the old page
     assert "background: var(--accent) !important" not in css  # white text on a light violet
+
+
+def test_a_desktop_menu_is_a_bar_of_glass_and_its_open_page_a_lit_drop() -> None:
+    css = t.css()
+    glass = css[css.index("a desktop has no sidebar") :]
+    desktop = glass[glass.index("@media (min-width: 769px)") :]
+
+    assert "backdrop-filter: blur(24px)" in desktop  # the page shows through, blurred
+    assert '[data-testid="stToolbar"]::before' in desktop  # the sheen on the upper edge
+    assert '[data-testid="stTopNavLink"][aria-current="page"]' in desktop  # the open page
+    assert 'stTopNavLink"]) > div' in desktop  # the menu of a group is glass as well
+    # every rule of the bar is for a desktop: a phone keeps its drawer
+    assert "stTopNav" not in glass[: glass.index("@media (min-width: 769px)")]
+
+
+def test_the_owners_card_is_a_chip_in_the_bar_on_a_desktop_and_gone_on_a_phone() -> None:
+    css = t.css()
+    chip = css[css.index("the owner's card sits at the right end of the bar") :]
+
+    assert ".st-key-dw_avatar { position: fixed; top: 12px;" in chip
+    assert re.search(
+        r"@media \(max-width: 768px\) \{\s*\.st-key-dw_avatar \{ display: none; \}", chip
+    )
+    assert (
+        'stSidebarNavLink"][href$="profile"] { display: none; }' not in css
+    )  # the drawer lists it

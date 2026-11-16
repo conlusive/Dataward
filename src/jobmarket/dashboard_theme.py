@@ -247,8 +247,8 @@ _BLOCKS = """
 [data-testid="stNavSectionHeader"] { pointer-events: none; cursor: default; }
 [data-testid="stNavSectionHeader"] [data-testid="stIconMaterial"] { display: none; }
 
-/* on a desktop the sidebar is part of the layout, not a drawer: it cannot be collapsed. On a
-   phone it is a drawer (closed at the start, see dashboard_mobile.py), so its buttons stay */
+/* a desktop has no drawer (the menu is the bar at the top): its buttons never show. On a
+   phone the same menu is a drawer (the app starts with it closed), so its buttons stay */
 @media (min-width: 769px) {
   [data-testid="stSidebarCollapseButton"], [data-testid="stSidebarCollapsedControl"],
   [data-testid="stExpandSidebarButton"], button[kind="headerNoPadding"] {
@@ -334,7 +334,7 @@ button[kind="pills"], button[kind="pillsActive"],
 
 _PHONE = """
 /* a phone: Streamlit puts every column on its own row below 640 px, and sets the sidebar as a
-   drawer below 768 px (see dashboard_mobile.py). The rules here only change what is too big or too
+   drawer below 768 px. The rules here only change what is too big or too
    long for a narrow screen. Last in the stylesheet, so that they win over the desktop ones. */
 @media (max-width: 640px) {
   .block-container { padding-top: 3.2rem; padding-bottom: 3rem; }
@@ -428,7 +428,6 @@ _WORKSPACE = """
 [data-testid="stSidebarNavLink"] { padding-top: 0.1rem !important;
   padding-bottom: 0.1rem !important; min-height: 1.9rem !important; }
 [data-testid="stSidebarNavItems"] { gap: 0 !important; }
-[data-testid="stSidebarNavLink"][href$="profile"] { display: none; }
 [data-testid="stNavSectionHeader"] { margin-top: 0.3rem; padding-top: 0;
   padding-bottom: 0; min-height: 0; }
 [data-testid="stNavSectionHeader"]:empty { display: none; }
@@ -796,6 +795,71 @@ button[data-baseweb="tab"] { font-family: var(--body); font-weight: 600; }
 }
 """
 
+_GLASS = """
+/* ---- a desktop has no sidebar: the menu is a bar of liquid glass over the page ----
+   (on a phone Streamlit folds the same menu into the drawer, styled above) */
+.stApp { isolation: isolate; }
+.stApp::before { content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none;
+  background: radial-gradient(70% 42% at 50% -14%, rgba(124, 92, 230, 0.24), transparent 70%),
+    radial-gradient(38% 30% at 94% 2%, rgba(46, 143, 208, 0.12), transparent 70%); }
+@media (min-width: 769px) {
+  [data-testid="stHeader"] { height: auto; padding-top: 12px; display: flex;
+    justify-content: center; background: transparent !important; pointer-events: none; }
+  [data-testid="stToolbar"] { pointer-events: auto; position: relative; inset: auto;
+    width: min(1240px, calc(100% - 2.5rem)); height: 56px; padding: 0 10px 0 14px;
+    border-radius: 20px; isolation: isolate; overflow: visible;
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.10), rgba(255, 255, 255, 0.03) 60%),
+      rgba(22, 27, 34, 0.52);
+    -webkit-backdrop-filter: blur(24px) saturate(1.9); backdrop-filter: blur(24px) saturate(1.9);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.22), inset 0 -1px 0 rgba(255, 255, 255, 0.04),
+      inset 0 0 24px rgba(167, 139, 250, 0.08), 0 14px 34px rgba(0, 0, 0, 0.5); }
+  /* the sheen of the glass: a bright edge that fades from the top left */
+  [data-testid="stToolbar"]::before { content: ""; position: absolute; inset: 0; z-index: -1;
+    border-radius: inherit; pointer-events: none;
+    background: radial-gradient(90% 160% at 10% -60%, rgba(255, 255, 255, 0.2), transparent 58%); }
+  .block-container { padding-top: 5.6rem; }
+  [data-testid="stHeaderLogo"] { height: 32px; width: auto; }
+  [data-testid="stTopNav"] { margin-left: 0.6rem; }
+  [data-testid="stTopNavLink"], button[data-testid="stTopNavSection"] {
+    border-radius: 999px !important; padding: 0.42rem 0.9rem !important; font-weight: 500;
+    transition: background 0.2s, box-shadow 0.2s, color 0.2s; }
+  [data-testid="stTopNavLink"]:hover, button[data-testid="stTopNavSection"]:hover {
+    background: rgba(255, 255, 255, 0.09) !important; }
+  /* the open page: a lit violet drop with a glossy top edge */
+  [data-testid="stTopNavLink"][aria-current="page"] {
+    background: linear-gradient(180deg, #8C6FF0, var(--violet)) !important;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.38), inset 0 -1px 0 rgba(0, 0, 0, 0.18),
+      0 5px 18px rgba(91, 63, 181, 0.6); }
+  [data-testid="stTopNavLink"][aria-current="page"] * { color: #FFFFFF !important; }
+  /* the menu of a group opens as a second pane of the same glass */
+  [data-baseweb="popover"]:has([data-testid="stTopNavLink"]) > div {
+    border-radius: 18px; border: 1px solid rgba(255, 255, 255, 0.12);
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.09), rgba(255, 255, 255, 0.02)),
+      rgba(22, 27, 34, 0.62);
+    -webkit-backdrop-filter: blur(24px) saturate(1.9); backdrop-filter: blur(24px) saturate(1.9);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2), 0 16px 36px rgba(0, 0, 0, 0.5); }
+  /* the owner's card sits at the right end of the bar: the frog and the level */
+  .st-key-dw_avatar { position: fixed; top: 12px; z-index: 1000001; height: 56px;
+    right: calc((100vw - min(1240px, 100vw - 2.5rem)) / 2 + 10px);
+    display: flex; flex-direction: row; align-items: center; width: max-content;
+    max-width: 18rem; padding: 0 0.4rem 0 0.2rem; border: 0; border-radius: 999px;
+    background: transparent; }
+  .st-key-dw_avatar .dw-avatar-pic { width: 38px; height: 38px; }
+  .st-key-dw_avatar .dw-avatar-text { line-height: 1.25; white-space: nowrap; flex: none; }
+  .st-key-dw_avatar .dw-avatar { gap: var(--s2); }
+  .st-key-dw_avatar .dw-avatar-name { font-size: var(--fs-sm); }
+  .st-key-dw_avatar .dw-xp, .st-key-dw_avatar .dw-avatar-text > div:last-child,
+  .st-key-dw_avatar [data-testid="stPageLink"]:not(.st-key-dw_avatar_open *) { display: none; }
+}
+@media (min-width: 769px) and (max-width: 1099px) {
+  .st-key-dw_avatar .dw-avatar-text { display: none; }  /* only the frog: the bar is narrow */
+}
+@media (max-width: 768px) {
+  .st-key-dw_avatar { display: none; }  /* the drawer lists the profile page itself */
+}
+"""
+
 
 def css() -> str:
     """The stylesheet, ready for a <style> tag."""
@@ -815,7 +879,8 @@ def css() -> str:
     fonts = (
         "@import url('https://fonts.googleapis.com/css2?family=Doto:wght@700;900&display=swap');"
     )
-    return f"<style>{fonts}{variables}{_STYLE}{_MOTION}{_BLOCKS}{_WORKSPACE}{_PHONE}{_CALM}</style>"
+    blocks = _STYLE + _MOTION + _BLOCKS + _WORKSPACE + _PHONE + _CALM + _GLASS
+    return f"<style>{fonts}{variables}{blocks}</style>"
 
 
 def pill(text: str, tone: str = "neutral") -> str:

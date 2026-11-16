@@ -71,9 +71,11 @@ def test_the_favicon_is_a_round_badge_a_multiple_of_48_px_in_the_brand_colours()
 
     assert image.size == (logo.FAVICON_SIZE,) * 2 and logo.FAVICON_SIZE % 48 == 0
     assert image.getpixel((0, 0))[3] == 0  # a corner is transparent: a circle in a tab
-    centre = image.getpixel((logo.FAVICON_SIZE // 2, 6))[:3]  # on the disc, above the bars
-    assert f"#{centre[0]:02X}{centre[1]:02X}{centre[2]:02X}" == t.VIOLET
-    wanted = {t.INK, logo.DOT_COLOUR}
+    middle = logo.FAVICON_SIZE // 2
+    top, bottom = image.getpixel((middle, 8))[:3], image.getpixel((middle, middle * 2 - 9))[:3]
+    assert top[2] > top[1] and bottom[2] > bottom[1]  # violet at both ends of the disc
+    assert sum(top) > sum(bottom)  # the glass tile is lighter at the top
+    wanted = {"#FFFFFF", logo.TILE_STOP}
     found = {
         f"#{r:02X}{g:02X}{b:02X}" for n, (r, g, b, a) in image.getcolors(100000) if a and n > 50
     }
@@ -125,7 +127,9 @@ def test_the_committed_png_icons_are_what_the_generator_draws() -> None:
 def test_the_calm_wordmark_is_real_text_with_the_rising_bars_and_is_committed() -> None:
     svg = logo.calm_wordmark_svg()
 
-    assert svg.count("<rect") == len(logo.BARS) and ">Dataward</text>" in svg
-    assert 'aria-label="Dataward"' in svg and t.ACCENT in svg and logo.DOT_COLOUR in svg
+    # the glass tile (three rects) and the rising bars; the name is text, its end in the accent
+    assert svg.count("<rect") == 3 + len(logo.BARS) and ">Data<tspan" in svg
+    assert 'aria-label="Dataward"' in svg and t.LAVENDER in svg and logo.TILE_STOP in svg
+    assert logo.TILE_TOP in svg and logo.TILE_BOTTOM in svg  # the tile is a gradient
     assert "&lt;b&gt;" in logo.calm_wordmark_svg("<b>")  # a name is escaped
     assert (logo.STATIC / "wordmark.svg").read_text(encoding="utf-8") == svg
