@@ -1,4 +1,4 @@
-"""The logo: three rising bars and a stop, as a glass tile (the header) or in a pixel font.
+"""The logo: rising columns of dots and a stop (the header, the icons) or a pixel-font name.
 
 Everything is drawn from the tables below, so the logo, the sidebar icon and the favicon are
 generated, not hand-edited. ``python -m jobmarket.dashboard_logo`` rewrites the files in
@@ -28,8 +28,9 @@ EMBLEM_GAP = 3  # columns between the emblem and the first letter
 DOT = 2  # the full stop is DOT x DOT pixels
 SHADOW = "#2F2A55"  # a pale step of the accent, one pixel down and right
 DOT_COLOUR = t.SERIES[1]  # the second chart colour: the stop of the pixel marks
-TILE_TOP, TILE_BOTTOM = "#A58CF7", "#4A35A8"  # the glass tile: light violet at the top, deep below
-TILE_STOP = t.DOMAINS["market"]  # the stop on the tile: mint, which reads on violet
+TILE_TOP, TILE_BOTTOM = "#A58CF7", "#4A35A8"  # the round icon: light violet at the top, deep below
+TILE_STOP = t.DOMAINS["market"]  # the stop: mint, which reads on dark and on violet
+COLUMNS = (2, 3, 4)  # dots in each rising column; a last column holds the stop alone
 STATIC = Path(__file__).resolve().parents[2] / "dashboard" / "static"
 
 
@@ -126,17 +127,17 @@ def favicon_png(size: int = FAVICON_SIZE, *, round_badge: bool = True) -> bytes:
     canvas = Image.new("RGBA", (big, big), (0, 0, 0, 0))
     canvas.paste(tile, mask=shape)
     draw = ImageDraw.Draw(canvas)
-    unit = big * 0.075  # the height of the shortest step of the bars
-    wide, gap = big * 0.11, big * 0.06
-    left = (big - (4 * wide + 3 * gap)) / 2
-    base = (big + max(BARS) * unit) / 2
-    for i, height in enumerate(BARS):
-        x = left + i * (wide + gap)
-        draw.rounded_rectangle(
-            [x, base - height * unit, x + wide, base], radius=wide / 2, fill=(255, 255, 255, 255)
-        )
-    x = left + 3 * (wide + gap)
-    draw.ellipse([x, base - wide, x + wide, base], fill=_rgb(TILE_STOP) + (255,))
+    pitch = big * 0.15  # distance between dot centres, across and up
+    radius = big * 0.055
+    columns = (*COLUMNS, 1)
+    left = (big - (len(columns) - 1) * pitch) / 2
+    base = (big + (max(COLUMNS) - 1) * pitch) / 2
+    for i, count in enumerate(columns):
+        stop = i == len(columns) - 1
+        for row in range(count):
+            cx, cy = left + i * pitch, base - row * pitch
+            fill = _rgb(TILE_STOP) + (255,) if stop else (255, 255, 255, 255)
+            draw.ellipse([cx - radius, cy - radius, cx + radius, cy + radius], fill=fill)
     buffer = io.BytesIO()
     canvas.resize((size, size), Image.Resampling.LANCZOS).save(buffer, format="PNG")
     return buffer.getvalue()
@@ -157,46 +158,32 @@ def favicon_ico() -> bytes:
 
 
 def calm_wordmark_svg(text: str = "Dataward") -> str:
-    """The mark of the header: a glass tile with the rising bars and a stop, and the name.
+    """The mark of the header: rising columns of dots, a mint stop, and the name.
 
-    The tile is a violet gradient with a sheen on its upper half and a thin light edge, like the
-    bar it sits in. The name is real text (an image cannot load a web font, so it falls back to the
-    system sans); its last letters take the lavender of the accent.
+    The columns echo the dot figures of the dashboard: each is a step taller than the one before and
+    the dots fade towards the bottom, so they read as a rising bar made of points. The name is real
+    text (an image cannot load a web font, so it falls back to the system sans).
     """
-    side, unit, bar, step = 34, 2.6, 4.6, 7.2  # the tile, a bar's height unit, a bar's width, pitch
-    left, base = 5.2, 27
-    bars = "".join(
-        f'<rect x="{left + i * step:.1f}" y="{base - h * unit:.1f}" width="{bar}" '
-        f'height="{h * unit:.1f}" rx="{bar / 2}" fill="#FFFFFF"/>'
-        for i, h in enumerate(BARS)
-    )
-    stop = (
-        f'<circle cx="{left + len(BARS) * step + bar / 2:.1f}" cy="{base - bar / 2:.1f}" '
-        f'r="{bar / 2}" fill="{TILE_STOP}"/>'
-    )
-    head, tail = text[:4], text[4:]
+    pitch, radius, base = 8.0, 3.3, 29.0  # dot spacing, dot radius, centre of the bottom row
+    columns = (*COLUMNS, 1)
+    dots = []
+    for i, count in enumerate(columns):
+        stop = i == len(columns) - 1
+        for row in range(count):
+            lit = 0.5 + 0.5 * (row + 1) / count  # the top dot of a column is the brightest
+            colour = TILE_STOP if stop else t.ACCENT
+            dots.append(
+                f'<circle cx="{4 + i * pitch:.1f}" cy="{base - row * pitch:.1f}" r="{radius}" '
+                f'fill="{colour}"' + ("" if stop else f' fill-opacity="{lit:.2f}"') + "/>"
+            )
     name = (
-        f'<text x="{side + 10}" y="25.5" fill="{t.INK}" font-size="24" font-weight="800" '
-        'letter-spacing="-0.7" '
-        f"font-family=\"Inter, 'Helvetica Neue', Arial, sans-serif\">{escape(head)}"
-        f'<tspan fill="{t.LAVENDER}">{escape(tail)}</tspan></text>'
-    )
-    defs = (
-        f'<defs><linearGradient id="tile" x1="0" y1="0" x2="0" y2="1">'
-        f'<stop offset="0" stop-color="{TILE_TOP}"/><stop offset="1" stop-color="{TILE_BOTTOM}"/>'
-        '</linearGradient><linearGradient id="sheen" x1="0" y1="0" x2="0" y2="1">'
-        '<stop offset="0" stop-color="#FFFFFF" stop-opacity="0.42"/>'
-        '<stop offset="0.5" stop-color="#FFFFFF" stop-opacity="0"/></linearGradient></defs>'
-    )
-    tile = (
-        f'<rect width="{side}" height="{side}" rx="10" fill="url(#tile)"/>'
-        f'<rect width="{side}" height="{side}" rx="10" fill="url(#sheen)"/>'
-        f'<rect x="0.5" y="0.5" width="{side - 1}" height="{side - 1}" rx="9.5" fill="none" '
-        'stroke="#FFFFFF" stroke-opacity="0.3"/>'
+        f'<text x="{len(columns) * pitch + 8:.0f}" y="27" fill="{t.INK}" font-size="26" '
+        'font-weight="800" letter-spacing="-0.8" '
+        f"font-family=\"Inter, 'Helvetica Neue', Arial, sans-serif\">{escape(text)}</text>"
     )
     return (
-        '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 34" role="img" '
-        f'aria-label="{escape(text)}">{defs}{tile}{bars}{stop}{name}</svg>'
+        '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 172 34" role="img" '
+        f'aria-label="{escape(text)}">{"".join(dots)}{name}</svg>'
     )
 
 

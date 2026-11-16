@@ -795,56 +795,41 @@ button[data-baseweb="tab"] { font-family: var(--body); font-weight: 600; }
 }
 """
 
-_GLASS = """
-/* ---- a desktop has no sidebar: the menu is a bar of liquid glass over the page ----
+_HEADER = """
+/* ---- a desktop has no sidebar: the menu is a plain header, transparent over the page ----
    (on a phone Streamlit folds the same menu into the drawer, styled above) */
-.stApp { isolation: isolate; }
-.stApp::before { content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none;
-  background: radial-gradient(70% 42% at 50% -14%, rgba(124, 92, 230, 0.24), transparent 70%),
-    radial-gradient(38% 30% at 94% 2%, rgba(46, 143, 208, 0.12), transparent 70%); }
 @media (min-width: 769px) {
-  [data-testid="stHeader"] { height: auto; padding-top: 12px; display: flex;
-    justify-content: center; background: transparent !important; pointer-events: none; }
-  [data-testid="stToolbar"] { pointer-events: auto; position: relative; inset: auto;
-    width: min(1240px, calc(100% - 2.5rem)); height: 56px; padding: 0 10px 0 14px;
-    border-radius: 20px; isolation: isolate; overflow: visible;
-    background: linear-gradient(180deg, rgba(255, 255, 255, 0.10), rgba(255, 255, 255, 0.03) 60%),
-      rgba(22, 27, 34, 0.52);
-    -webkit-backdrop-filter: blur(24px) saturate(1.9); backdrop-filter: blur(24px) saturate(1.9);
-    border: 1px solid rgba(255, 255, 255, 0.12);
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.22), inset 0 -1px 0 rgba(255, 255, 255, 0.04),
-      inset 0 0 24px rgba(167, 139, 250, 0.08), 0 14px 34px rgba(0, 0, 0, 0.5); }
-  /* the sheen of the glass: a bright edge that fades from the top left */
-  [data-testid="stToolbar"]::before { content: ""; position: absolute; inset: 0; z-index: -1;
-    border-radius: inherit; pointer-events: none;
-    background: radial-gradient(90% 160% at 10% -60%, rgba(255, 255, 255, 0.2), transparent 58%); }
-  .block-container { padding-top: 5.6rem; }
-  [data-testid="stHeaderLogo"] { height: 32px; width: auto; }
-  [data-testid="stTopNav"] { margin-left: 0.6rem; }
+  [data-testid="stHeader"] { height: 64px; display: flex; justify-content: center;
+    background: linear-gradient(180deg, rgba(13, 17, 23, 0.96), rgba(13, 17, 23, 0.9) 65%,
+      rgba(13, 17, 23, 0)) !important; }
+  [data-testid="stToolbar"] { position: relative; inset: auto; height: 64px; padding: 0;
+    width: min(1240px, calc(100% - 2.5rem)); background: transparent; }
+  .block-container { padding-top: 5rem; }
+  [data-testid="stHeaderLogo"] { height: 34px; width: auto; }
+  [data-testid="stTopNav"] { margin-left: 1.2rem; }
   [data-testid="stTopNavLink"], button[data-testid="stTopNavSection"] {
-    border-radius: 999px !important; padding: 0.42rem 0.9rem !important; font-weight: 500;
-    transition: background 0.2s, box-shadow 0.2s, color 0.2s; }
+    position: relative; border-radius: 8px !important; padding: 0.45rem 0.8rem !important;
+    font-weight: 500; background: transparent !important; box-shadow: none !important;
+    transition: background 0.15s; }
   [data-testid="stTopNavLink"]:hover, button[data-testid="stTopNavSection"]:hover {
-    background: rgba(255, 255, 255, 0.09) !important; }
-  /* the open page: a lit violet drop with a glossy top edge */
-  [data-testid="stTopNavLink"][aria-current="page"] {
-    background: linear-gradient(180deg, #8C6FF0, var(--violet)) !important;
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.38), inset 0 -1px 0 rgba(0, 0, 0, 0.18),
-      0 5px 18px rgba(91, 63, 181, 0.6); }
+    background: rgba(255, 255, 255, 0.07) !important; }
+  /* a page you can open is grey, the open one is white with a violet line under it */
+  [data-testid="stTopNavLink"] *, button[data-testid="stTopNavSection"] * {
+    color: var(--ink-2) !important; }
+  [data-testid="stTopNavLink"]:hover *, button[data-testid="stTopNavSection"]:hover * {
+    color: var(--ink) !important; }
   [data-testid="stTopNavLink"][aria-current="page"] * { color: #FFFFFF !important; }
-  /* the menu of a group opens as a second pane of the same glass */
+  [data-testid="stTopNavLink"][aria-current="page"]::after { content: ""; position: absolute;
+    left: 0.8rem; right: 0.8rem; bottom: 0; height: 2px; border-radius: 2px;
+    background: var(--accent); }
+  /* the menu of a group is a plain card */
   [data-baseweb="popover"]:has([data-testid="stTopNavLink"]) > div {
-    border-radius: 18px; border: 1px solid rgba(255, 255, 255, 0.12);
-    background: linear-gradient(180deg, rgba(255, 255, 255, 0.09), rgba(255, 255, 255, 0.02)),
-      rgba(22, 27, 34, 0.62);
-    -webkit-backdrop-filter: blur(24px) saturate(1.9); backdrop-filter: blur(24px) saturate(1.9);
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2), 0 16px 36px rgba(0, 0, 0, 0.5); }
-  /* the owner's card sits at the right end of the bar: the frog and the level */
-  .st-key-dw_avatar { position: fixed; top: 12px; z-index: 1000001; height: 56px;
-    right: calc((100vw - min(1240px, 100vw - 2.5rem)) / 2 + 10px);
+    border-radius: 12px; border: 1px solid var(--line); background: var(--card); }
+  /* the owner's card sits at the right end of the header: the frog and the level */
+  .st-key-dw_avatar { position: fixed; top: 0; z-index: 1000001; height: 64px;
+    right: calc((100vw - min(1240px, 100vw - 2.5rem)) / 2);
     display: flex; flex-direction: row; align-items: center; width: max-content;
-    max-width: 18rem; padding: 0 0.4rem 0 0.2rem; border: 0; border-radius: 999px;
-    background: transparent; }
+    max-width: 18rem; padding: 0; border: 0; background: transparent; }
   .st-key-dw_avatar .dw-avatar-pic { width: 38px; height: 38px; }
   .st-key-dw_avatar .dw-avatar-text { line-height: 1.25; white-space: nowrap; flex: none; }
   .st-key-dw_avatar .dw-avatar { gap: var(--s2); }
@@ -853,7 +838,7 @@ _GLASS = """
   .st-key-dw_avatar [data-testid="stPageLink"]:not(.st-key-dw_avatar_open *) { display: none; }
 }
 @media (min-width: 769px) and (max-width: 1099px) {
-  .st-key-dw_avatar .dw-avatar-text { display: none; }  /* only the frog: the bar is narrow */
+  .st-key-dw_avatar .dw-avatar-text { display: none; }  /* only the frog: the header is narrow */
 }
 @media (max-width: 768px) {
   .st-key-dw_avatar { display: none; }  /* the drawer lists the profile page itself */
@@ -879,7 +864,7 @@ def css() -> str:
     fonts = (
         "@import url('https://fonts.googleapis.com/css2?family=Doto:wght@700;900&display=swap');"
     )
-    blocks = _STYLE + _MOTION + _BLOCKS + _WORKSPACE + _PHONE + _CALM + _GLASS
+    blocks = _STYLE + _MOTION + _BLOCKS + _WORKSPACE + _PHONE + _CALM + _HEADER
     return f"<style>{fonts}{variables}{blocks}</style>"
 
 

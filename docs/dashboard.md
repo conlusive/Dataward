@@ -14,12 +14,12 @@ on the "about the data" page.
 
 ## Pages
 
-The menu is a **bar of liquid glass at the top** (no sidebar on a desktop): the glass tile with the
-bars and the name on the left, the pages after it, the open page a lit violet drop. The public copy has
+The menu is a **plain header, transparent over the page** (no sidebar on a desktop): the mark on the
+left, the pages after it, the open page white with a violet line under it; the page fades out under it. The public copy has
 six pages in one row (Головна, Каталог, Ринок, Навички, Зарплати, Стан системи); on your own machine
-there are twelve, so the groups open as menus of the same glass: Вакансії (Каталог, Для мене, Збережені),
+there are twelve, so the groups open as small menus: Вакансії (Каталог, Для мене, Збережені),
 Розвиток (Профіль, Навчання, Практика), Аналітика (Ринок, Навички, Зарплати, Стан системи).
-**You are the chip at the right end of the bar** (the frog, a name, a level): a click opens the profile.
+**You are the chip at the right end of the header** (the frog, a name, a level): a click opens the profile.
 On a phone Streamlit folds the same menu into the drawer (below). Tabs inside a page split one
 topic into views. Filters live on the page, in a bar above the list.
 
@@ -138,8 +138,7 @@ is shown as a tag too.
 references: a three-colour study (powder blue and two violets) and a dot-matrix dashboard.
 
 - **Page**: GitHub's dark canvas (`#0D1117`) with dark cards (`#161B22`), a hairline (`#30363D`) and 22 px
-  corners. The menu is a floating bar of glass (`_GLASS` in the theme: a blurred, saturated page behind a
-  light edge and a sheen); a soft violet glow at the top of the page gives the glass something to bend.
+  corners. The menu is a plain header (`_HEADER` in the theme): no panel, no border, the page fades out under it.
 - **Colour**: powder `#C0D8E6`, lavender `#B7A3EA` and violet `#5B3FB5` are worn as whole blocks (the row of
   figures, the chosen vacancy, the required skills): dark ink on the first two, white on the violet. Small
   text wears light steps (the accent `#A78BFA`, sky, mint, amber; a test checks 4.5:1 on the card). The
@@ -215,8 +214,8 @@ after the very first update to this version.
   skills, the stack graph, benchmarks, health). No Streamlit, so they are tested directly.
 - `src/jobmarket/dashboard_theme.py`: colour tokens, the stylesheet and small HTML pieces (header, status
   chip, section label, skill tags, fact list); text is escaped. No Streamlit import either.
-- `src/jobmarket/dashboard_logo.py`: the glass-tile mark of the header and the favicon (both drawn from
-  the same gradient, three bars and a mint stop), and the pixel logo; `python -m jobmarket.dashboard_logo`
+- `src/jobmarket/dashboard_logo.py`: the mark of the header (rising columns of dots, a mint stop) and the
+  favicon (the same dots on a violet disc), and the pixel logo; `python -m jobmarket.dashboard_logo`
   rewrites `dashboard/static`.
 - `src/jobmarket/dashboard_profile.py`, `dashboard_interview.py`, `dashboard_resources.py`,
   `dashboard_progress.py` and `dashboard_mascot.py`: the profile file and matching, the question bank and
@@ -277,7 +276,7 @@ serverless platform such as Vercel). `render.yaml` is a Render Blueprint for the
   files. `DASHBOARD_DATA_URL` is the archive URL (Render passes its env vars to the build as well);
   unset, nothing is fetched, and `scripts/dashboard-start.sh` fetches only if the image has no data.
 - **The public copy shows the market and the vacancies, not a person.** On Render
-  (`DASHBOARD_PROFILE=session`) the bar is Головна, Каталог, Ринок, Навички, Зарплати and Стан системи. The pages about you (Профіль, Навчання, Практика, Для мене, Збережені), the
+  (`DASHBOARD_PROFILE=session`) the header is Головна, Каталог, Ринок, Навички, Зарплати and Стан системи. The pages about you (Профіль, Навчання, Практика, Для мене, Збережені), the
   avatar, the undo bar and the "Сьогодні" block do not exist there: they are not hidden but not registered,
   so their URLs do not open, and the shortcuts and the palette do not offer them. The vacancy list is
   there without a profile: no match with your skills and no save button. Run it on your own machine for
