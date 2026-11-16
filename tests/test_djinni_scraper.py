@@ -144,3 +144,47 @@ async def test_without_the_fresh_setting_a_second_run_of_the_day_asks_the_site_n
         await scraper.run()
 
     assert site.list_pages == []  # the reason an hourly run needs the setting at all
+
+
+async def test_the_list_of_every_vacancy_is_scraped_on_purpose_not_by_an_unknown_keyword(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Djinni once answered an unknown keyword with the whole site and then stopped (2026-11-16)."""
+    monkeypatch.setattr("jobmarket.scrapers.djinni.KEYWORDS", (None,))
+    pages: list[str] = []
+
+    def site(request: httpx.Request) -> httpx.Response:
+        if (robots := robots_allow_all(request)) is not None:
+            return robots
+        if request.url.path == "/jobs/":
+            assert "primary_keyword" not in request.url.params
+            page = request.url.params.get("page", "1")
+            pages.append(page)
+            return httpx.Response(
+                200, content=sample("djinni/list_python.html") if page == "1" else EMPTY_PAGE
+            )
+        return httpx.Response(200, content=sample("djinni/detail.html"))
+
+    scraper = DjinniScraper(
+        settings=Settings(bronze_dir=tmp_path),
+        store=BronzeStore(tmp_path),
+        run_id="run-1",
+        run_date=date(2026, 11, 6),
+        client=httpx.AsyncClient(transport=httpx.MockTransport(site), follow_redirects=True),
+        sleep=NoSleep(),
+    )
+    async with scraper:
+        await scraper.run()
+
+    assert pages == ["1", "2"]
+    assert scraper.stats.errors == 0
+
+
+def test_every_vacancy_comes_first_in_the_default_keywords(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from jobmarket.scrapers import djinni
+
+    monkeypatch.undo()  # the autouse fixture narrows the keywords to one
+
+    assert djinni.KEYWORDS[0] is None and len(djinni.KEYWORDS) == 17

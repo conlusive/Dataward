@@ -3,7 +3,7 @@
 | Source | What | How it is read | Volume (2026-11-08) |
 |---|---|---|---|
 | **jobs.dou.ua** | IT vacancies in 16 categories (Python, Java, Data Science, DevOps, DBA, QA, Front End, .NET, Node.js, PHP, C++, Golang, Ruby, Scala, Android, iOS) | listing pages, the "load more" XHR batches and each vacancy page | about 1,000 vacancies |
-| **djinni.co** | IT vacancies for 16 keywords (the same stacks plus Fullstack, JavaScript, QA Manual/Automation) | listing pages and each vacancy page; the structured fields come from the page's `JobPosting` JSON-LD | about 5,900 vacancies |
+| **djinni.co** | every vacancy on the site (the `/jobs/` list, about 370 pages) plus 16 keyword lists (the same stacks plus Fullstack, JavaScript, QA Manual/Automation) | listing pages and each vacancy page; the structured fields come from the page's `JobPosting` JSON-LD | about 5,900 vacancies |
 | **NBU exchange rates** | official UAH rates for every date a vacancy was published | `bank.gov.ua` statdirectory API, one JSON per date | one file per date |
 | **DOU salary survey** | 34 survey waves since 2010: position, experience, city, English, company, salary | the CSV files of the public `devua/csv` repository (GitHub API) | about 289,000 answers with a salary |
 

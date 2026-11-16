@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+### Fixed (Djinni's listing shrank from 5 700 to 800 a day)
+- The nightly sweep kept failing `listing_volume`, and the cause was upstream: Djinni used to answer the
+  unknown keyword "QA Manual" with the whole site (5 697 vacancies) and on 2026-11-16 started to answer it
+  with its real 108. The catalog's wide Djinni base had come from that accident. The scraper now lists
+  **every vacancy** (`/jobs/`, about 370 pages) on purpose, first, and the 16 keyword lists after it, so
+  the market stays complete and a repeat of such a change shows as a failed check, not a silent shrink.
+
 ### Added (branches: develop and main)
 - `develop` is where work lands and `main` is what runs (Render, the workflows). PRs go to `develop` (squash);
   a release PR `develop` > `main` is merged with a merge commit, so the two do not conflict on every release.
