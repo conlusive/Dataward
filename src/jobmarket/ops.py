@@ -206,6 +206,20 @@ class OpsStore:
         )
         return run_id
 
+    def has_successful_sweep(self, run_date: date) -> bool:
+        """Did the full nightly flow (``daily``) finish for ``run_date``?
+
+        An hourly run reads only the first listing pages, so before the sweep a day looks like 900
+        vacancies against the usual 6 800: its numbers must not be published, and the quality check
+        rightly refuses them. The hourly flow therefore waits for the sweep of its own day.
+        """
+        row = self._con.execute(
+            "SELECT count(*) FROM ops_pipeline_runs "
+            "WHERE flow = 'daily' AND run_date = ? AND status = 'success'",
+            [run_date],
+        ).fetchone()
+        return bool(row and row[0])
+
     def finish_pipeline(self, run_id: str, status: str, failed_steps: list[str]) -> None:
         self._con.execute(
             "UPDATE ops_pipeline_runs SET finished_at = ?, status = ?, failed_steps = ? "

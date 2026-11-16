@@ -65,6 +65,17 @@ directory must be writable by uid 1000.
 - Prefect, the monthly retraining workflow and the dashboard image: there is no consumer yet (see
   ADR 0031 for Prefect).
 
+## The hourly flow waits for the day's sweep
+
+An hourly run reads only the first listing pages, about 900 vacancies against the usual 6 800. Before the
+night's full sweep of the same UTC day has finished, publishing that would show a market that shrank to a
+seventh, and the `listing_volume` quality check rightly refuses it (it failed every first hourly run of a
+day). So `jobmarket flow fresh` first asks the run records whether the `daily` flow of the day succeeded
+(`OpsStore.has_successful_sweep`); if not it logs why, scrapes and publishes nothing and exits 0, and the
+site keeps the previous full data. A sweep that failed does not open the way either. `--force` runs it
+anyway (for a local try). The workflow's "Prepare the public export" step tolerates that an hour exported
+nothing; a failed flow still fails its own step.
+
 ## An external hourly trigger
 
 GitHub runs a `schedule` when it has room: on a public repository the hourly cron (`17 * * * *`) arrives
