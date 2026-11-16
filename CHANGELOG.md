@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+### Fixed (the hourly flow no longer fails every morning)
+- The hourly flow failed `listing_volume` (941 vacancies against a median of 6 791) in the first run of every
+  UTC day, because it sees only the top of each listing until the night's full sweep has run. It now
+  **waits for the day's successful sweep**: nothing is scraped or published and the run is not a failure
+  (`--force` overrides it); the site keeps the previous full data. The public-export step tolerates an
+  hour that exported nothing.
+
 ### Added (an outside hourly trigger)
 - `docs/orchestration.md` explains how to start the hourly flow from a free outside scheduler (a
   fine-grained token with *Actions: Read and write* on this repository, a `POST` to the

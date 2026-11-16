@@ -117,6 +117,9 @@ def _build_parser() -> argparse.ArgumentParser:
     flow_cmd.add_argument("--from", dest="start", type=date.fromisoformat, default=None)
     flow_cmd.add_argument("--to", dest="end", type=date.fromisoformat, default=None)
     flow_cmd.add_argument("--only", default=None, help="comma-separated steps to run")
+    flow_cmd.add_argument(
+        "--force", action="store_true", help="run the hourly flow before the day's full sweep"
+    )
     backfill = commands.add_parser(
         "backfill",
         help="re-parse the stored bronze days of a date range into silver (no network)",
@@ -325,6 +328,19 @@ def _flow(args: argparse.Namespace) -> int:
             return 2
         steps = backfill_steps(args.start, args.end)
     elif args.name == "fresh":
+        ops = OpsStore(Settings.from_env().duckdb_path)
+        try:
+            swept = ops.has_successful_sweep(run_date)
+        finally:
+            ops.close()
+        if not swept and not args.force:
+            logger.warning(
+                "no full sweep has finished for {} yet: the hourly flow waits for it (its pages "
+                "are only the top of each listing, a day of them would look like 900 vacancies); "
+                "nothing was scraped or published. --force runs it anyway.",
+                run_date,
+            )
+            return 0
         steps = fresh_steps()
     else:
         steps = daily_steps()
