@@ -14,12 +14,14 @@ on the "about the data" page.
 
 ## Pages
 
-Eleven pages in a sidebar under the pixel logo, grouped by what you are doing: Головна, Вакансії
-(Каталог, Для мене, Збережені), Розвиток (Навчання, Практика), Аналітика, Система. The sidebar is part of
-the layout and cannot be collapsed; **the menu scrolls on its own and the avatar stays pinned below it**, so
-no page is out of reach on a short window. **You are the avatar at its foot** (the frog in a frame, a name, a level bar): the whole card opens the profile, so
-there is no "Профіль" in the menu (the page exists; its menu link is hidden). Tabs inside a page split one
-topic into views. Filters live on the page, in a bar above the list, never in the sidebar.
+The menu is a **bar of liquid glass at the top** (no sidebar on a desktop): the glass tile with the
+bars and the name on the left, the pages after it, the open page a lit violet drop. The public copy has
+six pages in one row (Головна, Каталог, Ринок, Навички, Зарплати, Стан системи); on your own machine
+there are twelve, so the groups open as menus of the same glass: Вакансії (Каталог, Для мене, Збережені),
+Розвиток (Профіль, Навчання, Практика), Аналітика (Ринок, Навички, Зарплати, Стан системи).
+**You are the chip at the right end of the bar** (the frog, a name, a level): a click opens the profile.
+On a phone Streamlit folds the same menu into the drawer (below). Tabs inside a page split one
+topic into views. Filters live on the page, in a bar above the list.
 
 | Page | Tabs | Shows | Reads |
 |---|---|---|---|
@@ -100,8 +102,9 @@ Shortcuts exist but are not printed on the pages: `?` lists them, `Ctrl K` (`⌘
 | `Esc` | close the window, or leave a field |
 
 The table lives in `dashboard_keys.py` and the script is generated from it (`st.html` with
-`unsafe_allow_javascript`); it clicks the sidebar links and the trainer's buttons, so it knows nothing
-about Streamlit's routing. Keys are matched by position (`KeyboardEvent.code`), so they work in the
+`unsafe_allow_javascript`); it clicks the menu links and the trainer's buttons, so it knows nothing
+about Streamlit's routing. The pages inside a group menu are not in the page until the menu is open, so the
+owner's copy keeps a hidden `st.page_link` to each of them in `ui.scripts(...)` for the script to click. Keys are matched by position (`KeyboardEvent.code`), so they work in the
 Ukrainian layout. A test keeps the table equal to the menu and checks the script with `node --check`.
 
 ## The salary calculator on a host that cannot train
@@ -135,7 +138,8 @@ is shown as a tag too.
 references: a three-colour study (powder blue and two violets) and a dot-matrix dashboard.
 
 - **Page**: GitHub's dark canvas (`#0D1117`) with dark cards (`#161B22`), a hairline (`#30363D`) and 22 px
-  corners. The menu has no panel of its own: it sits on the page, and the open page is a violet pill.
+  corners. The menu is a floating bar of glass (`_GLASS` in the theme: a blurred, saturated page behind a
+  light edge and a sheen); a soft violet glow at the top of the page gives the glass something to bend.
 - **Colour**: powder `#C0D8E6`, lavender `#B7A3EA` and violet `#5B3FB5` are worn as whole blocks (the row of
   figures, the chosen vacancy, the required skills): dark ink on the first two, white on the violet. Small
   text wears light steps (the accent `#A78BFA`, sky, mint, amber; a test checks 4.5:1 on the card). The
@@ -165,9 +169,9 @@ references: a three-colour study (powder blue and two violets) and a dot-matrix 
 - **Tabs build only the open one** (the page "Навички"): `st.tabs(..., on_change="rerun")` and
   `if tab.open:`, so a hidden table or graph is never drawn. Their widgets keep their values through
   `ui.keep(...)`, because Streamlit forgets a widget it did not draw.
-- **A phone** (`_PHONE` in the theme, `dashboard_mobile.py`): Streamlit shows the sidebar as a drawer below
-  768 px and stacks columns below 640 px; the stylesheet only adjusts what is too big. The drawer is closed
-  by a small script once per page load and its buttons are hidden only above 768 px. Figures go two to a
+- **A phone** (`_PHONE` in the theme): Streamlit folds the top menu into a drawer below 768 px and
+  stacks columns below 640 px; the stylesheet only adjusts what is too big. The app starts with the
+  drawer closed (`initial_sidebar_state="collapsed"`) and its buttons are hidden only above 768 px. Figures go two to a
   row, the filter bar of the catalog is two columns wide, the pills wrap. On the list of vacancies a tapped
   row gives its "back" button the key `*_close_open`, and the stylesheet lays the card (`:has()` on that
   key, phone only) over the screen; the card itself keeps its key, so a click does not mount it anew.
@@ -211,7 +215,9 @@ after the very first update to this version.
   skills, the stack graph, benchmarks, health). No Streamlit, so they are tested directly.
 - `src/jobmarket/dashboard_theme.py`: colour tokens, the stylesheet and small HTML pieces (header, status
   chip, section label, skill tags, fact list); text is escaped. No Streamlit import either.
-- `src/jobmarket/dashboard_logo.py`: the pixel logo, the sidebar icon and the favicon.
+- `src/jobmarket/dashboard_logo.py`: the glass-tile mark of the header and the favicon (both drawn from
+  the same gradient, three bars and a mint stop), and the pixel logo; `python -m jobmarket.dashboard_logo`
+  rewrites `dashboard/static`.
 - `src/jobmarket/dashboard_profile.py`, `dashboard_interview.py`, `dashboard_resources.py`,
   `dashboard_progress.py` and `dashboard_mascot.py`: the profile file and matching, the question bank and
   its schedule, the learning resources, experience and levels, and the frog. No Streamlit, so they are
@@ -271,8 +277,7 @@ serverless platform such as Vercel). `render.yaml` is a Render Blueprint for the
   files. `DASHBOARD_DATA_URL` is the archive URL (Render passes its env vars to the build as well);
   unset, nothing is fetched, and `scripts/dashboard-start.sh` fetches only if the image has no data.
 - **The public copy shows the market and the vacancies, not a person.** On Render
-  (`DASHBOARD_PROFILE=session`) the menu is Головна, Вакансії (Каталог), Аналітика (Ринок, Навички,
-  Зарплати) and Стан системи. The pages about you (Профіль, Навчання, Практика, Для мене, Збережені), the
+  (`DASHBOARD_PROFILE=session`) the bar is Головна, Каталог, Ринок, Навички, Зарплати and Стан системи. The pages about you (Профіль, Навчання, Практика, Для мене, Збережені), the
   avatar, the undo bar and the "Сьогодні" block do not exist there: they are not hidden but not registered,
   so their URLs do not open, and the shortcuts and the palette do not offer them. The vacancy list is
   there without a profile: no match with your skills and no save button. Run it on your own machine for

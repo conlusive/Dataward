@@ -2,6 +2,18 @@
 
 ## Unreleased
 
+### Changed (the desktop menu is a bar of glass, a new mark)
+- **No sidebar on a desktop.** The menu is a floating bar at the top (`st.navigation(position="top")`):
+  frosted, blurred, with a light edge and a sheen, over a soft violet glow; the open page is a lit violet
+  drop. The public site has six pages in one row; on your machine the groups (Вакансії, Розвиток,
+  Аналітика) open as menus of the same glass, and the avatar is a chip at the right end of the bar.
+  A phone keeps its burger and drawer (the drawer starts closed, so the script that closed it, which could
+  also close a drawer opened in the first five seconds, is gone).
+- **A new mark**: a violet glass tile with three rising bars and a mint stop, and the name with its
+  last letters in lavender; the favicon and the touch icon are the same tile.
+- The shortcuts (`g` + a letter) follow the new menu: the pages inside group menus are reached through
+  hidden links.
+
 ### Fixed (Djinni's listing shrank from 5 700 to 800 a day)
 - The nightly sweep kept failing `listing_volume`, and the cause was upstream: Djinni used to answer the
   unknown keyword "QA Manual" with the whole site (5 697 vacancies) and on 2026-11-16 started to answer it
