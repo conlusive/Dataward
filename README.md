@@ -52,6 +52,7 @@ files other people read.
 - [docs/architecture.md](docs/architecture.md): the diagram, the layers, how it runs, what it would take at 100x
 - [docs/data_model.md](docs/data_model.md) and [docs/lineage.md](docs/lineage.md): every table, and the dbt lineage generated from the project
 - [docs/decisions.md](docs/decisions.md): the decisions, why, and what was rejected
+- [docs/branches.md](docs/branches.md): `main` is what runs, `develop` is where work lands, how to release
 
 ## Reliability (the part I care most about)
 

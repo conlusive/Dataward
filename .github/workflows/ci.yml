@@ -3,7 +3,7 @@ name: ci
 on:
   pull_request:
   push:
-    branches: [main]
+    branches: [main, develop]  # develop is where work lands, main is what is deployed
 
 permissions:
   contents: read
