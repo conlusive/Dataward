@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+### Added (an outside hourly trigger)
+- `docs/orchestration.md` explains how to start the hourly flow from a free outside scheduler (a
+  fine-grained token with *Actions: Read and write* on this repository, a `POST` to the
+  `workflow_dispatch` endpoint, HTTP 204 on success), because GitHub's own hourly cron arrives about
+  every four to six hours.
+
 ### Fixed (the nightly sweep failed its quality check)
 - The nightly full sweep failed `dq_silver` ("939 vacancies listed, the days before: median 6 791") eight
   times and published nothing. The hourly run parses only the first listing pages of today and marks the
