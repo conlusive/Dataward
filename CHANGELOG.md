@@ -8,6 +8,12 @@
   `workflow_dispatch` endpoint, HTTP 204 on success), because GitHub's own hourly cron arrives about
   every four to six hours.
 
+### Fixed (the nightly sweep failed its quality check)
+- The nightly full sweep failed `dq_silver` ("939 vacancies listed, the days before: median 6 791") eight
+  times and published nothing. The hourly run parses only the first listing pages of today and marks the
+  day done, so `parse --missing` skipped the day and the sweep's full listings never reached silver. The
+  full parse now goes over the last three days again (`make parse-recent`); parsing a day twice is harmless.
+
 ### Changed (phone header, one colour)
 - On a phone the top bar is the mark on the left and a **burger icon on the right**, as in most services
   (no text label); the open menu is a plain panel without the rounded outline that floated above the
