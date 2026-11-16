@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+### Added (branches: develop and main)
+- `develop` is where work lands and `main` is what runs (Render, the workflows). PRs go to `develop` (squash);
+  a release PR `develop` > `main` is merged with a merge commit, so the two do not conflict on every release.
+  `ci.yml` also runs on pushes to `develop`. See `docs/branches.md`.
+
 ### Fixed (the hourly flow no longer fails every morning)
 - The hourly flow failed `listing_volume` (941 vacancies against a median of 6 791) in the first run of every
   UTC day, because it sees only the top of each listing until the night's full sweep has run. It now
