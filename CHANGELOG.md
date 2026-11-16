@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+### Added (an outside hourly trigger)
+- `docs/orchestration.md` explains how to start the hourly flow from a free outside scheduler (a
+  fine-grained token with *Actions: Read and write* on this repository, a `POST` to the
+  `workflow_dispatch` endpoint, HTTP 204 on success), because GitHub's own hourly cron arrives about
+  every four to six hours.
+
 ### Changed (phone header, one colour)
 - On a phone the top bar is the mark on the left and a **burger icon on the right**, as in most services
   (no text label); the open menu is a plain panel without the rounded outline that floated above the

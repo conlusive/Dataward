@@ -64,3 +64,39 @@ directory must be writable by uid 1000.
   needs the models ported first.
 - Prefect, the monthly retraining workflow and the dashboard image: there is no consumer yet (see
   ADR 0031 for Prefect).
+
+## An external hourly trigger
+
+GitHub runs a `schedule` when it has room: on a public repository the hourly cron (`17 * * * *`) arrives
+about every four to six hours, and some runs are dropped. The workflow also takes a manual start
+(`workflow_dispatch`, inputs `flow` = `daily` or `fresh`), so a small outside scheduler can start it on time.
+Runs queue and never overlap (`concurrency`, one at a time; a start that arrives while a sweep runs waits
+as the one pending run), so a ping that comes too often costs nothing.
+
+Set it up once, with a free scheduler such as cron-job.org:
+
+1. **A token.** GitHub > Settings > Developer settings > Personal access tokens > *Fine-grained tokens* >
+   Generate. Repository access: *Only select repositories* > `Dataward`. Permissions > Repository
+   permissions > **Actions: Read and write** (nothing else). Expiration: as long as you accept (a year);
+   put the date in your calendar, an expired token only stops the pings.
+2. **The job** (cron-job.org > Create cronjob):
+   - URL: `https://api.github.com/repos/conlusive/Dataward/actions/workflows/pipeline-daily.yml/dispatches`
+   - Schedule: every hour (for example at minute 5)
+   - Request method: `POST`; Request body: `{"ref":"main","inputs":{"flow":"fresh"}}`
+   - Headers: `Authorization: Bearer <the token>`, `Accept: application/vnd.github+json`,
+     `X-GitHub-Api-Version: 2022-11-28`, `Content-Type: application/json`, `User-Agent: dataward-ping`
+   - Success is **HTTP 204** (no body). Optionally a second job at 04:00 UTC with `"flow":"daily"`.
+3. **Try it by hand first** (the token goes in the environment, not in the command line history):
+
+   ```bash
+   read -rs GH_PING_TOKEN && export GH_PING_TOKEN
+   curl -si -X POST -H "Authorization: Bearer $GH_PING_TOKEN" -H "Accept: application/vnd.github+json" \
+     -d '{"ref":"main","inputs":{"flow":"fresh"}}' \
+     https://api.github.com/repos/conlusive/Dataward/actions/workflows/pipeline-daily.yml/dispatches | head -1
+   ```
+
+   `HTTP/2 204` means it started: the run appears under Actions as "workflow_dispatch". `401` is a wrong
+   or expired token, `403` or `404` a token without *Actions: Read and write* on this repository.
+
+The token can only start workflows of this one repository; it cannot read the code's secrets. Keep it out
+of the repository and of chat.
