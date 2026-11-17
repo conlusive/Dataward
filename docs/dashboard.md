@@ -138,7 +138,8 @@ references: a three-colour study (powder blue and two violets) and a dot-matrix 
   corners. The menu has no panel of its own: it sits on the page, and the open page is a violet pill.
 - **Colour**: powder `#C0D8E6`, lavender `#B7A3EA` and violet `#5B3FB5` are worn as whole blocks (the row of
   figures, the chosen vacancy, the required skills): dark ink on the first two, white on the violet. Small
-  text wears light steps (the accent `#A78BFA`, sky, mint, amber; a test checks 4.5:1 on the card). The
+  text wears light steps (the accent `#A78BFA` and the four colours of the parts of the product below; a
+  test checks 4.5:1 on the card). The
   chart marks are `#7A5AE0`, `#2E8FD0`, `#C08A10` and `#DB5F93`, validated in dark mode.
 - **A phone**: the menu is dark frosted glass. The top bar is the mark and a burger icon on the right (the
   bare arrow said nothing); the open menu closes with a cross.
@@ -176,9 +177,11 @@ references: a three-colour study (powder blue and two violets) and a dot-matrix 
   image overwrites Streamlit's `favicon.png` with ours (`Dockerfile.dashboard`), and a script does the
   same for a local run: it removes the icon links and adds a PNG one and an `apple-touch-icon` from
   `/app/static` (`enableStaticServing`). The address carries a hash of the icon. `page_icon` is not set.
-- **Colour by part of the product**: vacancies teal, learning (Розвиток) violet, analytics red, the state of
-  the system yellow; they colour the heading marks, the menu bars and the actions (`DOMAINS` in the theme;
-  a test keeps the hues). These are not the chart series colours.
+- **Colour by part of the product**: one cool pastel ramp, about 25 degrees of hue apart and about as light,
+  so the menu reads as a family: vacancies powder blue `#98C3E7`, analytics periwinkle `#A0AFF3`, learning
+  (Розвиток) the violet of the accent `#A78BFA`, the state of the system orchid `#D89EEB`. They colour the
+  heading marks, the menu group names and the actions (`DOMAINS` in the theme; a test keeps the hues and
+  the family). These are not the chart series colours.
 - **Smooth on a small machine**: no selector that rescans every wrapper (`:has()` over all containers), no
   entrance animation, progress rings are CSS (a conic gradient) instead of charts, one ring of the market
   at a time (a radio, not three tabs that would all draw), and the toolbar over tables and charts (full

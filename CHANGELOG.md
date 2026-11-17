@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+### Changed (one family of colours for the parts of the product)
+- The colours of the menu groups and heading marks (vacancies sky, analytics mint, the system amber) did
+  not belong together. They are now one cool pastel ramp, powder blue, periwinkle, violet and orchid, about
+  25 degrees of hue apart and about as light, so the sidebar, the eyebrows and the section marks read as
+  one family and match the powder and lavender blocks of the home page.
+
 ### Added (the hourly flow starts itself)
 - GitHub's own hourly `schedule` arrived every four to six hours, so the data on the site was hours old.
   The last job of every run, `rearm`, now waits for the next `:17` UTC and starts the next run with the
