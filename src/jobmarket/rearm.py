@@ -9,7 +9,10 @@ again if it ever breaks.
 
 Only the newest run carries the chain on: a run that finds a newer one (a schedule fired while it
 waited) lets go, so chains merge instead of multiplying. The full sweep is started when none has
-succeeded for a day. The standard library only: this runs in a job that installs nothing.
+succeeded for a day. While it waits the job also asks the hosted site for its health every few
+minutes: a free Render service falls asleep after 15 idle minutes and a visitor then waits a minute
+for it to wake, so a visit every few minutes keeps it awake. The standard library only: this runs in
+a job that installs nothing.
 """
 
 import json
@@ -17,6 +20,8 @@ import os
 import subprocess
 import sys
 import time
+import urllib.error
+import urllib.request
 from collections.abc import Sequence
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
@@ -27,6 +32,8 @@ TARGET_MINUTE: Final = 17  # the minute of the hourly schedule: the chain keeps 
 MIN_WAIT: Final = timedelta(minutes=10)  # never start sooner than this after a run ends
 SWEEP_EVERY: Final = timedelta(hours=20)  # a full sweep succeeded within this: none is due
 SWEEP_RETRY_AFTER: Final = timedelta(hours=6)  # a sweep started within this: do not start another
+SITE_URL: Final = os.environ.get("DASHBOARD_SITE_URL") or "https://dataward.onrender.com"
+PING_EVERY: Final = timedelta(minutes=8)  # under the 15 minutes after which a free service sleeps
 
 Flow = Literal["daily", "fresh"]
 
@@ -83,6 +90,15 @@ def fetch_runs() -> list[Run]:
     ]
 
 
+def ping(url: str = SITE_URL) -> None:
+    """Ask the site whether it is well; this is also what wakes it. A failure is only logged."""
+    try:
+        with urllib.request.urlopen(f"{url.rstrip('/')}/_stcore/health", timeout=60) as reply:  # noqa: S310
+            print(f"site answered {reply.status}")
+    except (urllib.error.URLError, OSError) as error:
+        print(f"site did not answer: {error}")
+
+
 def _find(runs: Sequence[Run], run_id: int) -> Run | None:
     return next((run for run in runs if run.id == run_id), None)
 
@@ -95,7 +111,11 @@ def main() -> int:
         return 0
     start = next_start(datetime.now(UTC))
     print(f"the next run is due at {start:%H:%M} UTC")
+    last_ping: datetime | None = None
     while (left := (start - datetime.now(UTC)).total_seconds()) > 0:
+        if last_ping is None or datetime.now(UTC) - last_ping >= PING_EVERY:
+            ping()
+            last_ping = datetime.now(UTC)
         time.sleep(min(left, 60))
     runs = fetch_runs()
     if superseded(mine, runs):

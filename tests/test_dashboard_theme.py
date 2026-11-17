@@ -1,4 +1,5 @@
 import re
+from pathlib import Path
 
 from jobmarket import dashboard_theme as t
 
@@ -352,10 +353,13 @@ def test_a_ring_is_bounded_labelled_and_coloured_by_its_domain() -> None:
     assert 'role="img"' in high and "aria-label" in high  # a reader gets the figure as text
 
 
-def test_the_single_system_item_carries_its_own_colour_since_it_has_no_heading() -> None:
+def test_the_system_group_has_a_visible_heading_that_carries_its_colour() -> None:
     css = t.css()
+    app = (Path(__file__).parent.parent / "dashboard" / "app.py").read_text(encoding="utf-8")
 
-    assert 'has(a[href$="system"]) a {\n  border-left: 4px solid var(--dom); }' in css
+    assert 'sections["Система"] = [' in app  # two pages (state, about): a heading is fine now
+    assert 'has(a[href$="system"]) [data-testid="stNavSectionHeader"] {\n  display: none' not in css
+    assert 'has(a[href$="system"]) a {\n  border-left' not in css  # the heading carries the colour
 
 
 def test_a_menu_group_takes_its_colour_from_its_page_not_from_its_place() -> None:
@@ -412,3 +416,19 @@ def test_nothing_on_a_dark_page_keeps_a_light_theme_colour() -> None:
 
     assert "251, 243, 225" not in css  # the cream of the old page
     assert "background: var(--accent) !important" not in css  # white text on a light violet
+
+
+def test_the_foot_of_the_menu_shows_the_age_of_the_data_and_a_link_that_is_escaped() -> None:
+    fresh = t.sidefoot("12 хв тому", True, "https://example.org/a?b=1&c=2")
+    old = t.sidefoot("3 дн тому", False, "https://example.org")
+
+    assert 'class="dw-live"' in fresh and "12 хв тому" in fresh and "&amp;c=2" in fresh
+    assert 'class="dw-live old"' in old  # the dot turns amber when the data is too old
+    assert 'rel="noopener"' in fresh  # a link that leaves the site
+
+
+def test_a_heading_has_no_chain_icon_and_the_mark_looks_like_the_button_it_is() -> None:
+    css = t.css()
+
+    assert '[data-testid="stHeaderActionElements"] { display: none !important; }' in css
+    assert '[data-testid="stLogoLink"] { cursor: pointer;' in css

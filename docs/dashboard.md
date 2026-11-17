@@ -14,7 +14,7 @@ on the "about the data" page.
 
 ## Pages
 
-Eleven pages in a sidebar under the pixel logo, grouped by what you are doing: Головна, Вакансії
+Twelve pages in a sidebar under the pixel logo, grouped by what you are doing: Головна, Вакансії
 (Каталог, Для мене, Збережені), Розвиток (Навчання, Практика), Аналітика, Система. The sidebar is part of
 the layout and cannot be collapsed; **the menu scrolls on its own and the avatar stays pinned below it**, so
 no page is out of reach on a short window. **You are the avatar at its foot** (the frog in a frame, a name, a level bar): the whole card opens the profile, so
@@ -306,3 +306,22 @@ export yourself), then on Render: New > Blueprint > this repository.
 
 - **Other hosts**: Streamlit Community Cloud and the Hugging Face mirror (see "Public hosting" for Render).
 - **English UI**: only Ukrainian for now.
+
+## The page head, the icon and keeping the site awake
+
+- **`dashboard_head.py`** writes the head of Streamlit's `index.html` once, at `docker build`: the
+  title, the description, `lang="uk"`, the canonical address, Open Graph and Twitter tags, a JSON-LD
+  `WebApplication`, a `<noscript>` text with links to the pages, and the icons. Streamlit serves one
+  static page for every address and fills it with JavaScript, so a crawler or a link preview (Telegram,
+  Slack) reads only this. What a crawler cannot get from a Streamlit app: a `robots.txt`, a sitemap and
+  server-rendered text per page; the head and the noscript text are the part that can be improved.
+- **The tab icon** had stayed Streamlit's crown in Safari: Streamlit serves `favicon.png` as `immutable`
+  for a year, so a browser that once saw the crown at that address keeps it, whatever the file holds. The
+  icon links now point at `./app/static/favicon.png?v=<hash of the icon>`: a changed icon is a new address.
+- **Slow first visit.** A free Render service falls asleep after 15 idle minutes and a visitor then waits
+  about a minute. The waiting job of the pipeline chain (`rearm`, `orchestration.md`) asks the site for
+  `/_stcore/health` every 8 minutes, which keeps it awake (about 750 free hours a month is one service
+  running all the time). A warm page shows its first heading in about 6 s.
+- **The menu**: the last group is "Система" (Стан системи, Про проєкт); under the menu a small foot shows
+  how long ago the data was refreshed (a green dot, amber after the 36 h of the SLO) and the link to the
+  code. Heading anchors (the chain icon) are hidden; the logo is a button to the home page.

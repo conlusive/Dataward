@@ -22,6 +22,7 @@ PAGES: Final[tuple[tuple[str, str], ...]] = (
     ("Навички", "s"),
     ("Зарплати", "w"),
     ("Стан системи", "d"),
+    ("Про проєкт", "a"),
 )
 
 # pages the public copy does not have: those about a person (the market and vacancies are public)

@@ -433,11 +433,6 @@ _WORKSPACE = """
 [data-testid="stNavSectionHeader"] { margin-top: 0.3rem; padding-top: 0;
   padding-bottom: 0; min-height: 0; }
 [data-testid="stNavSectionHeader"]:empty { display: none; }
-[data-testid="stSidebarNavItems"] > div:has(a[href$="system"]) [data-testid="stNavSectionHeader"] {
-  display: none; }
-/* the item has no heading to carry the colour of its group, so the item itself carries it */
-[data-testid="stSidebarNavItems"] > div:has(a[href$="system"]) a {
-  border-left: 4px solid var(--dom); }
 [data-testid="stSidebarHeader"] { padding-top: 0.6rem; padding-bottom: 0.2rem; }
 [data-testid="stSidebarNav"] { padding-bottom: 0; }
 [data-testid="stSidebarUserContent"] { padding-bottom: 0 !important; }
@@ -797,6 +792,27 @@ button[data-baseweb="tab"] { font-family: var(--body); font-weight: 600; }
 }
 """
 
+_SITE = """
+/* a heading's anchor (the chain icon that copies a link to it) means nothing to a visitor */
+[data-testid="stHeaderActionElements"] { display: none !important; }
+/* the mark takes you home: it is a button, so it looks like one */
+[data-testid="stLogoLink"] { cursor: pointer; transition: opacity 0.15s; }
+[data-testid="stLogoLink"]:hover { opacity: 0.8; }
+/* the foot of the menu: how fresh the data is, and where the code is */
+.dw-sidefoot { margin: var(--s3) var(--s2) var(--s4); padding-top: var(--s3);
+  border-top: 1px solid var(--line); font-size: var(--fs-xs); color: var(--ink-3);
+  line-height: 1.7; }
+.dw-sidefoot b { color: var(--ink-2); font-weight: 600; }
+.dw-sidefoot a { color: var(--ink-2); text-decoration: none;
+  border-bottom: 1px solid var(--line-2); }
+.dw-sidefoot a:hover { color: var(--ink); border-bottom-color: var(--ink-3); }
+.dw-live { display: inline-block; width: 0.5rem; height: 0.5rem; border-radius: 50%;
+  margin-right: 0.45rem; background: var(--ok);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--ok) 25%, transparent); }
+.dw-live.old { background: var(--warn);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--warn) 25%, transparent); }
+"""
+
 
 def css() -> str:
     """The stylesheet, ready for a <style> tag."""
@@ -816,7 +832,8 @@ def css() -> str:
     fonts = (
         "@import url('https://fonts.googleapis.com/css2?family=Doto:wght@700;900&display=swap');"
     )
-    return f"<style>{fonts}{variables}{_STYLE}{_MOTION}{_BLOCKS}{_WORKSPACE}{_PHONE}{_CALM}</style>"
+    blocks = _STYLE + _MOTION + _BLOCKS + _WORKSPACE + _PHONE + _CALM + _SITE
+    return f"<style>{fonts}{variables}{blocks}</style>"
 
 
 def pill(text: str, tone: str = "neutral") -> str:
@@ -873,6 +890,16 @@ def card_title(title: str, note: str = "") -> str:
     """A card's heading; its explanation is a "?" next to it, not a line of grey text."""
     mark = tip(note) if note else ""
     return f'<div class="dw-card-title">{escape(title)}{mark}</div>'
+
+
+def sidefoot(age: str, fresh: bool, repo_url: str) -> str:
+    """The foot of the menu: a dot and the age of the data, and the address of the code."""
+    state = "dw-live" if fresh else "dw-live old"
+    return (
+        f'<div class="dw-sidefoot"><span class="{state}"></span>дані оновлено <b>{escape(age)}</b>'
+        f'<br><a href="{escape(repo_url, quote=True)}" target="_blank" rel="noopener">'
+        "код на GitHub</a></div>"
+    )
 
 
 def side_label(text: str) -> str:

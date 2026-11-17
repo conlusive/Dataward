@@ -8,6 +8,7 @@ a clear message instead of a stack trace; a test keeps `REQUIRED` inside the dbt
 import json
 import os
 from collections.abc import Sequence
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -550,6 +551,25 @@ def stamp(iso: str) -> str:
     moment = pd.Timestamp(iso)
     moment = moment.tz_localize("UTC") if moment.tzinfo is None else moment.tz_convert("UTC")
     return str(moment.strftime("%d.%m.%Y %H:%M UTC"))
+
+
+def age_minutes(iso: str, now: datetime | None = None) -> int:
+    """How many whole minutes ago an ISO time was (never negative: a clock a little behind is 0)."""
+    moment = pd.Timestamp(iso)
+    moment = moment.tz_localize("UTC") if moment.tzinfo is None else moment.tz_convert("UTC")
+    delta = (now or datetime.now(UTC)) - moment.to_pydatetime()
+    return max(0, int(delta.total_seconds() // 60))
+
+
+def age_text(minutes: int) -> str:
+    """ "щойно", "12 хв тому", "5 год тому", "3 дн тому"."""
+    if minutes < 1:
+        return "щойно"
+    if minutes < 60:
+        return f"{minutes} хв тому"
+    if minutes < 48 * 60:
+        return f"{minutes // 60} год тому"
+    return f"{minutes // (24 * 60)} дн тому"
 
 
 # ---- the vacancy catalog ---------------------------------------------------------------------

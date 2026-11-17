@@ -165,6 +165,23 @@ def card(title: str, note: str = "") -> Any:
     return box
 
 
+REPO_URL = "https://github.com/conlusive/Dataward"
+FRESH_MINUTES = 36 * 60  # the SLO "data at most 36 h old": a dot that turns amber after it
+
+
+def sidebar_footer() -> None:
+    """How fresh the data is and where the code is, at the foot of the menu on every page."""
+    try:
+        exported = _json(str(dd.data_dir()), "last_update.json")["exported_at"]
+    except (dd.DataError, KeyError):
+        return  # the pages say "no data" themselves; the menu stays quiet
+    minutes = dd.age_minutes(exported)
+    st.sidebar.markdown(
+        theme.sidefoot(dd.age_text(minutes), minutes < FRESH_MINUTES, REPO_URL),
+        unsafe_allow_html=True,
+    )
+
+
 def sidebar_label(text: str) -> None:
     """A small heading in the sidebar, above a group of filters."""
     st.sidebar.markdown(theme.side_label(text), unsafe_allow_html=True)

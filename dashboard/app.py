@@ -8,12 +8,13 @@ from jobmarket import dashboard_reload
 
 dashboard_reload.refresh()  # pick up edited modules from src/ before they are imported below
 
-from jobmarket import dashboard_ui as ui  # noqa: E402  (after the refresh on purpose)
+from jobmarket import dashboard_head as head  # noqa: E402  (after the refresh on purpose)
+from jobmarket import dashboard_ui as ui  # noqa: E402
 
 STATIC = Path(__file__).parent / "static"  # the wordmark and the favicon (dashboard_logo.py)
 
 st.set_page_config(
-    page_title="Dataward · ринок праці в ІТ України",
+    page_title=head.TITLE,
     layout="wide",
     initial_sidebar_state="expanded",
 )
@@ -45,13 +46,15 @@ sections["Аналітика"] = [
     st.Page("views/skills.py", title="Навички", icon=":material/psychology:"),
     st.Page("views/salary.py", title="Зарплати", icon=":material/payments:"),
 ]
-sections["\u200b"] = [  # no visible heading: a heading over one item looked like a button
+sections["Система"] = [
     st.Page("views/system.py", title="Стан системи", icon=":material/health_and_safety:"),
+    st.Page("views/about.py", title="Про проєкт", icon=":material/info:"),
 ]
 navigation = st.navigation(sections, expanded=True)  # every item visible, never behind "View more"
 if personal:
     ui.undo_bar()  # a slim bar while the last action can be taken back (also `z`)
 ui.scripts()  # shortcuts (`?` lists them, pages do not print them) and the page-enter motion
+ui.sidebar_footer()  # how fresh the data is, and the code, under the menu
 if personal:
     ui.avatar_card()  # you, at the foot of the sidebar, on every page
 navigation.run()

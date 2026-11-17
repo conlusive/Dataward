@@ -1,4 +1,4 @@
-from datetime import date
+from datetime import UTC, date, datetime
 from pathlib import Path
 
 import pandas as pd
@@ -799,3 +799,15 @@ def test_a_page_stays_inside_the_list() -> None:
     assert dd.page_of(40, 9, 15) == (2, 30, 40)  # past the end: the last page
     assert dd.page_of(40, -3, 15) == (0, 0, 15)
     assert dd.page_of(0, 0, 15) == (0, 0, 0)  # an empty list has one empty page
+
+
+def test_the_age_of_the_export_in_words_and_a_clock_that_is_a_little_behind() -> None:
+    now = datetime(2026, 11, 18, 12, 0, tzinfo=UTC)
+
+    assert dd.age_minutes("2026-11-18T11:48:00+00:00", now) == 12
+    assert dd.age_minutes("2026-11-18T11:00:00", now) == 60  # no zone: UTC, as the exports are
+    assert dd.age_minutes("2026-11-18T12:05:00+00:00", now) == 0  # never negative
+    assert [dd.age_text(m) for m in (0, 12, 59, 60, 300, 47 * 60, 48 * 60, 5 * 24 * 60)] == [
+        "щойно", "12 хв тому", "59 хв тому", "1 год тому", "5 год тому", "47 год тому",
+        "2 дн тому", "5 дн тому",
+    ]  # fmt: skip

@@ -26,6 +26,9 @@ COPY .streamlit ./.streamlit
 # there: put ours in its place (see dashboard_icon.py)
 RUN STATIC="$(python -c 'import pathlib, streamlit; print(pathlib.Path(streamlit.__file__).parent / "static")')" \
     && cp dashboard/static/favicon.png dashboard/static/favicon.ico dashboard/static/apple-touch-icon.png "$STATIC/"
+# the head of the page (title, description, icons at an address with a hash, link previews): see
+# dashboard_head.py; without it a browser that once saw Streamlit's crown keeps it for a year
+RUN python -m jobmarket.dashboard_head
 COPY scripts/dashboard-start.sh ./scripts/dashboard-start.sh
 RUN python -m compileall -q src dashboard
 

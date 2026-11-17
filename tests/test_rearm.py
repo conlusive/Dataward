@@ -1,4 +1,5 @@
 import time
+import urllib.request
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
@@ -85,7 +86,10 @@ class _Clock:
 
 
 def _main(
-    monkeypatch: pytest.MonkeyPatch, runs: list[Run], later: list[Run] | None = None
+    monkeypatch: pytest.MonkeyPatch,
+    runs: list[Run],
+    later: list[Run] | None = None,
+    pings: list[datetime] | None = None,
 ) -> list[tuple[str, ...]]:
     """Run ``main`` against fake runs; ``later`` is what the list looks like after the wait."""
     clock = _Clock(NOW)
@@ -98,7 +102,9 @@ def _main(
         calls.append(args)
         return ""
 
+    sink = pings if pings is not None else []
     monkeypatch.setattr(rearm, "_gh", record)
+    monkeypatch.setattr(rearm, "ping", lambda *a: sink.append(clock.now))
     monkeypatch.setattr(time, "sleep", clock.sleep)
     monkeypatch.setattr(
         rearm, "datetime", type("D", (), {"now": staticmethod(lambda tz=None: clock.now)})
@@ -140,3 +146,29 @@ def test_the_workflow_hands_the_chain_a_token_that_can_only_start_workflows() ->
     assert workflow["jobs"]["scrape"]["concurrency"]["cancel-in-progress"] is False
     assert workflow["permissions"] == {"contents": "read"}  # everything else stays read-only
     assert "'fresh' || 'daily'" in workflow["run-name"]  # the title names the flow
+
+
+def test_the_site_is_asked_after_it_every_few_minutes_while_the_chain_waits(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    pings: list[datetime] = []
+
+    _main(monkeypatch, [_run(1, timedelta(minutes=35))], pings=pings)
+
+    # waits from 21:40 to 22:17: 37 minutes, so a first ping at once and then every 8 minutes
+    gaps = [b - a for a, b in zip(pings, pings[1:], strict=False)]
+    assert len(pings) >= 4 and pings[0] == NOW
+    assert all(timedelta(minutes=8) <= gap < timedelta(minutes=10) for gap in gaps)  # under 15 min
+
+
+def test_a_site_that_does_not_answer_does_not_stop_the_chain(
+    monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    def refuse(*args: object, **kwargs: object) -> object:
+        raise OSError("connection refused")
+
+    monkeypatch.setattr(urllib.request, "urlopen", refuse)
+
+    rearm.ping("https://example.invalid")
+
+    assert "did not answer" in capsys.readouterr().out

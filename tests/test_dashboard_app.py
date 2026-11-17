@@ -1397,3 +1397,20 @@ def test_every_code_in_the_shipped_grid_has_a_label_and_the_order_is_by_meaning(
     ]  # not alphabetical
     assert dd.ordered(["x", "b", "a"]) == ["a", "b", "x"]  # unknown codes after, in order
     assert dd.default_index(["a", "b"], "b") == 1 and dd.default_index(["a", "b"], "z") == 0
+
+
+def test_the_about_page_tells_the_path_of_the_data_and_links_to_the_code(export: Path) -> None:
+    app = _run("about")
+
+    page = _markdown(app)
+    assert "Шлях даних" in page and "Межі даних" in page
+    assert "https://github.com/conlusive/Dataward/blob/main/docs/architecture.md" in page
+
+
+def test_every_page_has_the_age_of_the_data_and_the_code_at_the_foot_of_the_menu(
+    export: Path,
+) -> None:
+    for page in ("home", "market", "about"):
+        app = _run(page)
+        foot = [m.value for m in app.sidebar.markdown if 'class="dw-sidefoot"' in m.value]
+        assert foot and "дані оновлено" in foot[0] and "github.com/conlusive/Dataward" in foot[0]

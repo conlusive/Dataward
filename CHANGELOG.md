@@ -2,6 +2,18 @@
 
 ## Unreleased
 
+### Changed (the tab icon, the head of the page, the menu)
+- **The tab icon is ours.** Safari kept Streamlit's crown because Streamlit serves `favicon.png` as
+  `immutable` for a year; the page now links the icon at an address with a hash of the file.
+- **A head a crawler or a link preview can read**: title, description, `lang="uk"`, canonical,
+  Open Graph, Twitter, JSON-LD and a `<noscript>` text with links (`dashboard_head.py`, run at image build).
+- **The site is kept awake**: while it waits, the pipeline chain asks `/_stcore/health` every 8 minutes, so
+  a free Render service does not fall asleep (a visitor waited about a minute after 15 idle minutes).
+- **The menu**: a visible group "Система" with the new page "Про проєкт" (the task, the path of the
+  data, why the numbers can be trusted, their limits, the code); under the menu, how long ago the data was
+  refreshed and the link to the code; the chain icon next to headings is gone; the logo looks clickable
+  (it already led to the home page).
+
 ### Changed (one family of colours for the parts of the product)
 - The colours of the menu groups and heading marks (vacancies sky, analytics mint, the system amber) did
   not belong together. They are now one cool pastel ramp, powder blue, periwinkle, violet and orchid, about
