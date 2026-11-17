@@ -1,24 +1,27 @@
 # Branches
 
-One long-lived branch, `main`, and short-lived ones for the work itself.
+One long-lived branch, `main`, and `data` (not code: the published export the site reads; the workflow
+rewrites it, never delete or edit it by hand).
 
-| Branch | What it is |
-|---|---|
-| `main` | What runs: Render deploys it, the nightly and hourly workflows run from it (scheduled workflows always use the default branch). Always green. |
-| `data` | Not code: the published export that the site reads. The workflow rewrites it. Never delete or edit it by hand. |
-| `feat/*`, `fix/*`, `docs/*`, `chore/*` | One piece of work, branched from `main`, deleted after the merge. |
+## Day to day: commit to `main`
 
-## Day to day
+1. `git switch main && git pull`, change, run the checks (`make lint`, `make test`).
+2. `git commit` and `git push` straight to `main`. No pull request, no waiting for a merge.
+3. `ci.yml` runs on the push (lint, types, tests, the dashboard image); its `deploy` job asks Render to
+   deploy **only if those pass**. The site is updated about 10-15 minutes later (the image is rebuilt).
 
-1. `git switch main && git pull`, then `git switch -c feat/what-it-does`.
-2. Open the PR **against `main`** (`gh pr create`). CI runs; merge it with **squash**.
-3. After the merge `ci.yml` runs on `main`, its `deploy` job asks Render to deploy, and the branch is
-   deleted (GitHub does it: Settings > General > "Automatically delete head branches").
+A pull request is for a change worth a second look first, or for anyone but the owner: `main` is
+protected (the checks `checks` and `docker` must pass before a merge), and the owner may push past that;
+a PR is merged with **squash**.
 
-One PR is one deploy. A fix that cannot wait is the same flow: a short branch, a PR, a squash.
+## A broken push
+
+CI is red and nothing is deployed, so the site keeps the last good version (set Render's auto-deploy to
+"After CI checks pass" so that its own deploy on a push waits as well). Fix forward with another commit,
+or `git revert <commit>` and push.
 
 ## History
 
-For a few days there was a second branch, `develop`, with release PRs into `main`. It was dropped: the
-site is small, there is one author, and every release (a squash in practice) made the two branches
-diverge and need a manual merge. A single trunk is faster and has nothing to keep in step.
+For a few days there was a second branch, `develop`, with release PRs into `main`; it was dropped: the
+site is small, there is one author, and every release (a squash in practice) made the two diverge.
+Before that every change was a PR; with one author it was a click per change and no review.
