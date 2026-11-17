@@ -323,5 +323,4 @@ export yourself), then on Render: New > Blueprint > this repository.
   `/_stcore/health` every 8 minutes, which keeps it awake (about 750 free hours a month is one service
   running all the time). A warm page shows its first heading in about 6 s.
 - **The menu**: the last group is "Система" (Стан системи, Про проєкт); under the menu a small foot shows
-  how long ago the data was refreshed (a green dot, amber after the 36 h of the SLO) and the link to the
-  code. Heading anchors (the chain icon) are hidden; the logo is a button to the home page.
+  how long ago the data was refreshed (a green dot, amber after the 36 h of the SLO). Heading anchors (the chain icon) are hidden; the logo is a button to the home page.

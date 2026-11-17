@@ -418,13 +418,13 @@ def test_nothing_on_a_dark_page_keeps_a_light_theme_colour() -> None:
     assert "background: var(--accent) !important" not in css  # white text on a light violet
 
 
-def test_the_foot_of_the_menu_shows_the_age_of_the_data_and_a_link_that_is_escaped() -> None:
-    fresh = t.sidefoot("12 хв тому", True, "https://example.org/a?b=1&c=2")
-    old = t.sidefoot("3 дн тому", False, "https://example.org")
+def test_the_foot_of_the_menu_shows_only_the_age_of_the_data() -> None:
+    fresh = t.sidefoot("12 хв <тому>", True)
+    old = t.sidefoot("3 дн тому", False)
 
-    assert 'class="dw-live"' in fresh and "12 хв тому" in fresh and "&amp;c=2" in fresh
+    assert 'class="dw-live"' in fresh and "12 хв &lt;тому&gt;" in fresh  # escaped
     assert 'class="dw-live old"' in old  # the dot turns amber when the data is too old
-    assert 'rel="noopener"' in fresh  # a link that leaves the site
+    assert "<a " not in fresh and "github" not in fresh.lower()  # no link down there
 
 
 def test_a_heading_has_no_chain_icon_and_the_mark_looks_like_the_button_it_is() -> None:

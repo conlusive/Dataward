@@ -1407,10 +1407,10 @@ def test_the_about_page_tells_the_path_of_the_data_and_links_to_the_code(export:
     assert "https://github.com/conlusive/Dataward/blob/main/docs/architecture.md" in page
 
 
-def test_every_page_has_the_age_of_the_data_and_the_code_at_the_foot_of_the_menu(
+def test_every_page_has_the_age_of_the_data_at_the_foot_of_the_menu(
     export: Path,
 ) -> None:
     for page in ("home", "market", "about"):
         app = _run(page)
         foot = [m.value for m in app.sidebar.markdown if 'class="dw-sidefoot"' in m.value]
-        assert foot and "дані оновлено" in foot[0] and "github.com/conlusive/Dataward" in foot[0]
+        assert foot and "дані оновлено" in foot[0] and "<a " not in foot[0]

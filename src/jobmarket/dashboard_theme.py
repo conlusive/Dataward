@@ -798,14 +798,11 @@ _SITE = """
 /* the mark takes you home: it is a button, so it looks like one */
 [data-testid="stLogoLink"] { cursor: pointer; transition: opacity 0.15s; }
 [data-testid="stLogoLink"]:hover { opacity: 0.8; }
-/* the foot of the menu: how fresh the data is, and where the code is */
+/* the foot of the menu: how fresh the data is */
 .dw-sidefoot { margin: var(--s3) var(--s2) var(--s4); padding-top: var(--s3);
   border-top: 1px solid var(--line); font-size: var(--fs-xs); color: var(--ink-3);
   line-height: 1.7; }
 .dw-sidefoot b { color: var(--ink-2); font-weight: 600; }
-.dw-sidefoot a { color: var(--ink-2); text-decoration: none;
-  border-bottom: 1px solid var(--line-2); }
-.dw-sidefoot a:hover { color: var(--ink); border-bottom-color: var(--ink-3); }
 .dw-live { display: inline-block; width: 0.5rem; height: 0.5rem; border-radius: 50%;
   margin-right: 0.45rem; background: var(--ok);
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--ok) 25%, transparent); }
@@ -892,13 +889,12 @@ def card_title(title: str, note: str = "") -> str:
     return f'<div class="dw-card-title">{escape(title)}{mark}</div>'
 
 
-def sidefoot(age: str, fresh: bool, repo_url: str) -> str:
-    """The foot of the menu: a dot and the age of the data, and the address of the code."""
+def sidefoot(age: str, fresh: bool) -> str:
+    """The foot of the menu: a dot and how long ago the data was refreshed."""
     state = "dw-live" if fresh else "dw-live old"
     return (
-        f'<div class="dw-sidefoot"><span class="{state}"></span>дані оновлено <b>{escape(age)}</b>'
-        f'<br><a href="{escape(repo_url, quote=True)}" target="_blank" rel="noopener">'
-        "код на GitHub</a></div>"
+        f'<div class="dw-sidefoot"><span class="{state}"></span>'
+        f"дані оновлено <b>{escape(age)}</b></div>"
     )
 
 

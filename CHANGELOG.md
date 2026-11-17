@@ -11,7 +11,7 @@
   a free Render service does not fall asleep (a visitor waited about a minute after 15 idle minutes).
 - **The menu**: a visible group "Система" with the new page "Про проєкт" (the task, the path of the
   data, why the numbers can be trusted, their limits, the code); under the menu, how long ago the data was
-  refreshed and the link to the code; the chain icon next to headings is gone; the logo looks clickable
+  refreshed; the chain icon next to headings is gone; the logo looks clickable
   (it already led to the home page).
 
 ### Changed (one family of colours for the parts of the product)

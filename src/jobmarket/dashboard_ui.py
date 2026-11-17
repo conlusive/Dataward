@@ -170,14 +170,14 @@ FRESH_MINUTES = 36 * 60  # the SLO "data at most 36 h old": a dot that turns amb
 
 
 def sidebar_footer() -> None:
-    """How fresh the data is and where the code is, at the foot of the menu on every page."""
+    """How long ago the data was refreshed, at the foot of the menu on every page."""
     try:
         exported = _json(str(dd.data_dir()), "last_update.json")["exported_at"]
     except (dd.DataError, KeyError):
         return  # the pages say "no data" themselves; the menu stays quiet
     minutes = dd.age_minutes(exported)
     st.sidebar.markdown(
-        theme.sidefoot(dd.age_text(minutes), minutes < FRESH_MINUTES, REPO_URL),
+        theme.sidefoot(dd.age_text(minutes), minutes < FRESH_MINUTES),
         unsafe_allow_html=True,
     )
 
