@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Changed (one branch)
+- The `develop` branch is dropped: PRs go straight into `main` (squash), and Render deploys each one.
+  `docs/branches.md` says so; `ci.yml` runs on `main` and on pull requests.
+
 ### Changed (back to the sidebar)
 - The desktop menu is the **sidebar again**, as before the top header (the glass bar, then the plain
   header, and the mark of dots, are taken back). A phone keeps its drawer. Design work continues from the
