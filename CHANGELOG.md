@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+### Added (the hourly flow starts itself)
+- GitHub's own hourly `schedule` arrived every four to six hours, so the data on the site was hours old.
+  The last job of every run, `rearm`, now waits for the next `:17` UTC and starts the next run with the
+  run's own `GITHUB_TOKEN` (`actions: write` only; no outside scheduler, no secret). Only the newest run
+  carries the chain on, the full sweep starts when none succeeded in 20 hours (a failed one is retried
+  after six), and the schedules stay as a net. The waiting job has no queue of its own, so the jobs that
+  write keep theirs (`concurrency` moved from the workflow to `scrape` and `publish-data`).
+  See `docs/orchestration.md`.
+
 ### Changed (one branch)
 - The `develop` branch is dropped: PRs go straight into `main` (squash), and Render deploys each one.
   `docs/branches.md` says so; `ci.yml` runs on `main` and on pull requests.

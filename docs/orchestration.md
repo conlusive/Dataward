@@ -76,7 +76,33 @@ site keeps the previous full data. A sweep that failed does not open the way eit
 anyway (for a local try). The workflow's "Prepare the public export" step tolerates that an hour exported
 nothing; a failed flow still fails its own step.
 
-## An external hourly trigger
+## The chain: every run starts the next one
+
+GitHub starts a `schedule` when it has room; for this repository the hourly cron arrived every four to
+six hours. A workflow may start another with `workflow_dispatch` using its own `GITHUB_TOKEN` (the one
+exception to "events made by this token start nothing"), so the last job of every run, `rearm`
+(`src/jobmarket/rearm.py`), waits for the next `:17` UTC and starts the next run. No outside service and
+no stored secret: the job's token has `actions: write` and nothing else.
+
+- **Only the newest run carries on.** A run that finds a newer one when it wakes (a schedule fired while
+  it waited, or someone started one by hand) lets go, so chains merge instead of multiplying.
+- **Which flow.** `daily` (the full sweep) when none succeeded in the last 20 hours and none was started in
+  the last 6; otherwise `fresh`. A failed sweep is therefore retried at most every six hours, not every
+  hour. The title of a run (`run-name`) says which flow it was: that is how the chain tells.
+- **The net.** The hourly and the nightly `schedule` stay: if a chain ever breaks (a run cancelled by
+  hand), the next schedule that GitHub does fire starts it again.
+- **The wait is a job.** It sleeps up to about 55 minutes per hour on a runner. On a public repository
+  that is free; it is the price of needing no outside scheduler. The `scrape` and `publish-data` jobs have
+  their own queues, so a manual run does not wait behind a sleeping `rearm`.
+- **To start it,** run the workflow once by hand (Actions > pipeline-daily > Run workflow, flow `fresh`),
+  or let the next schedule do it. To stop it, cancel the run that is waiting (and disable the workflow if
+  the schedule must stop as well).
+- **Look at it:** `gh run list --workflow=pipeline-daily.yml`: a `workflow_dispatch` run about every
+  hour at :17, and the `data` branch updated after each.
+
+## An external hourly trigger (optional)
+
+The chain makes this unnecessary; it remains a way to start runs on time from outside.
 
 GitHub runs a `schedule` when it has room: on a public repository the hourly cron (`17 * * * *`) arrives
 about every four to six hours, and some runs are dropped. The workflow also takes a manual start
