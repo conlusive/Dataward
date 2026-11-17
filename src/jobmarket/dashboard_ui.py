@@ -4,7 +4,6 @@ import copy
 import os
 import re
 import time
-from collections.abc import Sequence
 from datetime import date
 from html import escape
 from pathlib import Path
@@ -18,6 +17,7 @@ from jobmarket import dashboard_icon as dic
 from jobmarket import dashboard_interview as iv
 from jobmarket import dashboard_keys as dk
 from jobmarket import dashboard_mascot as mascot
+from jobmarket import dashboard_mobile as dmo
 from jobmarket import dashboard_motion as dm
 from jobmarket import dashboard_profile as pr
 from jobmarket import dashboard_progress as pg
@@ -196,14 +196,14 @@ def pet_state(profile: pr.Profile, today: date | None = None) -> dict[str, Any]:
 
 
 def avatar_card() -> None:
-    """You, at the right end of the header: the frog, a name, a level (a click: the profile)."""
+    """You, at the foot of the sidebar: the frog in a frame, a name, a level, what waits."""
     profile = _load()
     state = pet_state(profile)
     info, stage = state["level"], state["stage"]
     notes = [f"серія {state['streak']} дн."] if state["streak"] else []
     notes.append(f"сьогодні {state['today']}/{profile.goal}")
     due = state["counts"]["due"]
-    with st.container(key="dw_avatar"):
+    with st.sidebar.container(key="dw_avatar"):
         st.markdown(
             theme.avatar(
                 mascot.frog_svg(stage.key, state["mood"], label=stage.name),
@@ -221,17 +221,12 @@ def avatar_card() -> None:
             st.page_link("views/practice.py", label=f"Повторити питань: {due} →")
 
 
-def scripts(hotkey_pages: Sequence[st.Page] = ()) -> None:
-    """Install the shortcuts, page motion, tips and tab icon; they show nothing.
-
-    ``hotkey_pages`` are pages that live inside a group menu of the top bar. A menu keeps its links
-    out of the page until it is opened, so the shortcut script gets a hidden link to each of them.
-    """
+def scripts() -> None:
+    """Install the shortcuts, page motion, phone drawer and tab icon; they show nothing."""
     with st.container(key="dw_scripts"):
-        for page in hotkey_pages:
-            st.page_link(page)
         st.html(dk.script(public=public_demo()), unsafe_allow_javascript=True)
         st.html(dm.script(), unsafe_allow_javascript=True)
+        st.html(dmo.script(), unsafe_allow_javascript=True)
         st.html(dic.script(), unsafe_allow_javascript=True)
         st.html(dtips.script(), unsafe_allow_javascript=True)
 

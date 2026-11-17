@@ -2,17 +2,10 @@
 
 ## Unreleased
 
-### Changed (a plain transparent header, a mark of dots)
-- **No sidebar on a desktop.** The menu is an ordinary header at the top (`st.navigation(position="top")`),
-  transparent over the page: grey links, the open page white with a violet line, no panel or border. The
-  public site has six pages in one row; on your machine the groups (Вакансії, Розвиток, Аналітика) open as
-  small menus, and the avatar is a chip at the right end. (A floating bar of glass was tried first and
-  dropped.) A phone keeps its burger and drawer (the drawer starts closed, so the script that closed it,
-  which could also close a drawer opened in the first five seconds, is gone).
-- **A new mark**: three rising columns of dots (the dots of the dashboard's figures) and a mint stop, with
-  the name in heavy ink; the favicon and the touch icon are the same dots on a violet disc.
-- The shortcuts (`g` + a letter) follow the new menu: the pages inside group menus are reached through
-  hidden links.
+### Changed (back to the sidebar)
+- The desktop menu is the **sidebar again**, as before the top header (the glass bar, then the plain
+  header, and the mark of dots, are taken back). A phone keeps its drawer. Design work continues from the
+  sidebar.
 
 ### Fixed (Djinni's listing shrank from 5 700 to 800 a day)
 - The nightly sweep kept failing `listing_volume`, and the cause was upstream: Djinni used to answer the

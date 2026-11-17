@@ -670,15 +670,15 @@ def test_the_profile_shows_the_streak_and_lights_the_medals_that_were_earned(exp
     assert 'class="dw-frog dw-frog-party"' in html  # five answers today meet the goal of five
 
 
-def test_the_frog_is_in_the_header_on_every_page(export: Path) -> None:
+def test_the_frog_is_in_the_sidebar_on_every_page(export: Path) -> None:
     for page in ("home", "market", "learn"):
         app = _run(page)
-        card = [m for m in app.markdown if 'class="dw-avatar ' in m.value]  # the card, not the CSS
-        assert card and "dw-frog" in card[0].value, page
-        assert not app.sidebar.markdown, page  # a desktop has no sidebar
+        assert any("dw-avatar" in m.value and "dw-frog" in m.value for m in app.sidebar.markdown), (
+            page
+        )
 
 
-def test_the_drawer_buttons_are_hidden_on_a_desktop() -> None:
+def test_the_sidebar_cannot_be_collapsed() -> None:
     from jobmarket import dashboard_theme as theme
 
     assert "stSidebarCollapseButton" in theme.css() and "display: none" in theme.css()
@@ -1252,7 +1252,7 @@ def test_the_public_copy_has_no_avatar_undo_or_today_block(
 ) -> None:
     app = _public(monkeypatch)
 
-    assert not any('class="dw-avatar ' in m.value for m in app.markdown)  # nobody to show
+    assert not any("dw-avatar" in m.value for m in app.sidebar.markdown)  # nobody to show
     assert not any(b.key == "dw_undo_btn" for b in app.button)
     html = _markdown(app)
     assert "Сьогодні" not in html and "ціль дня" not in html  # that block is about a person
@@ -1291,7 +1291,7 @@ def test_without_a_catalog_the_public_pages_still_work(
 def test_your_own_machine_keeps_every_page(with_catalog: Path) -> None:
     app = _run("home")
 
-    assert any('class="dw-avatar ' in m.value for m in app.markdown)
+    assert any("dw-avatar" in m.value for m in app.sidebar.markdown)
     for page in ("catalog", "fit", "saved", "profile", "learn", "practice"):
         app = app.switch_page(f"views/{page}.py").run()
         assert not app.exception, page

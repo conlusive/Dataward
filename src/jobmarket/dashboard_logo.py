@@ -1,4 +1,4 @@
-"""The logo: rising columns of dots and a stop (the header, the icons) or a pixel-font name.
+"""The pixel logo: three rising bars, DATAWARD in a 5x7 pixel font, and a full stop.
 
 Everything is drawn from the tables below, so the logo, the sidebar icon and the favicon are
 generated, not hand-edited. ``python -m jobmarket.dashboard_logo`` rewrites the files in
@@ -27,10 +27,7 @@ EMBLEM_WIDTH = len(BARS) * 2 - 1
 EMBLEM_GAP = 3  # columns between the emblem and the first letter
 DOT = 2  # the full stop is DOT x DOT pixels
 SHADOW = "#2F2A55"  # a pale step of the accent, one pixel down and right
-DOT_COLOUR = t.SERIES[1]  # the second chart colour: the stop of the pixel marks
-TILE_TOP, TILE_BOTTOM = "#A58CF7", "#4A35A8"  # the round icon: light violet at the top, deep below
-TILE_STOP = t.DOMAINS["market"]  # the stop: mint, which reads on dark and on violet
-COLUMNS = (2, 3, 4)  # dots in each rising column; a last column holds the stop alone
+DOT_COLOUR = t.SERIES[1]  # the terracotta of the second chart colour
 STATIC = Path(__file__).resolve().parents[2] / "dashboard" / "static"
 
 
@@ -101,7 +98,7 @@ ICO_SIZES = ((16, 16), (32, 32), (48, 48))
 
 
 def favicon_png(size: int = FAVICON_SIZE, *, round_badge: bool = True) -> bytes:
-    """The site icon: the glass tile of the header (rising bars and a stop) as a round badge.
+    """The site icon: three rising bars and a dot, light on a violet disc (a round badge).
 
     The corners of a round badge are transparent, so a tab or a search result shows a circle; the
     icon of a home screen (``round_badge=False``) is a full square, which the system rounds itself.
@@ -110,41 +107,27 @@ def favicon_png(size: int = FAVICON_SIZE, *, round_badge: bool = True) -> bytes:
     from PIL import Image, ImageDraw  # Pillow comes with Streamlit; only these functions need it
 
     big = size * 4
-    top, bottom = _rgb(TILE_TOP), _rgb(TILE_BOTTOM)
-    gradient = Image.linear_gradient("L").resize((big, big))  # 0 at the top, 255 at the bottom
-    tile = Image.composite(
-        Image.new("RGB", (big, big), bottom), Image.new("RGB", (big, big), top), gradient
-    )
-    # the sheen: white that fades out by the middle of the tile
-    fade = [max(0, 96 - v * 96 // 128) for v in range(256)]
-    tile.paste((255, 255, 255), mask=gradient.point(fade))
-    shape = Image.new("L", (big, big), 0)
-    outline = [0, 0, big - 1, big - 1]
-    if round_badge:
-        ImageDraw.Draw(shape).ellipse(outline, fill=255)
-    else:
-        ImageDraw.Draw(shape).rectangle(outline, fill=255)
     canvas = Image.new("RGBA", (big, big), (0, 0, 0, 0))
-    canvas.paste(tile, mask=shape)
     draw = ImageDraw.Draw(canvas)
-    pitch = big * 0.15  # distance between dot centres, across and up
-    radius = big * 0.055
-    columns = (*COLUMNS, 1)
-    left = (big - (len(columns) - 1) * pitch) / 2
-    base = (big + (max(COLUMNS) - 1) * pitch) / 2
-    for i, count in enumerate(columns):
-        stop = i == len(columns) - 1
-        for row in range(count):
-            cx, cy = left + i * pitch, base - row * pitch
-            fill = _rgb(TILE_STOP) + (255,) if stop else (255, 255, 255, 255)
-            draw.ellipse([cx - radius, cy - radius, cx + radius, cy + radius], fill=fill)
+    disc = [0, 0, big - 1, big - 1]
+    if round_badge:
+        draw.ellipse(disc, fill=t.VIOLET)
+    else:
+        draw.rectangle(disc, fill=t.VIOLET)
+    unit = big * 0.075  # the height of the shortest step of the bars
+    wide, gap = big * 0.11, big * 0.06
+    left = (big - (4 * wide + 3 * gap)) / 2
+    base = (big + max(BARS) * unit) / 2
+    for i, height in enumerate(BARS):
+        x = left + i * (wide + gap)
+        draw.rounded_rectangle(
+            [x, base - height * unit, x + wide, base], radius=wide / 2, fill=t.INK
+        )
+    x = left + 3 * (wide + gap)
+    draw.ellipse([x, base - wide, x + wide, base], fill=DOT_COLOUR)
     buffer = io.BytesIO()
     canvas.resize((size, size), Image.Resampling.LANCZOS).save(buffer, format="PNG")
     return buffer.getvalue()
-
-
-def _rgb(colour: str) -> tuple[int, int, int]:
-    return int(colour[1:3], 16), int(colour[3:5], 16), int(colour[5:7], 16)
 
 
 def favicon_ico() -> bytes:
@@ -158,32 +141,26 @@ def favicon_ico() -> bytes:
 
 
 def calm_wordmark_svg(text: str = "Dataward") -> str:
-    """The mark of the header: rising columns of dots, a mint stop, and the name.
+    """The wordmark of the light look: three rounded bars and the name in the grotesque.
 
-    The columns echo the dot figures of the dashboard: each is a step taller than the one before and
-    the dots fade towards the bottom, so they read as a rising bar made of points. The name is real
-    text (an image cannot load a web font, so it falls back to the system sans).
+    The name is real text (an image cannot load a web font, so it falls back to the system sans),
+    the bars repeat the emblem of the pixel mark: the same rising heights, the last one a dot of
+    the second chart colour.
     """
-    pitch, radius, base = 8.0, 3.3, 29.0  # dot spacing, dot radius, centre of the bottom row
-    columns = (*COLUMNS, 1)
-    dots = []
-    for i, count in enumerate(columns):
-        stop = i == len(columns) - 1
-        for row in range(count):
-            lit = 0.5 + 0.5 * (row + 1) / count  # the top dot of a column is the brightest
-            colour = TILE_STOP if stop else t.ACCENT
-            dots.append(
-                f'<circle cx="{4 + i * pitch:.1f}" cy="{base - row * pitch:.1f}" r="{radius}" '
-                f'fill="{colour}"' + ("" if stop else f' fill-opacity="{lit:.2f}"') + "/>"
-            )
+    bars = "".join(
+        f'<rect x="{i * 9}" y="{30 - h * 3.4:.1f}" width="6" height="{h * 3.4:.1f}" rx="3" '
+        f'fill="{t.ACCENT}"/>'
+        for i, h in enumerate(BARS)
+    )
+    dot = f'<circle cx="{len(BARS) * 9 + 3}" cy="27" r="3" fill="{DOT_COLOUR}"/>'
     name = (
-        f'<text x="{len(columns) * pitch + 8:.0f}" y="27" fill="{t.INK}" font-size="26" '
+        f'<text x="{len(BARS) * 9 + 14}" y="29" fill="{t.INK}" font-size="25" '
         'font-weight="800" letter-spacing="-0.8" '
         f"font-family=\"Inter, 'Helvetica Neue', Arial, sans-serif\">{escape(text)}</text>"
     )
     return (
-        '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 172 34" role="img" '
-        f'aria-label="{escape(text)}">{"".join(dots)}{name}</svg>'
+        '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 190 36" role="img" '
+        f'aria-label="{escape(text)}">{bars}{dot}{name}</svg>'
     )
 
 

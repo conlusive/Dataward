@@ -247,8 +247,8 @@ _BLOCKS = """
 [data-testid="stNavSectionHeader"] { pointer-events: none; cursor: default; }
 [data-testid="stNavSectionHeader"] [data-testid="stIconMaterial"] { display: none; }
 
-/* a desktop has no drawer (the menu is the bar at the top): its buttons never show. On a
-   phone the same menu is a drawer (the app starts with it closed), so its buttons stay */
+/* on a desktop the sidebar is part of the layout, not a drawer: it cannot be collapsed. On a
+   phone it is a drawer (closed at the start, see dashboard_mobile.py), so its buttons stay */
 @media (min-width: 769px) {
   [data-testid="stSidebarCollapseButton"], [data-testid="stSidebarCollapsedControl"],
   [data-testid="stExpandSidebarButton"], button[kind="headerNoPadding"] {
@@ -334,7 +334,7 @@ button[kind="pills"], button[kind="pillsActive"],
 
 _PHONE = """
 /* a phone: Streamlit puts every column on its own row below 640 px, and sets the sidebar as a
-   drawer below 768 px. The rules here only change what is too big or too
+   drawer below 768 px (see dashboard_mobile.py). The rules here only change what is too big or too
    long for a narrow screen. Last in the stylesheet, so that they win over the desktop ones. */
 @media (max-width: 640px) {
   .block-container { padding-top: 3.2rem; padding-bottom: 3rem; }
@@ -428,6 +428,7 @@ _WORKSPACE = """
 [data-testid="stSidebarNavLink"] { padding-top: 0.1rem !important;
   padding-bottom: 0.1rem !important; min-height: 1.9rem !important; }
 [data-testid="stSidebarNavItems"] { gap: 0 !important; }
+[data-testid="stSidebarNavLink"][href$="profile"] { display: none; }
 [data-testid="stNavSectionHeader"] { margin-top: 0.3rem; padding-top: 0;
   padding-bottom: 0; min-height: 0; }
 [data-testid="stNavSectionHeader"]:empty { display: none; }
@@ -795,56 +796,6 @@ button[data-baseweb="tab"] { font-family: var(--body); font-weight: 600; }
 }
 """
 
-_HEADER = """
-/* ---- a desktop has no sidebar: the menu is a plain header, transparent over the page ----
-   (on a phone Streamlit folds the same menu into the drawer, styled above) */
-@media (min-width: 769px) {
-  [data-testid="stHeader"] { height: 64px; display: flex; justify-content: center;
-    background: linear-gradient(180deg, rgba(13, 17, 23, 0.96), rgba(13, 17, 23, 0.9) 65%,
-      rgba(13, 17, 23, 0)) !important; }
-  [data-testid="stToolbar"] { position: relative; inset: auto; height: 64px; padding: 0;
-    width: min(1240px, calc(100% - 2.5rem)); background: transparent; }
-  .block-container { padding-top: 5rem; }
-  [data-testid="stHeaderLogo"] { height: 34px; width: auto; }
-  [data-testid="stTopNav"] { margin-left: 1.2rem; }
-  [data-testid="stTopNavLink"], button[data-testid="stTopNavSection"] {
-    position: relative; border-radius: 8px !important; padding: 0.45rem 0.8rem !important;
-    font-weight: 500; background: transparent !important; box-shadow: none !important;
-    transition: background 0.15s; }
-  [data-testid="stTopNavLink"]:hover, button[data-testid="stTopNavSection"]:hover {
-    background: rgba(255, 255, 255, 0.07) !important; }
-  /* a page you can open is grey, the open one is white with a violet line under it */
-  [data-testid="stTopNavLink"] *, button[data-testid="stTopNavSection"] * {
-    color: var(--ink-2) !important; }
-  [data-testid="stTopNavLink"]:hover *, button[data-testid="stTopNavSection"]:hover * {
-    color: var(--ink) !important; }
-  [data-testid="stTopNavLink"][aria-current="page"] * { color: #FFFFFF !important; }
-  [data-testid="stTopNavLink"][aria-current="page"]::after { content: ""; position: absolute;
-    left: 0.8rem; right: 0.8rem; bottom: 0; height: 2px; border-radius: 2px;
-    background: var(--accent); }
-  /* the menu of a group is a plain card */
-  [data-baseweb="popover"]:has([data-testid="stTopNavLink"]) > div {
-    border-radius: 12px; border: 1px solid var(--line); background: var(--card); }
-  /* the owner's card sits at the right end of the header: the frog and the level */
-  .st-key-dw_avatar { position: fixed; top: 0; z-index: 1000001; height: 64px;
-    right: calc((100vw - min(1240px, 100vw - 2.5rem)) / 2);
-    display: flex; flex-direction: row; align-items: center; width: max-content;
-    max-width: 18rem; padding: 0; border: 0; background: transparent; }
-  .st-key-dw_avatar .dw-avatar-pic { width: 38px; height: 38px; }
-  .st-key-dw_avatar .dw-avatar-text { line-height: 1.25; white-space: nowrap; flex: none; }
-  .st-key-dw_avatar .dw-avatar { gap: var(--s2); }
-  .st-key-dw_avatar .dw-avatar-name { font-size: var(--fs-sm); }
-  .st-key-dw_avatar .dw-xp, .st-key-dw_avatar .dw-avatar-text > div:last-child,
-  .st-key-dw_avatar [data-testid="stPageLink"]:not(.st-key-dw_avatar_open *) { display: none; }
-}
-@media (min-width: 769px) and (max-width: 1099px) {
-  .st-key-dw_avatar .dw-avatar-text { display: none; }  /* only the frog: the header is narrow */
-}
-@media (max-width: 768px) {
-  .st-key-dw_avatar { display: none; }  /* the drawer lists the profile page itself */
-}
-"""
-
 
 def css() -> str:
     """The stylesheet, ready for a <style> tag."""
@@ -864,8 +815,7 @@ def css() -> str:
     fonts = (
         "@import url('https://fonts.googleapis.com/css2?family=Doto:wght@700;900&display=swap');"
     )
-    blocks = _STYLE + _MOTION + _BLOCKS + _WORKSPACE + _PHONE + _CALM + _HEADER
-    return f"<style>{fonts}{variables}{blocks}</style>"
+    return f"<style>{fonts}{variables}{_STYLE}{_MOTION}{_BLOCKS}{_WORKSPACE}{_PHONE}{_CALM}</style>"
 
 
 def pill(text: str, tone: str = "neutral") -> str:

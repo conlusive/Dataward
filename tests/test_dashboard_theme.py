@@ -407,29 +407,3 @@ def test_nothing_on_a_dark_page_keeps_a_light_theme_colour() -> None:
 
     assert "251, 243, 225" not in css  # the cream of the old page
     assert "background: var(--accent) !important" not in css  # white text on a light violet
-
-
-def test_a_desktop_menu_is_a_plain_transparent_header_and_the_open_page_is_underlined() -> None:
-    css = t.css()
-    header = css[css.index("a desktop has no sidebar") :]
-    desktop = header[header.index("@media (min-width: 769px)") :]
-
-    assert "rgba(13, 17, 23, 0)) !important" in desktop  # it fades out into the page: no panel
-    assert "backdrop-filter" not in desktop and "blur(" not in desktop  # no glass, no pill
-    assert '[data-testid="stTopNavLink"][aria-current="page"]::after' in desktop  # the open page
-    assert "bottom: 0; height: 2px" in desktop  # inside the link: an outer line is clipped
-    # every rule of the header is for a desktop: a phone keeps its drawer
-    assert "stTopNav" not in header[: header.index("@media (min-width: 769px)")]
-
-
-def test_the_owners_card_is_a_chip_in_the_header_on_a_desktop_and_gone_on_a_phone() -> None:
-    css = t.css()
-    chip = css[css.index("the owner's card sits at the right end of the header") :]
-
-    assert ".st-key-dw_avatar { position: fixed; top: 0;" in chip
-    assert re.search(
-        r"@media \(max-width: 768px\) \{\s*\.st-key-dw_avatar \{ display: none; \}", chip
-    )
-    assert (
-        'stSidebarNavLink"][href$="profile"] { display: none; }' not in css
-    )  # the drawer lists it
