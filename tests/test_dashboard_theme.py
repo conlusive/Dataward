@@ -326,16 +326,21 @@ def test_the_toolbar_of_tables_and_charts_is_hidden_everywhere() -> None:
 def test_the_parts_of_the_product_have_four_colours_of_one_family() -> None:
     import colorsys
 
-    def hue(name: str) -> float:
+    def hsv(name: str) -> tuple[float, float, float]:
         colour = t.DOMAINS[name].lstrip("#")
         red, green, blue = (int(colour[i : i + 2], 16) / 255 for i in (0, 2, 4))
-        return colorsys.rgb_to_hsv(red, green, blue)[0] * 360
+        hue, sat, val = colorsys.rgb_to_hsv(red, green, blue)
+        return hue * 360, sat, val
 
-    assert 190 <= hue("jobs") <= 215  # vacancies: the deep step of powder blue
-    assert 250 <= hue("grow") <= 262  # learning: the violet of the accent
-    assert 150 <= hue("market") <= 170  # analytics: mint
-    assert 40 <= hue("system") <= 52  # the state of the system: ochre
+    # one cool ramp, powder blue to orchid, in the order of the menu's steps
+    assert 200 <= hsv("jobs")[0] <= 215  # vacancies: powder blue
+    assert 225 <= hsv("market")[0] <= 238  # analytics: periwinkle
+    assert 250 <= hsv("grow")[0] <= 262  # learning: the violet of the accent
+    assert 278 <= hsv("system")[0] <= 292  # the state of the system: orchid
     assert len(set(t.DOMAINS.values())) == 4  # four parts, four colours
+    # a family: pastel (no hard saturated colour) and about as light as each other
+    assert all(0.3 <= hsv(name)[1] <= 0.7 for name in ("jobs", "market", "system"))
+    assert all(hsv(name)[2] >= 0.9 for name in t.DOMAINS)
 
 
 def test_a_ring_is_bounded_labelled_and_coloured_by_its_domain() -> None:
