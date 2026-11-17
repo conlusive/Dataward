@@ -26,8 +26,9 @@ BARS = (3, 5, 7)  # heights of the emblem's bars, one column each with a column 
 EMBLEM_WIDTH = len(BARS) * 2 - 1
 EMBLEM_GAP = 3  # columns between the emblem and the first letter
 DOT = 2  # the full stop is DOT x DOT pixels
-SHADOW = "#2F2A55"  # a pale step of the accent, one pixel down and right
-DOT_COLOUR = t.SERIES[1]  # the terracotta of the second chart colour
+SHADOW = "#30363D"  # a grey step of the page (its hairline), one pixel down and right
+GREY = "#8B949E"  # the second half of the name
+DOT_COLOUR = t.INK  # black and white: the stop is as light as the bars
 STATIC = Path(__file__).resolve().parents[2] / "dashboard" / "static"
 
 
@@ -63,7 +64,7 @@ def _dot(x: int) -> str:
 
 
 def wordmark_svg(text: str = "DATAWARD", *, split: int = 4) -> str:
-    """The emblem, the name (the first ``split`` letters in the accent, the rest in ink), a stop."""
+    """The emblem, the name (the first ``split`` letters in ink, the rest grey), a stop."""
     left = EMBLEM_WIDTH + EMBLEM_GAP
     lit = _letters(text, left)
     first = [(x, y) for x, y, i in lit if i < split]
@@ -73,8 +74,8 @@ def wordmark_svg(text: str = "DATAWARD", *, split: int = 4) -> str:
     dot_x = end + 1
     body = (
         f'<path fill="{SHADOW}" d="{_path(emblem + first + second, 1, 1)}"/>'
-        f'<path fill="{t.ACCENT}" d="{_path(emblem + first)}"/>'
-        f'<path fill="{t.INK}" d="{_path(second)}"/>' + _dot(dot_x)
+        f'<path fill="{t.INK}" d="{_path(emblem + first)}"/>'
+        f'<path fill="{GREY}" d="{_path(second)}"/>' + _dot(dot_x)
     )
     return _svg(dot_x + DOT + 1, HEIGHT + 1, body)
 
@@ -85,7 +86,7 @@ def icon_svg() -> str:
     dot_x = EMBLEM_WIDTH + 1
     body = (
         f'<path fill="{SHADOW}" d="{_path(emblem, 1, 1)}"/>'
-        f'<path fill="{t.ACCENT}" d="{_path(emblem)}"/>' + _dot(dot_x)
+        f'<path fill="{t.INK}" d="{_path(emblem)}"/>' + _dot(dot_x)
     )
     return _svg(dot_x + DOT + 1, HEIGHT + 1, body)
 
@@ -98,7 +99,7 @@ ICO_SIZES = ((16, 16), (32, 32), (48, 48))
 
 
 def favicon_png(size: int = FAVICON_SIZE, *, round_badge: bool = True) -> bytes:
-    """The site icon: three rising bars and a dot, light on a violet disc (a round badge).
+    """The site icon: three rising bars and a dot, light on a black disc (a round badge).
 
     The corners of a round badge are transparent, so a tab or a search result shows a circle; the
     icon of a home screen (``round_badge=False``) is a full square, which the system rounds itself.
@@ -111,9 +112,9 @@ def favicon_png(size: int = FAVICON_SIZE, *, round_badge: bool = True) -> bytes:
     draw = ImageDraw.Draw(canvas)
     disc = [0, 0, big - 1, big - 1]
     if round_badge:
-        draw.ellipse(disc, fill=t.VIOLET)
+        draw.ellipse(disc, fill=t.BG)
     else:
-        draw.rectangle(disc, fill=t.VIOLET)
+        draw.rectangle(disc, fill=t.BG)
     unit = big * 0.075  # the height of the shortest step of the bars
     wide, gap = big * 0.11, big * 0.06
     left = (big - (4 * wide + 3 * gap)) / 2
@@ -149,7 +150,7 @@ def calm_wordmark_svg(text: str = "Dataward") -> str:
     """
     bars = "".join(
         f'<rect x="{i * 9}" y="{30 - h * 3.4:.1f}" width="6" height="{h * 3.4:.1f}" rx="3" '
-        f'fill="{t.ACCENT}"/>'
+        f'fill="{t.INK}"/>'
         for i, h in enumerate(BARS)
     )
     dot = f'<circle cx="{len(BARS) * 9 + 3}" cy="27" r="3" fill="{DOT_COLOUR}"/>'

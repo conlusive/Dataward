@@ -177,11 +177,13 @@ references: a three-colour study (powder blue and two violets) and a dot-matrix 
   image overwrites Streamlit's `favicon.png` with ours (`Dockerfile.dashboard`), and a script does the
   same for a local run: it removes the icon links and adds a PNG one and an `apple-touch-icon` from
   `/app/static` (`enableStaticServing`). The address carries a hash of the icon. `page_icon` is not set.
-- **Colour by part of the product**: one cool pastel ramp, about 25 degrees of hue apart and about as light,
-  so the menu reads as a family: vacancies powder blue `#98C3E7`, analytics periwinkle `#A0AFF3`, learning
-  (Розвиток) the violet of the accent `#A78BFA`, the state of the system orchid `#D89EEB`. They colour the
-  heading marks, the menu group names and the actions (`DOMAINS` in the theme; a test keeps the hues and
-  the family). These are not the chart series colours.
+- **Colour by part of the product**: one, lavender `#B7A3EA`. The four parts (vacancies, learning,
+  analytics, the system) each had a colour, and that read as four themes; now the menu group names, the
+  labels above the titles, the section marks and the rings wear the same lavender, and the open page of
+  the menu is a lavender pill with dark ink (as the lavender blocks are). `DOMAINS` in the theme keeps the
+  four names, so a part can be given its own colour again in one place. Not the chart series colours.
+- **The mark is black and white**: the wordmark and the tab icon are the rising bars and a stop in the
+  light ink of the page (the tab icon on a black disc); the pixel logo is ink and grey.
 - **Smooth on a small machine**: no selector that rescans every wrapper (`:has()` over all containers), no
   entrance animation, progress rings are CSS (a conic gradient) instead of charts, one ring of the market
   at a time (a radio, not three tabs that would all draw), and the toolbar over tables and charts (full

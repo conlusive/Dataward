@@ -30,14 +30,15 @@ ACCENT = "#A78BFA"  # links, labels, lit dots: the violet step that reads on dar
 SERIES = ("#7A5AE0", "#2E8FD0", "#C08A10", "#DB5F93")
 SOURCE_ORDER = ("dou", "djinni")  # the sources always wear the first two colours in this order
 MARK = SERIES[0]  # one-series bars and lines
-# Each part of the product has its own colour, so a glance says where you are. The four are one
-# family: pastel steps of one cool ramp, powder blue to orchid, about 25 degrees apart, all about as
-# light (a test checks 4.5:1 on the card: small text wears them). The page tints them itself.
+# The parts of the product (vacancies, learning, analytics, the system) used to have a colour each;
+# that read as four themes, so they all wear one: lavender, the colour of the blocks and of the open
+# page of the menu. The names stay, so that a part can be given its own colour again in one place.
+# Small text wears them (a test checks 4.5:1 on the card); the page tints them itself.
 DOMAINS = {  # a colour per part of the product
-    "jobs": "#98C3E7",  # vacancies: powder blue
-    "market": "#A0AFF3",  # analytics: periwinkle
-    "grow": "#A78BFA",  # learning: the violet of the accent
-    "system": "#D89EEB",  # state of the system: orchid
+    "jobs": LAVENDER,
+    "grow": LAVENDER,
+    "market": LAVENDER,
+    "system": LAVENDER,
 }  # fmt: skip
 MUTED_MARK = "#6E7681"  # context marks next to an emphasised one (3:1 on the card)
 
@@ -620,8 +621,8 @@ button[kind="pills"], button[kind="pillsActive"], [data-testid="stBaseButton-pil
   margin: 1px 0; padding-left: 0.9rem; }
 [data-testid="stSidebarNavLink"]:hover { background: color-mix(in srgb, var(--accent) 12%,
   transparent); }
-[data-testid="stSidebarNavItems"] a[aria-current="page"] { background: var(--violet) !important; }
-[data-testid="stSidebarNavItems"] a[aria-current="page"] * { color: #FFFFFF !important; }
+[data-testid="stSidebarNavItems"] a[aria-current="page"] { background: var(--lavender) !important; }
+[data-testid="stSidebarNavItems"] a[aria-current="page"] * { color: var(--on-block) !important; }
 [data-testid="stNavSectionHeader"] { border-left: 0 !important; padding-left: 0.9rem;
   color: var(--dom, var(--ink-3)); }
 .st-key-dw_avatar { background: transparent; }

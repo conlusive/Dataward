@@ -17,7 +17,8 @@ def test_the_wordmark_spells_the_name_in_a_pixel_grid() -> None:
 
     assert svg.startswith("<svg") and 'aria-label="Dataward"' in svg
     assert 'shape-rendering="crispEdges"' in svg  # no blurred pixels
-    assert t.ACCENT in svg and t.INK in svg  # DATA in the accent, WARD in the text colour
+    assert t.INK in svg and logo.GREY in svg  # DATA in ink, WARD in grey: black and white
+    assert t.ACCENT not in svg and t.VIOLET not in svg
 
 
 def test_every_letter_is_a_5_by_7_grid_of_pixels() -> None:
@@ -28,21 +29,21 @@ def test_every_letter_is_a_5_by_7_grid_of_pixels() -> None:
 
 def test_the_wordmark_has_a_shadow_pixel_for_every_lit_pixel() -> None:
     svg = logo.wordmark_svg()
-    shadow, accent, ink = (
+    shadow, ink, grey = (
         re.search(rf'fill="{colour}" d="([^"]+)"', svg).group(1)  # type: ignore[union-attr]
-        for colour in (logo.SHADOW, t.ACCENT, t.INK)
+        for colour in (logo.SHADOW, t.INK, logo.GREY)
     )
 
-    assert _lit(shadow) == _lit(accent) + _lit(ink)
+    assert _lit(shadow) == _lit(ink) + _lit(grey)
 
 
 def test_the_letters_are_far_enough_apart_for_the_shadow_not_to_close_the_gap() -> None:
     assert logo.GAP >= 2
 
 
-def test_the_full_stop_is_static_and_uses_the_second_chart_colour() -> None:
+def test_the_full_stop_is_static_and_as_light_as_the_bars() -> None:
     for svg in (logo.wordmark_svg(), logo.icon_svg()):
-        assert svg.count(f'fill="{t.SERIES[1]}"') == 1  # one stop ...
+        assert svg.count("<rect") == 1 and f'fill="{logo.DOT_COLOUR}"/>' in svg  # one stop ...
         assert "<animate" not in svg  # ... that does not blink
 
 
@@ -72,8 +73,8 @@ def test_the_favicon_is_a_round_badge_a_multiple_of_48_px_in_the_brand_colours()
     assert image.size == (logo.FAVICON_SIZE,) * 2 and logo.FAVICON_SIZE % 48 == 0
     assert image.getpixel((0, 0))[3] == 0  # a corner is transparent: a circle in a tab
     centre = image.getpixel((logo.FAVICON_SIZE // 2, 6))[:3]  # on the disc, above the bars
-    assert f"#{centre[0]:02X}{centre[1]:02X}{centre[2]:02X}" == t.VIOLET
-    wanted = {t.INK, logo.DOT_COLOUR}
+    assert f"#{centre[0]:02X}{centre[1]:02X}{centre[2]:02X}" == t.BG  # a black disc
+    wanted = {t.INK}  # the bars and the stop are light
     found = {
         f"#{r:02X}{g:02X}{b:02X}" for n, (r, g, b, a) in image.getcolors(100000) if a and n > 50
     }
@@ -126,6 +127,7 @@ def test_the_calm_wordmark_is_real_text_with_the_rising_bars_and_is_committed() 
     svg = logo.calm_wordmark_svg()
 
     assert svg.count("<rect") == len(logo.BARS) and ">Dataward</text>" in svg
-    assert 'aria-label="Dataward"' in svg and t.ACCENT in svg and logo.DOT_COLOUR in svg
+    assert 'aria-label="Dataward"' in svg and t.INK in svg
+    assert t.ACCENT not in svg and t.VIOLET not in svg  # black and white
     assert "&lt;b&gt;" in logo.calm_wordmark_svg("<b>")  # a name is escaped
     assert (logo.STATIC / "wordmark.svg").read_text(encoding="utf-8") == svg

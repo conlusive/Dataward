@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+### Changed (a black-and-white mark, one lavender)
+- **The logo and the tab icon are black and white**: the rising bars and the stop in the light ink of the
+  page, the tab icon on a black disc (the pixel logo: ink and grey).
+- **One colour for the whole menu**: the group names, the labels above titles, section marks and rings
+  all wear the lavender of the blocks, and the open page is a lavender pill with dark ink. The four
+  colours per part of the product (#68) read as four themes.
+
 ### Changed (the tab icon, the head of the page, the menu)
 - **The tab icon is ours.** Safari kept Streamlit's crown because Streamlit serves `favicon.png` as
   `immutable` for a year; the page now links the icon at an address with a hash of the file.
