@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Changed (commits straight to main)
+- One author, no reviewer: a pull request per change was a click for nothing. Changes are committed and
+  pushed to `main`; CI runs on the push and the deploy to Render waits for it. `docs/branches.md` says so.
+
 ### Added (the hourly flow starts itself)
 - GitHub's own hourly `schedule` arrived every four to six hours, so the data on the site was hours old.
   The last job of every run, `rearm`, now waits for the next `:17` UTC and starts the next run with the
