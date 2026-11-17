@@ -1,5 +1,9 @@
 name: pipeline-daily
 
+# The title of a run says which flow it is, so that the chain (src/jobmarket/rearm.py) can tell when
+# the last full sweep was.
+run-name: ${{ (github.event.schedule == '17 * * * *' || inputs.flow == 'fresh') && 'fresh' || 'daily' }}
+
 on:
   schedule:
     - cron: "0 4 * * *" # 04:00 UTC: the full sweep (every listing page, closures)
@@ -23,15 +27,15 @@ on:
 permissions:
   contents: read
 
-# Two runs writing the same bronze partitions would race; queue instead of cancelling.
-concurrency:
-  group: pipeline-daily
-  cancel-in-progress: false
-
 jobs:
   scrape:
     runs-on: ubuntu-latest
     timeout-minutes: 180
+    # Two runs writing the same bronze partitions would race; queue instead of cancelling. The group
+    # is on the job, not on the run, so that the waiting job at the end (below) does not hold it.
+    concurrency:
+      group: pipeline-daily-scrape
+      cancel-in-progress: false
     env:
       RUN_DATE: ${{ inputs.run_date }}
       SCRAPE_MAX_LIST_PAGES: ${{ inputs.max_pages }}
@@ -121,6 +125,9 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+    concurrency:
+      group: pipeline-daily-publish
+      cancel-in-progress: false
     steps:
       - uses: actions/download-artifact@v4
         with:
@@ -142,3 +149,25 @@ jobs:
           git add -A
           git commit -q -m "Public export of $(date -u +%F)"
           git push -q --force "https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}.git" data
+
+  # GitHub starts the hourly `schedule` when it has room (for this repository about every four to six
+  # hours), so the chain does it: the run waits for the next :17 and starts the next one itself with
+  # its own token, which may do that (and only that) to the same repository. The schedule above stays
+  # as the net that restarts the chain if it ever breaks. Only the newest run carries on.
+  rearm:
+    needs: [scrape, publish-data]
+    if: ${{ !cancelled() && github.ref == 'refs/heads/main' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 75
+    permissions:
+      actions: write
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - name: Start the next run when its hour comes
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          RUN_ID: ${{ github.run_id }}
+          PYTHONPATH: src
+        run: python3 -m jobmarket.rearm
