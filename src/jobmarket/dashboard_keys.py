@@ -2,7 +2,7 @@
 
 The page never prints the shortcuts: they are there for those who look (``?`` opens the list,
 ``Ctrl K`` / ``⌘ K`` the command palette). Keys are matched by their physical position
-(``KeyboardEvent.code``), so they work in the Ukrainian layout too. The script clicks the menu
+(``KeyboardEvent.code``), so they work in the Ukrainian layout too. The script clicks the sidebar
 links and the trainer's buttons, so nothing here knows how Streamlit routes pages.
 """
 
@@ -48,11 +48,7 @@ _SCRIPT: Final = """
   if (window.__dwKeys) window.__dwKeys();
   const doc = document;
   let pending = false, timer = null, swallow = false;
-  // the bar's links, the drawer's links, and the hidden links of the pages inside group menus
-  // (those menus keep their links out of the page until someone opens them)
-  const links = () => [...doc.querySelectorAll(
-    '[data-testid="stTopNavLink"], [data-testid="stSidebarNavLink"], '
-    + '.st-key-dw_scripts [data-testid="stPageLink-NavLink"]')];
+  const links = () => [...doc.querySelectorAll('[data-testid="stSidebarNavLink"]')];
   const go = (title) => {
     // the link text starts with the icon's name ("homeГоловна"), so match the end
     const link = links().find((a) => a.textContent.trim().endsWith(title));

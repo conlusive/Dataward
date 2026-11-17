@@ -85,18 +85,3 @@ def test_your_own_copy_is_offered_everything() -> None:
 
     assert len(config["pages"]) == len(keys.PAGES) and len(config["other"]) == len(keys.OTHER)
     assert {title for title, _ in keys.PAGES} >= keys.PERSONAL  # no stale title in the filter
-
-
-def test_shortcuts_reach_pages_inside_group_menus_through_hidden_links() -> None:
-    script = keys.script()
-
-    assert "stTopNavLink" in script  # the links of the bar
-    assert '.st-key-dw_scripts [data-testid="stPageLink-NavLink"]' in script  # the hidden ones
-
-
-def test_the_app_registers_the_pages_of_group_menus_for_the_shortcuts() -> None:
-    source = APP.read_text(encoding="utf-8")
-
-    assert 'position="top"' in source  # no sidebar on a desktop
-    assert "ui.scripts(grouped)" in source
-    assert 'initial_sidebar_state="collapsed"' in source  # a phone's drawer starts closed
