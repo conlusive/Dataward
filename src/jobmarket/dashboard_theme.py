@@ -2,7 +2,7 @@
 
 No Streamlit import here, so the pieces are tested directly. The look is "soft signal" on GitHub's
 dark surface: a near-black page, dark cards with a hairline, three bright colours worn as whole
-blocks (powder blue, lavender, violet), a heavy grotesque for titles, small capitals with wide
+blocks (powder blue, violet, deep violet), a heavy grotesque for titles, small capitals with wide
 tracking for labels, and numbers and figures made of dots (``dashboard_dots``). The menu has no
 panel of its own. Text wears light steps of the colours (4.5:1 on a card); a block wears dark ink or
 white; the chart marks were checked with the dataviz palette validator in dark mode.
@@ -19,9 +19,9 @@ INK = "#E6EDF3"
 INK_2 = "#C9D1D9"
 INK_3 = "#8B949E"  # muted text: 5.9:1 on the card
 POWDER = "#C0D8E6"  # three bright colours, worn as whole blocks (dark ink on them)
-LAVENDER = "#B7A3EA"
+LAVENDER = "#A78BFA"  # the violet of the accent (the name is from the colour it replaced)
 VIOLET = "#5B3FB5"  # a block and the open page: white text on it
-ON_BLOCK = "#0D1117"  # the ink of a powder or lavender block
+ON_BLOCK = "#0D1117"  # the ink of a powder or violet block
 ACCENT = "#A78BFA"  # links, labels, lit dots: the violet step that reads on dark (6:1)
 
 # Chart colours, in a fixed order (an entity keeps its colour whatever the filter shows). All four
@@ -31,9 +31,9 @@ SERIES = ("#7A5AE0", "#2E8FD0", "#C08A10", "#DB5F93")
 SOURCE_ORDER = ("dou", "djinni")  # the sources always wear the first two colours in this order
 MARK = SERIES[0]  # one-series bars and lines
 # The parts of the product (vacancies, learning, analytics, the system) used to have a colour each;
-# that read as four themes, so they all wear one: lavender, the colour of the blocks and of the open
-# page of the menu. The names stay, so that a part can be given its own colour again in one place.
-# Small text wears them (a test checks 4.5:1 on the card); the page tints them itself.
+# that read as four themes, so they all wear one: the violet of the accent, which is also the colour
+# of the second block of a row. The names stay, so that a part can be given its own colour again in
+# one place. Small text wears them (a test checks 4.5:1 on the card); the page tints them itself.
 DOMAINS = {  # a colour per part of the product
     "jobs": LAVENDER,
     "grow": LAVENDER,

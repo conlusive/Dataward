@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+### Changed (the lavender is the accent violet)
+- Everything that was the pale lavender `#B7A3EA` (the menu's labels, the section marks, rings, the second
+  block of a row, meter bars) is now the violet of the status pill and the links, `#A78BFA`: one violet
+  instead of two close ones.
+
 ### Changed (a fixed sidebar, a compact phone)
 - **The sidebar has one width, about 300 px, and cannot be dragged.** Its items and groups sit closer
   together (a 1.75 rem row, a small gap between groups).

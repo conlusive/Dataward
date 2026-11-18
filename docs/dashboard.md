@@ -139,7 +139,7 @@ references: a three-colour study (powder blue and two violets) and a dot-matrix 
 
 - **Page**: GitHub's dark canvas (`#0D1117`) with dark cards (`#161B22`), a hairline (`#30363D`) and 22 px
   corners. The menu has no panel of its own: it sits on the page, and the open page is a violet pill.
-- **Colour**: powder `#C0D8E6`, lavender `#B7A3EA` and violet `#5B3FB5` are worn as whole blocks (the row of
+- **Colour**: powder `#C0D8E6`, violet `#A78BFA` (the accent) and deep violet `#5B3FB5` are worn as whole blocks (the row of
   figures, the chosen vacancy, the required skills): dark ink on the first two, white on the violet. Small
   text wears light steps (the accent `#A78BFA` and the four colours of the parts of the product below; a
   test checks 4.5:1 on the card). The
@@ -180,9 +180,9 @@ references: a three-colour study (powder blue and two violets) and a dot-matrix 
   image overwrites Streamlit's `favicon.png` with ours (`Dockerfile.dashboard`), and a script does the
   same for a local run: it removes the icon links and adds a PNG one and an `apple-touch-icon` from
   `/app/static` (`enableStaticServing`). The address carries a hash of the icon. `page_icon` is not set.
-- **Colour by part of the product**: one, lavender `#B7A3EA`. The four parts (vacancies, learning,
+- **Colour by part of the product**: one, the accent violet `#A78BFA` (it was a paler lavender, `#B7A3EA`, until the status pill's violet looked better). The four parts (vacancies, learning,
   analytics, the system) each had a colour, and that read as four themes; now the menu group names, the
-  labels above the titles, the section marks and the rings wear the same lavender, and the open page of
+  labels above the titles, the section marks and the rings wear the same violet, and the open page of
   the menu has no colour at all: white, bold, on a quiet grey pill. `DOMAINS` in the theme keeps the
   four names, so a part can be given its own colour again in one place. Not the chart series colours.
 - **The mark is black and white**: the wordmark and the tab icon are the rising bars and a stop in the

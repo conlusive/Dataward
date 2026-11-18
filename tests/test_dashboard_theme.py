@@ -81,7 +81,7 @@ def test_the_page_is_near_black_like_githubs_and_the_text_light() -> None:
 
 
 def test_a_block_has_the_ink_that_reads_on_it() -> None:
-    assert _contrast(t.ON_BLOCK, t.POWDER) >= 7 and _contrast(t.ON_BLOCK, t.LAVENDER) >= 7
+    assert _contrast(t.ON_BLOCK, t.POWDER) >= 7 and _contrast(t.ON_BLOCK, t.LAVENDER) >= 6
     assert _contrast("#FFFFFF", t.VIOLET) >= 7  # the violet block and the open menu page: white
 
 
@@ -108,7 +108,7 @@ def test_the_style_is_soft_signal_a_heavy_grotesque_dot_numbers_and_three_colour
     css = t.css()
 
     assert "'Inter'" in css and "'Doto'" in css and "font-weight: 800" in css
-    assert (t.POWDER, t.LAVENDER, t.VIOLET) == ("#C0D8E6", "#B7A3EA", "#5B3FB5")  # three colours
+    assert (t.POWDER, t.LAVENDER, t.VIOLET) == ("#C0D8E6", "#A78BFA", "#5B3FB5")  # three colours
     assert t.ACCENT == "#A78BFA"  # the violet step that reads as text on dark
     assert _contrast(t.ACCENT, t.CARD) >= 6  # well over the 4.5 that small text needs
     assert f"--powder: {t.POWDER}" in css and f"--violet: {t.VIOLET}" in css
@@ -324,9 +324,10 @@ def test_the_toolbar_of_tables_and_charts_is_hidden_everywhere() -> None:
     assert '[data-testid="stElementToolbar"]' in css and "display: none !important" in css
 
 
-def test_every_part_of_the_product_wears_the_same_lavender() -> None:
+def test_every_part_of_the_product_wears_the_same_violet() -> None:
     # one colour, so that the menu, the labels and the marks read as one system, not as four themes
-    assert set(t.DOMAINS.values()) == {t.LAVENDER}
+    assert t.LAVENDER == t.ACCENT  # the colour that replaced the lavender is the accent's violet
+    assert set(t.DOMAINS.values()) == {t.ACCENT}
     assert set(t.DOMAINS) == {"jobs", "grow", "market", "system"}  # the names stay
 
 

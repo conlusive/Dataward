@@ -1,5 +1,5 @@
 # The dashboard's look (read when `streamlit run` starts in the repository root; the dashboard image
-# copies this file too). "Soft signal": GitHub's dark surface, powder, lavender and violet, a heavy grotesque. The chart
+# copies this file too). "Soft signal": GitHub's dark surface, powder, violet and deep violet, a heavy grotesque. The chart
 # colours were checked with the dataviz palette validator on the white card.
 [theme]
 base = "dark"
