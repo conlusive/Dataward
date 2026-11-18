@@ -414,8 +414,31 @@ def test_a_phone_gets_a_burger_icon_on_the_right_and_a_cross_to_close_it() -> No
     assert 'stExpandSidebarButton"] [data-testid="stIconMaterial"]' in css  # the bare arrow is gone
     assert 'content: "Меню"' not in css  # an icon, as in most services
     assert "justify-content: space-between" in css  # the mark left, the burger right
-    assert 'content: "✕"' in css  # inside the open menu
+    assert "linear-gradient(45deg, transparent calc(50% - 1px), currentColor" in css  # the cross,
+    assert "linear-gradient(-45deg, transparent calc(50% - 1px), currentColor" in css  # drawn too
     assert css.index("linear-gradient(currentColor 0 0)") > css.index("@media (max-width: 768px)")
+
+
+def test_the_burger_and_the_cross_are_bare_icons_of_one_size_with_no_box() -> None:
+    css = t.css()
+    phone = css[css.index("a phone: the top bar is the mark on the left") :]
+    phone = phone[: phone.index("_SITE") if "_SITE" in phone else None]
+    both = phone[phone.index('[data-testid="stExpandSidebarButton"],') :]
+
+    # one rule for both: the same size, no border, no background: they line up and match
+    assert "width: 2.75rem;\n    height: 2.75rem;" in both
+    assert "border: 0; border-radius: 10px;" in both and "background: transparent" in both
+    assert "var(--line-2)" not in both[: both.index("}")]  # no outline round them
+
+
+def test_the_phone_drawer_and_the_top_bar_are_solid_not_frosted() -> None:
+    css = t.css()
+    drawer = css[css.index("a phone: the menu is a drawer over the page") :]
+    drawer = drawer[: drawer.index("/* a row per day")]
+
+    assert '[data-testid="stSidebar"] { background: var(--bg); border-right: 1px solid' in drawer
+    assert '[data-testid="stHeader"] { background: var(--bg);' in drawer
+    assert "backdrop-filter" not in drawer and "rgba(13, 17, 23, 0.55)" not in css
 
 
 def test_the_phone_menu_is_a_plain_panel_without_a_floating_outline() -> None:

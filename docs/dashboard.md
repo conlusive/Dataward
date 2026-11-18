@@ -144,8 +144,10 @@ references: a three-colour study (powder blue and two violets) and a dot-matrix 
   text wears light steps (the accent `#A78BFA` and the four colours of the parts of the product below; a
   test checks 4.5:1 on the card). The
   chart marks are `#7A5AE0`, `#2E8FD0`, `#C08A10` and `#DB5F93`, validated in dark mode.
-- **A phone**: the menu is dark frosted glass. The top bar is the mark and a burger icon on the right (the
-  bare arrow said nothing); the open menu closes with a cross.
+- **A phone**: the menu is a solid drawer, as GitHub's is (the page colour, a hairline on its edge); the top
+  bar is solid too. It holds the mark and a burger on the right; the open menu closes with a cross of the
+  same size on the same line. Both are bare drawn icons with no box round them (a 2.75 rem tap area that
+  lights up when pressed).
 - **Type**: one grotesque (Inter), weight 800 and tight tracking in titles; labels are small capitals with
   wide tracking; **numbers are made of dots** (the Doto face, Latin only, so Cyrillic falls back).
 - **Sections number themselves** (`01`, `02`, a CSS counter), under a hairline rule.

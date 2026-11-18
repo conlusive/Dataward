@@ -668,26 +668,13 @@ button[data-baseweb="tab"] { font-family: var(--body); font-weight: 600; }
   box-shadow: 0 24px 60px rgba(1, 4, 9, 0.7); }
 .dw-kbd { border-radius: 6px; border-width: 1px; border-bottom-width: 2px; }
 
-/* a phone: the menu is a drawer over the page, so it is frosted glass, not nothing (on a desktop it
-   sits on the page with no panel). A translucent cream, a strong blur, a bright rim and a soft
-   shadow; where the browser cannot blur, the cream is opaque enough to read. */
+/* a phone: the menu is a drawer over the page, and it is solid, as GitHub's is: the page colour, a
+   hairline on its edge and a shadow that separates it from the dimmed page; the top bar likewise */
 @media (max-width: 768px) {
-  [data-testid="stSidebar"] { background: rgba(13, 17, 23, 0.9);
-    border-right: 1px solid rgba(255, 255, 255, 0.14);
-    box-shadow: 0 0 60px rgba(1, 4, 9, 0.7); }
+  [data-testid="stSidebar"] { background: var(--bg); border-right: 1px solid var(--line);
+    box-shadow: 0 0 40px rgba(1, 4, 9, 0.8); }
   [data-testid="stSidebarContent"] { background: transparent; }
-
-  /* the top bar (with the button that opens the menu): the same glass, a slim strip */
-  [data-testid="stHeader"] { background: rgba(13, 17, 23, 0.9);
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-    box-shadow: 0 8px 28px rgba(1, 4, 9, 0.5); }
-}
-@supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
-  @media (max-width: 768px) {
-    [data-testid="stSidebar"], [data-testid="stHeader"] { background: rgba(13, 17, 23, 0.55);
-      -webkit-backdrop-filter: blur(28px) saturate(1.7);
-      backdrop-filter: blur(28px) saturate(1.7); }
-  }
+  [data-testid="stHeader"] { background: var(--bg); border-bottom: 1px solid var(--line); }
 }
 
 /* a row per day: closed to the left, new to the right of one centre, the numbers at the ends */
@@ -786,28 +773,36 @@ button[data-baseweb="tab"] { font-family: var(--body); font-weight: 600; }
 }
 
 /* a phone: the top bar is the mark on the left and a burger icon on the right, as in most
-   services; inside the open menu the way out is a cross */
+   services; inside the open menu the way out is a cross of the same size on the same line. Both are
+   bare icons (no box, as on GitHub) with a square tap area that lights up when pressed. */
 @media (max-width: 768px) {
   [data-testid="stHeader"] > [data-testid="stToolbar"] > div > div {
     width: 100%; justify-content: space-between; align-items: center; padding-right: 0.25rem; }
-  [data-testid="stExpandSidebarButton"] { display: inline-flex; align-items: center;
-    justify-content: center; width: 2.75rem; height: 2.75rem; min-width: 0; padding: 0;
-    border-radius: 50%; color: var(--ink); background: var(--card);
-    border: 1px solid var(--line-2); }
+  [data-testid="stExpandSidebarButton"],
+  [data-testid="stSidebar"] button[data-testid="stBaseButton-headerNoPadding"] {
+    display: inline-flex; align-items: center; justify-content: center; width: 2.75rem;
+    height: 2.75rem; min-width: 0; padding: 0; margin: 0; border: 0; border-radius: 10px;
+    background: transparent; color: var(--ink); box-shadow: none; }
+  [data-testid="stExpandSidebarButton"]:active,
+  [data-testid="stSidebar"] button[data-testid="stBaseButton-headerNoPadding"]:active {
+    background: rgba(255, 255, 255, 0.1); }
   [data-testid="stExpandSidebarButton"] [data-testid="stIconMaterial"],
-  [data-testid="stExpandSidebarButton"] svg, [data-testid="stExpandSidebarButton"] > * {
-    display: none; }
-  [data-testid="stExpandSidebarButton"]::before { content: ""; width: 1.2rem; height: 0.9rem;
+  [data-testid="stExpandSidebarButton"] svg, [data-testid="stExpandSidebarButton"] > *,
+  [data-testid="stSidebar"] button[data-testid="stBaseButton-headerNoPadding"] * { display: none; }
+  [data-testid="stExpandSidebarButton"]::before,
+  [data-testid="stSidebar"] button[data-testid="stBaseButton-headerNoPadding"]::before {
+    content: ""; width: 1.3rem; height: 1.3rem; }
+  [data-testid="stExpandSidebarButton"]::before { height: 0.95rem;
     background:
       linear-gradient(currentColor 0 0) 0 0 / 100% 2px no-repeat,
       linear-gradient(currentColor 0 0) 0 50% / 100% 2px no-repeat,
       linear-gradient(currentColor 0 0) 0 100% / 100% 2px no-repeat; }
-  [data-testid="stSidebar"] button[data-testid="stBaseButton-headerNoPadding"] {
-    width: 2.75rem; height: 2.75rem; border-radius: 50%; color: var(--ink);
-    background: var(--card); border: 1px solid var(--line-2); }
-  [data-testid="stSidebar"] button[data-testid="stBaseButton-headerNoPadding"] * { display: none; }
   [data-testid="stSidebar"] button[data-testid="stBaseButton-headerNoPadding"]::before {
-    content: "✕"; font-family: var(--body); font-size: var(--fs-md); font-weight: 600; }
+    background:
+      linear-gradient(45deg, transparent calc(50% - 1px), currentColor calc(50% - 1px),
+        currentColor calc(50% + 1px), transparent calc(50% + 1px)),
+      linear-gradient(-45deg, transparent calc(50% - 1px), currentColor calc(50% - 1px),
+        currentColor calc(50% + 1px), transparent calc(50% + 1px)); }
 }
 """
 

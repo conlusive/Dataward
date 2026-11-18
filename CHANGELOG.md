@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+### Changed (the phone menu: solid, with bare icons)
+- The burger and the cross that closes the menu were icons in rounded boxes with an outline. They are now
+  bare drawn icons of one size on the same centre line as the mark, with a tap area that lights up when
+  pressed, as on GitHub.
+- The phone drawer and the top bar are solid (the page colour and a hairline) instead of translucent
+  frosted glass.
+
 ### Changed (the lavender is the accent violet)
 - Everything that was the pale lavender `#B7A3EA` (the menu's labels, the section marks, rings, the second
   block of a row, meter bars) is now the violet of the status pill and the links, `#A78BFA`: one violet
