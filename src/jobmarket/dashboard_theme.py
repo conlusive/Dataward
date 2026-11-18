@@ -815,8 +815,10 @@ _SITE = """
 /* a heading's anchor (the chain icon that copies a link to it) means nothing to a visitor */
 [data-testid="stHeaderActionElements"] { display: none !important; }
 /* the groups of the menu are only gaps: their names are invisible characters, not headings */
-[data-testid="stNavSectionHeader"] { height: 0.75rem; min-height: 0 !important;
+[data-testid="stNavSectionHeader"] { height: 0.1rem; min-height: 0 !important;
   margin: 0 !important; padding: 0 !important; border: 0 !important; overflow: hidden; }
+[data-testid="stSidebarNavItems"] > div { margin-top: 0.7rem !important; }
+[data-testid="stSidebarNavLink"] { margin: 0 !important; min-height: 1.75rem !important; }
 /* the mark takes you home: it is a button, so it looks like one */
 [data-testid="stLogoLink"] { cursor: pointer; transition: opacity 0.15s; }
 [data-testid="stLogoLink"]:hover { opacity: 0.8; }
@@ -830,6 +832,31 @@ _SITE = """
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--ok) 25%, transparent); }
 .dw-live.old { background: var(--warn);
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--warn) 25%, transparent); }
+/* a desktop: the sidebar is one fixed width (about 300 px), not something to drag */
+@media (min-width: 769px) {
+  [data-testid="stSidebar"] { width: 300px !important; min-width: 300px !important;
+    max-width: 300px !important; }
+  [data-testid="stSidebarResizeHandle"], [data-testid="stSidebar"] [style*="col-resize"] {
+    display: none !important; }
+}
+
+/* a phone, in the manner of GitHub's: smaller type (every size is in rem, so one root size
+   does it), tighter corners and gaps, a slim top bar; the desktop look, only closer together */
+@media (max-width: 640px) {
+  html { font-size: 0.9375em; }  /* 15 px: the browser's 16 px less a sixteenth */
+  :root { --r: 12px; }
+  .block-container { padding: 3rem 0.75rem 2.5rem; }
+  [data-testid="stHeader"] { height: 3rem; }
+  [data-testid="stHeaderLogo"] { height: 1.7rem; }
+  [data-testid="stExpandSidebarButton"] { width: 2.4rem; height: 2.4rem; }
+  .dw-hero { margin-bottom: 0.9rem; gap: 0.6rem; }
+  .dw-eyebrow { margin-bottom: 0.35rem; }
+  .dw-title { font-size: 1.75rem; }
+  .dw-sub { margin-top: 0.4rem; }
+  .dw-section { margin: 1.4rem 0 0.6rem; }
+  [data-testid="stMain"] [data-testid="stVerticalBlock"] { gap: 0.7rem; }
+  [data-testid="stMetric"] { padding: 0.7rem; min-height: 5.2rem; }
+}
 """
 
 

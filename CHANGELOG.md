@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+### Changed (a fixed sidebar, a compact phone)
+- **The sidebar has one width, about 300 px, and cannot be dragged.** Its items and groups sit closer
+  together (a 1.75 rem row, a small gap between groups).
+- **The phone is tighter and of a piece with the desktop, in the manner of GitHub's**: a 15 px root size,
+  12 px corners, a 0.75 rem gutter, smaller gaps, a slim top bar.
+
 ### Changed (plain names in the menu, a steadier tab icon, the README)
 - **The menu has no group headings** (Вакансії, Аналітика ...) and its pages have plain names: Вакансії,
   Вакансії для мене, Збережені вакансії, План навчання, Практика співбесід, Ринок праці, Навички у

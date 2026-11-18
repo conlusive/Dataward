@@ -329,3 +329,12 @@ export yourself), then on Render: New > Blueprint > this repository.
   running all the time). A warm page shows its first heading in about 6 s.
 - **The menu**: the last group is "Система" (Стан системи, Про проєкт); under the menu a small foot shows
   how long ago the data was refreshed (a green dot, amber after the 36 h of the SLO). Heading anchors (the chain icon) are hidden; the logo is a button to the home page.
+
+## Sidebar and phone
+
+- **The sidebar is one fixed width, about 300 px, and cannot be dragged** (its resize handle is hidden on a
+  desktop). The items are close together (a 1.75 rem row), and the groups are separated by a small gap.
+- **A phone in the manner of GitHub's**: the same look as on a desktop, only closer together (the closing
+  block of the stylesheet): a root size of 15 px (every size is in rem, so one value shrinks all), 12 px
+  corners instead of 22, a 0.75 rem gutter, tighter gaps between blocks and a slim top bar. Tap targets stay
+  44 px (`pointer: coarse`).

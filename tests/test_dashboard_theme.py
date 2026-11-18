@@ -364,7 +364,7 @@ def test_the_menu_has_no_group_headings_only_gaps_between_the_groups() -> None:
     keys = re.findall(r'sections\["([^"]*)"\]', app)
     assert keys and all(set(key) <= {"\\", "u", "2", "0", "b"} for key in keys)  # only \u200b
     assert "Аналітика" not in app and "Розвиток" not in app  # no visible name of a group
-    assert '[data-testid="stNavSectionHeader"] { height: 0.75rem;' in css  # the gap
+    assert '[data-testid="stNavSectionHeader"] { height: 0.1rem;' in css  # the gap
 
 
 def test_the_open_page_of_the_menu_is_a_squarish_block_not_a_pill() -> None:
@@ -444,3 +444,24 @@ def test_a_heading_has_no_chain_icon_and_the_mark_looks_like_the_button_it_is() 
 
     assert '[data-testid="stHeaderActionElements"] { display: none !important; }' in css
     assert '[data-testid="stLogoLink"] { cursor: pointer;' in css
+
+
+def test_a_desktop_sidebar_has_one_fixed_width_and_cannot_be_dragged() -> None:
+    css = t.css()
+    desktop = css[css.index("a desktop: the sidebar is one fixed width") :]
+    desktop = desktop[: desktop.index("@media (max-width: 640px)")]
+
+    assert "@media (min-width: 769px)" in desktop
+    assert "width: 300px !important; min-width: 300px !important;" in desktop
+    assert 'stSidebarResizeHandle"]' in desktop and "display: none !important" in desktop
+
+
+def test_a_phone_gets_smaller_type_tighter_corners_and_gaps_in_one_closing_block() -> None:
+    css = t.css()
+    phone = css[css.index("a phone, in the manner of GitHub's") :]
+
+    assert (
+        "html { font-size: 0.9375em; }" in phone
+    )  # every size is in rem: one root size shrinks all
+    assert "--r: 12px" in phone and "padding: 3rem 0.75rem 2.5rem" in phone
+    assert css.rindex("@media (max-width: 640px)") > css.index(".dw-dir { min-height: 12rem")
