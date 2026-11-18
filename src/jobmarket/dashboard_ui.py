@@ -598,7 +598,7 @@ def vacancy_list(
     @st.fragment
     def view() -> None:
         with st.container(key=f"{key}_bar"):  # on a phone: the sort on one row, the pager below
-            sorting, back, forward, where = st.columns([4, 1, 1, 3], vertical_alignment="bottom")
+            sorting, back, where, forward = st.columns([8, 1, 3, 1], vertical_alignment="bottom")
             sort = sorting.selectbox("Сортування", list(dd.SORTS), key=f"{key}_sort")
         ordered = dd.sort_catalog(frame, sort).reset_index(drop=True)
         signature = (sort, len(ordered), str(ordered.iloc[0]["vacancy_id"]))
@@ -612,17 +612,17 @@ def vacancy_list(
         st.session_state[f"{key}_page"] = page
         pages = max(1, -(-len(ordered) // dd.PAGE_SIZE))
         back.button(
-            "←", key=f"{key}_back", on_click=_turn, args=(key, -1), disabled=page == 0,
-            width="stretch", help="Попередня сторінка",
-        )  # fmt: skip
-        forward.button(
-            "→", key=f"{key}_next", on_click=_turn, args=(key, 1), disabled=page >= pages - 1,
-            width="stretch", help="Наступна сторінка",
+            ":material/chevron_left:", key=f"{key}_back", on_click=_turn, args=(key, -1),
+            disabled=page == 0, width="content", help="Попередня сторінка",
         )  # fmt: skip
         where.markdown(
             f'<div class="dw-pager">{first + 1}–{last} з {dd.fmt_int(len(ordered))}</div>',
             unsafe_allow_html=True,
         )
+        forward.button(
+            ":material/chevron_right:", key=f"{key}_next", on_click=_turn, args=(key, 1),
+            disabled=page >= pages - 1, width="content", help="Наступна сторінка",
+        )  # fmt: skip
         shown = ordered.iloc[first:last].reset_index(drop=True)
         ids = shown["vacancy_id"].astype(str).tolist()
         opened = st.session_state.get(f"{key}_shown")

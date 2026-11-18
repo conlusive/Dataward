@@ -367,13 +367,12 @@ _PHONE = """
   .st-key-cat_filters [data-testid="stColumn"]:nth-child(3):nth-last-child(1) {
     min-width: calc(50% - 8px) !important; }
 
-  /* the sort on a row, the pager (two arrows and the count) on the next one */
-  .st-key-cat_bar [data-testid="stColumn"], .st-key-mkt_bar [data-testid="stColumn"] {
-    min-width: 0 !important; flex: 1 1 0 !important; }
+  /* the sort on a row, the pager (back, the count, forward) centred on the next one */
   .st-key-cat_bar [data-testid="stColumn"]:first-child,
-  .st-key-mkt_bar [data-testid="stColumn"]:first-child { min-width: 100% !important; }
-  .st-key-cat_bar [data-testid="stColumn"]:last-child,
-  .st-key-mkt_bar [data-testid="stColumn"]:last-child { flex-grow: 2 !important; }
+  .st-key-mkt_bar [data-testid="stColumn"]:first-child {
+    min-width: 100% !important; flex-basis: 100% !important; }
+  .st-key-cat_bar > [data-testid="stHorizontalBlock"],
+  .st-key-mkt_bar > [data-testid="stHorizontalBlock"] { justify-content: center; }
 
   /* the card of a tapped vacancy (its "back" button has the key *_close_open) covers the screen;
      a card nobody has tapped is hidden: below the list it would be a page away */
@@ -423,8 +422,7 @@ _WORKSPACE = """
 [data-testid="stNavSectionHeader"] { border-left: 4px solid var(--dom, var(--line));
   padding-left: 0.5rem; }
 [data-testid="stSidebarNavItems"] a[aria-current="page"] {
-  border-left-color: var(--dom, var(--accent)) !important;
-  color: var(--dom, var(--accent)) !important; }
+  border-left-color: transparent !important; color: var(--ink) !important; }
 
 /* the menu is compact so that it fits without a scrollbar; the profile is the avatar below */
 [data-testid="stSidebarNavLink"] { padding-top: 0.1rem !important;
@@ -472,8 +470,27 @@ _WORKSPACE = """
   background: color-mix(in srgb, var(--accent) 10%, transparent);
   padding: var(--s2) var(--s3); margin-bottom: var(--s3); }
 .dw-undo { font-size: var(--fs-sm); color: var(--ink); }
-.dw-pager { text-align: right; font-size: var(--fs-sm); color: var(--ink-3);
-  padding-bottom: 0.6rem; }
+/* the pager: a round button each way with the count between them, at the right of the sort; its
+   three columns are as wide as what they hold, so that they sit together, not at the far ends */
+.st-key-cat_bar [data-testid="stColumn"]:nth-child(2),
+.st-key-cat_bar [data-testid="stColumn"]:nth-child(4),
+.st-key-mkt_bar [data-testid="stColumn"]:nth-child(2),
+.st-key-mkt_bar [data-testid="stColumn"]:nth-child(4) {
+  flex: 0 0 2.5rem !important; width: 2.5rem !important; min-width: 2.5rem !important; }
+.st-key-cat_bar [data-testid="stColumn"]:nth-child(3),
+.st-key-mkt_bar [data-testid="stColumn"]:nth-child(3) {
+  flex: 0 0 8.5rem !important; width: 8.5rem !important; min-width: 0 !important; }
+.dw-pager { text-align: center; font-size: var(--fs-sm); color: var(--ink-2);
+  padding-bottom: 0.65rem; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.st-key-cat_back button, .st-key-cat_next button, .st-key-mkt_back button,
+.st-key-mkt_next button { width: 2.5rem; min-width: 2.5rem; height: 2.5rem; min-height: 2.5rem;
+  padding: 0; border-radius: 50%; border: 1px solid var(--line-2); background: transparent; }
+.st-key-cat_back button:hover:not(:disabled), .st-key-cat_next button:hover:not(:disabled),
+.st-key-mkt_back button:hover:not(:disabled), .st-key-mkt_next button:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.08); border-color: var(--ink-3); }
+.st-key-cat_back button:disabled, .st-key-cat_next button:disabled,
+.st-key-mkt_back button:disabled, .st-key-mkt_next button:disabled {
+  opacity: 0.35; border-color: var(--line); }
 
 /* the filter bar sits above the list, not in the menu: every control has a label of one height
    above it and the same height, so the rows line up */
@@ -615,14 +632,15 @@ button[kind="pills"], button[kind="pillsActive"], [data-testid="stBaseButton-pil
 .dw-meter span { background: var(--lavender); }
 .dw-pulse span { border-radius: 50%; width: 10px; height: 10px; }
 
-/* the menu has no panel: it sits on the page; the open page is a violet pill */
+/* the menu has no panel: it sits on the page; the open page is a quiet pill with no colour */
 [data-testid="stSidebar"] { background: transparent; border-right: 0; }
 [data-testid="stSidebarNavLink"] { border-radius: 999px !important; border-left: 0 !important;
   margin: 1px 0; padding-left: 0.9rem; }
-[data-testid="stSidebarNavLink"]:hover { background: color-mix(in srgb, var(--accent) 12%,
-  transparent); }
-[data-testid="stSidebarNavItems"] a[aria-current="page"] { background: var(--lavender) !important; }
-[data-testid="stSidebarNavItems"] a[aria-current="page"] * { color: var(--on-block) !important; }
+[data-testid="stSidebarNavLink"]:hover { background: rgba(255, 255, 255, 0.05); }
+[data-testid="stSidebarNavItems"] a[aria-current="page"] {
+  background: rgba(255, 255, 255, 0.09) !important; }
+[data-testid="stSidebarNavItems"] a[aria-current="page"] * {
+  color: var(--ink) !important; font-weight: 600; }
 [data-testid="stNavSectionHeader"] { border-left: 0 !important; padding-left: 0.9rem;
   color: var(--dom, var(--ink-3)); }
 .st-key-dw_avatar { background: transparent; }

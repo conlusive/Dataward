@@ -180,7 +180,7 @@ references: a three-colour study (powder blue and two violets) and a dot-matrix 
 - **Colour by part of the product**: one, lavender `#B7A3EA`. The four parts (vacancies, learning,
   analytics, the system) each had a colour, and that read as four themes; now the menu group names, the
   labels above the titles, the section marks and the rings wear the same lavender, and the open page of
-  the menu is a lavender pill with dark ink (as the lavender blocks are). `DOMAINS` in the theme keeps the
+  the menu has no colour at all: white, bold, on a quiet grey pill. `DOMAINS` in the theme keeps the
   four names, so a part can be given its own colour again in one place. Not the chart series colours.
 - **The mark is black and white**: the wordmark and the tab icon are the rising bars and a stop in the
   light ink of the page (the tab icon on a black disc); the pixel logo is ink and grey.

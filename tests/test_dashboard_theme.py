@@ -330,12 +330,22 @@ def test_every_part_of_the_product_wears_the_same_lavender() -> None:
     assert set(t.DOMAINS) == {"jobs", "grow", "market", "system"}  # the names stay
 
 
-def test_the_open_page_of_the_menu_is_a_lavender_pill_with_dark_ink() -> None:
+def test_the_open_page_of_the_menu_has_no_colour_only_a_quiet_pill() -> None:
     css = t.css()
 
-    assert 'a[aria-current="page"] { background: var(--lavender) !important; }' in css
-    assert 'a[aria-current="page"] * { color: var(--on-block) !important; }' in css
-    assert 'a[aria-current="page"] { background: var(--violet)' not in css
+    assert 'a[aria-current="page"] {\n  background: rgba(255, 255, 255, 0.09) !important; }' in css
+    assert 'a[aria-current="page"] * {\n  color: var(--ink) !important; font-weight: 600; }' in css
+    assert 'a[aria-current="page"] { background: var(--lavender)' not in css
+    assert "border-left-color: var(--dom, var(--accent)) !important" not in css
+
+
+def test_the_pager_is_two_round_buttons_with_the_count_between_them() -> None:
+    css = t.css()
+
+    assert ".st-key-cat_back button, .st-key-cat_next button" in css
+    assert "border-radius: 50%" in css[css.index(".st-key-cat_back button, .st-key-cat_next") :]
+    assert ".dw-pager { text-align: center;" in css  # between the buttons, not at the far right
+    assert "flex: 0 0 2.5rem !important" in css  # the columns are as wide as the buttons
 
 
 def test_a_ring_is_bounded_labelled_and_coloured_by_its_domain() -> None:

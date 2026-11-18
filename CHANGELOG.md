@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+### Changed (the open page without colour, a pager that sits together)
+- The open page of the menu is no longer coloured: bold white text on a quiet grey pill (the lavender pill
+  was too loud next to the lavender group names).
+- The pager of the vacancy list (catalog and market): a round chevron button each way with the count
+  between them, at the right of the sort, instead of two wide ovals with tiny arrows at the far ends; on a
+  phone it is one centred row under the sort.
+
 ### Changed (a black-and-white mark, one lavender)
 - **The logo and the tab icon are black and white**: the rising bars and the stop in the light ink of the
   page, the tab icon on a black disc (the pixel logo: ink and grey).
