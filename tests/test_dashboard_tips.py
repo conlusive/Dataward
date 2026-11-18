@@ -16,15 +16,12 @@ def test_the_script_shifts_a_tip_left_by_how_far_it_would_run_past_the_edge() ->
     assert "window.__dwTips" in code  # a second run replaces the first listeners
 
 
-def test_the_style_reads_the_shift_and_a_phone_menu_is_frosted_glass() -> None:
+def test_the_style_reads_the_shift_and_a_phone_menu_is_solid() -> None:
     css = t.css()
 
     assert "left: var(--dx, 0)" in css  # the tip text moves with the measured shift
-    assert "backdrop-filter: blur(28px) saturate(1.7)" in css and "-webkit-backdrop-filter" in css
-    assert "@supports ((backdrop-filter: blur(1px))" in css  # and readable where it cannot blur
-    assert (
-        '[data-testid="stSidebar"], [data-testid="stHeader"] { background: rgba(' in css
-    )  # the bar too
+    assert "backdrop-filter" not in css  # no frosted glass: the drawer and the bar are solid
+    assert '[data-testid="stSidebar"] { background: var(--bg);' in css
     assert "max-width: 768px" in css  # on a desktop the menu stays panel-less
 
 
