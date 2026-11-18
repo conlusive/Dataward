@@ -3,6 +3,8 @@
 [![CI](https://github.com/conlusive/Dataward/actions/workflows/ci.yml/badge.svg)](https://github.com/conlusive/Dataward/actions/workflows/ci.yml)
 [![Daily pipeline](https://github.com/conlusive/Dataward/actions/workflows/pipeline-daily.yml/badge.svg)](https://github.com/conlusive/Dataward/actions/workflows/pipeline-daily.yml)
 
+**Live dashboard: https://dataward.onrender.com** (the market, skills, salaries and the vacancy catalog; the data refreshes every hour).
+
 A reproducible, observable pipeline that scrapes IT vacancies from DOU and Djinni every night into an
 immutable bronze layer, cleans and deduplicates them into silver, builds gold marts in dbt, and serves a
 dashboard and a salary model on top. **It is not big data** (a few thousand vacancies a day). It is the
@@ -91,7 +93,7 @@ names code review, monitoring or DevOps). Neither wins on F1, which is why the d
 nightly method and the LLM is a measured option. Details and the most frequent mistakes of each:
 [docs/metrics.md](docs/metrics.md).
 
-**How far to trust these numbers.** The gold labels were made by an LLM (Claude), blind to both methods'
+**How far to trust these numbers.** The gold labels were made by an LLM, blind to both methods'
 answers, and not by a human; the file says so (`labelled_by`). The LLM method is a different model, but
 two language models can make the same mistakes, so the real accuracy may differ. 150 vacancies are
 enough to see which method is better, not to quote a second decimal. A human check of 15-20 of the

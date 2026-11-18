@@ -357,13 +357,21 @@ def test_a_ring_is_bounded_labelled_and_coloured_by_its_domain() -> None:
     assert 'role="img"' in high and "aria-label" in high  # a reader gets the figure as text
 
 
-def test_the_system_group_has_a_visible_heading_that_carries_its_colour() -> None:
+def test_the_menu_has_no_group_headings_only_gaps_between_the_groups() -> None:
     css = t.css()
     app = (Path(__file__).parent.parent / "dashboard" / "app.py").read_text(encoding="utf-8")
 
-    assert 'sections["Система"] = [' in app  # two pages (state, about): a heading is fine now
-    assert 'has(a[href$="system"]) [data-testid="stNavSectionHeader"] {\n  display: none' not in css
-    assert 'has(a[href$="system"]) a {\n  border-left' not in css  # the heading carries the colour
+    keys = re.findall(r'sections\["([^"]*)"\]', app)
+    assert keys and all(set(key) <= {"\\", "u", "2", "0", "b"} for key in keys)  # only \u200b
+    assert "Аналітика" not in app and "Розвиток" not in app  # no visible name of a group
+    assert '[data-testid="stNavSectionHeader"] { height: 0.75rem;' in css  # the gap
+
+
+def test_the_open_page_of_the_menu_is_a_squarish_block_not_a_pill() -> None:
+    css = t.css()
+
+    assert '[data-testid="stSidebarNavLink"] { border-radius: 10px !important;' in css
+    assert "border-radius: 999px !important; border-left: 0 !important;" not in css
 
 
 def test_a_menu_group_takes_its_colour_from_its_page_not_from_its_place() -> None:

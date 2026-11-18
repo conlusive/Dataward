@@ -4,7 +4,7 @@ Measured against the gold set (`data/gold/skills_gold.yaml`),
 micro-averaged over (vacancy, skill) pairs. Cost is per 10,000 vacancies, from the
 logged token usage.
 
-**The labels were made by: Claude (an LLM), blind to the dictionary and to the LLM method; not a human.** A metric is only as independent as its labels.
+**The labels were made by: an LLM, blind to the dictionary and to the LLM method; not a human.** A metric is only as independent as its labels.
 
 | Method | Vacancies | Precision | Recall | F1 | Cost per 10k vacancies |
 |---|---|---|---|---|---|

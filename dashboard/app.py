@@ -25,28 +25,28 @@ ui.keep_data_fresh()  # a hosted copy re-fetches the nightly export (no-op witho
 
 personal = not ui.public_demo()  # a profile and what is built on it are for the owner only
 
+# The menu has no group headings: a group is a gap, and a heading made only of invisible characters
+# (every key of a dict must differ) gives Streamlit something to draw as that gap.
 sections = {
-    "": [  # no heading: the home page is the root of the menu
-        st.Page("views/home.py", title="Головна", icon=":material/home:", default=True),
-    ],
+    "": [st.Page("views/home.py", title="Головна", icon=":material/home:", default=True)],
+    "\u200b": [st.Page("views/catalog.py", title="Вакансії", icon=":material/list_alt:")],
 }
-sections["Вакансії"] = [st.Page("views/catalog.py", title="Каталог", icon=":material/list_alt:")]
 if personal:
-    sections["Вакансії"] += [
-        st.Page("views/fit.py", title="Для мене", icon=":material/person_search:"),
-        st.Page("views/saved.py", title="Збережені", icon=":material/bookmark:"),
+    sections["\u200b"] += [
+        st.Page("views/fit.py", title="Вакансії для мене", icon=":material/person_search:"),
+        st.Page("views/saved.py", title="Збережені вакансії", icon=":material/bookmark:"),
     ]
-    sections["Розвиток"] = [
-        st.Page("views/profile.py", title="Профіль", icon=":material/account_circle:"),
-        st.Page("views/learn.py", title="Навчання", icon=":material/school:"),
-        st.Page("views/practice.py", title="Практика", icon=":material/quiz:"),
+    sections["\u200b\u200b"] = [
+        st.Page("views/profile.py", title="Мій профіль", icon=":material/account_circle:"),
+        st.Page("views/learn.py", title="План навчання", icon=":material/school:"),
+        st.Page("views/practice.py", title="Практика співбесід", icon=":material/quiz:"),
     ]
-sections["Аналітика"] = [
-    st.Page("views/market.py", title="Ринок", icon=":material/monitoring:"),
-    st.Page("views/skills.py", title="Навички", icon=":material/psychology:"),
+sections["\u200b\u200b\u200b"] = [
+    st.Page("views/market.py", title="Ринок праці", icon=":material/monitoring:"),
+    st.Page("views/skills.py", title="Навички у вакансіях", icon=":material/psychology:"),
     st.Page("views/salary.py", title="Зарплати", icon=":material/payments:"),
 ]
-sections["Система"] = [
+sections["\u200b\u200b\u200b\u200b"] = [
     st.Page("views/system.py", title="Стан системи", icon=":material/health_and_safety:"),
     st.Page("views/about.py", title="Про проєкт", icon=":material/info:"),
 ]

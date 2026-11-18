@@ -1,5 +1,5 @@
 # Labelled skills per vacancy (ids from the taxonomy). Texts are kept separately.
-labelled_by: Claude (an LLM), blind to the dictionary and to the LLM method; not a
+labelled_by: an LLM, blind to the dictionary and to the LLM method; not a
   human
 regression_min_f1: 0.78
 wanted:

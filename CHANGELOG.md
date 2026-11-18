@@ -2,6 +2,17 @@
 
 ## Unreleased
 
+### Changed (plain names in the menu, a steadier tab icon, the README)
+- **The menu has no group headings** (Вакансії, Аналітика ...) and its pages have plain names: Вакансії,
+  Вакансії для мене, Збережені вакансії, План навчання, Практика співбесід, Ринок праці, Навички у
+  вакансіях, Зарплати, Стан системи, Про проєкт. A gap separates the groups. The open page and a hovered
+  one are squarish blocks (10 px corners), not pills.
+- **The tab icon no longer jumps between pictures**: the script that swapped the icon links removed the
+  ones written into the page head and added the same ones again after every navigation; it now keeps any
+  link that points into our static folder and removes only foreign ones.
+- The README links the live dashboard (https://dataward.onrender.com). The gold labels are credited to
+  "an LLM" without a model name (the history had no co-author line to remove: every commit is yours).
+
 ### Changed (the open page without colour, a pager that sits together)
 - The open page of the menu is no longer coloured: bold white text on a quiet grey pill (the lavender pill
   was too loud next to the lavender group names).

@@ -75,11 +75,12 @@ def test_the_public_copy_is_offered_no_key_that_leads_nowhere() -> None:
     titles = {p["title"] for p in public["pages"]}
 
     assert titles == {
-        "Головна", "Каталог", "Ринок", "Навички", "Зарплати", "Стан системи", "Про проєкт"
+        "Головна", "Вакансії", "Ринок праці", "Навички у вакансіях", "Зарплати", "Стан системи",
+        "Про проєкт",
     }  # fmt: skip
     assert not titles & keys.PERSONAL
     assert not {"Space", "1 · 2 · 3", "Z"} & {o["keys"] for o in public["other"]}
-    assert "Профіль" not in keys.script(public=True)  # not even in the palette's data
+    assert "Мій профіль" not in keys.script(public=True)  # not even in the palette's data
 
 
 def test_your_own_copy_is_offered_everything() -> None:

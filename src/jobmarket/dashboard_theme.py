@@ -632,9 +632,9 @@ button[kind="pills"], button[kind="pillsActive"], [data-testid="stBaseButton-pil
 .dw-meter span { background: var(--lavender); }
 .dw-pulse span { border-radius: 50%; width: 10px; height: 10px; }
 
-/* the menu has no panel: it sits on the page; the open page is a quiet pill with no colour */
+/* the menu has no panel: it sits on the page; the open page is a quiet, squarish block */
 [data-testid="stSidebar"] { background: transparent; border-right: 0; }
-[data-testid="stSidebarNavLink"] { border-radius: 999px !important; border-left: 0 !important;
+[data-testid="stSidebarNavLink"] { border-radius: 10px !important; border-left: 0 !important;
   margin: 1px 0; padding-left: 0.9rem; }
 [data-testid="stSidebarNavLink"]:hover { background: rgba(255, 255, 255, 0.05); }
 [data-testid="stSidebarNavItems"] a[aria-current="page"] {
@@ -814,6 +814,9 @@ button[data-baseweb="tab"] { font-family: var(--body); font-weight: 600; }
 _SITE = """
 /* a heading's anchor (the chain icon that copies a link to it) means nothing to a visitor */
 [data-testid="stHeaderActionElements"] { display: none !important; }
+/* the groups of the menu are only gaps: their names are invisible characters, not headings */
+[data-testid="stNavSectionHeader"] { height: 0.75rem; min-height: 0 !important;
+  margin: 0 !important; padding: 0 !important; border: 0 !important; overflow: hidden; }
 /* the mark takes you home: it is a button, so it looks like one */
 [data-testid="stLogoLink"] { cursor: pointer; transition: opacity 0.15s; }
 [data-testid="stLogoLink"]:hover { opacity: 0.8; }

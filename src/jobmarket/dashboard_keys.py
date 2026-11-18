@@ -12,14 +12,14 @@ from typing import Final
 # (title as in the menu, the key after "g"); the titles must match ``dashboard/app.py``.
 PAGES: Final[tuple[tuple[str, str], ...]] = (
     ("Головна", "h"),
-    ("Каталог", "c"),
-    ("Для мене", "f"),
-    ("Збережені", "b"),
-    ("Профіль", "u"),
-    ("Навчання", "l"),
-    ("Практика", "p"),
-    ("Ринок", "m"),
-    ("Навички", "s"),
+    ("Вакансії", "c"),
+    ("Вакансії для мене", "f"),
+    ("Збережені вакансії", "b"),
+    ("Мій профіль", "u"),
+    ("План навчання", "l"),
+    ("Практика співбесід", "p"),
+    ("Ринок праці", "m"),
+    ("Навички у вакансіях", "s"),
     ("Зарплати", "w"),
     ("Стан системи", "d"),
     ("Про проєкт", "a"),
@@ -27,7 +27,13 @@ PAGES: Final[tuple[tuple[str, str], ...]] = (
 
 # pages the public copy does not have: those about a person (the market and vacancies are public)
 PERSONAL: Final[frozenset[str]] = frozenset(
-    {"Для мене", "Збережені", "Профіль", "Навчання", "Практика"}
+    {
+        "Вакансії для мене",
+        "Збережені вакансії",
+        "Мій профіль",
+        "План навчання",
+        "Практика співбесід",
+    }  # fmt: skip
 )
 
 # shortcuts that act on a profile (the trainer, undo): not on the public copy either

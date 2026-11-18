@@ -20,6 +20,8 @@ def test_the_script_replaces_every_icon_link_that_is_not_its_own() -> None:
     assert "link.remove()" in code and "dwIcon" in code  # Streamlit's links go, ours stay
     assert "MutationObserver" in code  # Streamlit adds its own link again after a rerun
     assert "window.__dwIcon" in code  # once per page load
+    # a link into the static folder is kept, whoever wrote it: no remove-and-add churn in the tab
+    assert "includes('/app/static/')" in code and "if (!ours(link)) link.remove()" in code
 
 
 def test_a_changed_icon_is_a_new_address(tmp_path: Path) -> None:

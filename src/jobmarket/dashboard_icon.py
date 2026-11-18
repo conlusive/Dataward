@@ -3,9 +3,11 @@
 Streamlit's page already carries ``<link rel="shortcut icon" href="./favicon.png">`` (its own
 logo) and swaps it for ``page_icon`` with a script, after the page has loaded, as a JPEG. Chrome
 follows that swap; Safari reads the icon when the page loads and keeps what it found. So the
-container image replaces Streamlit's own ``favicon.png`` (``Dockerfile.dashboard``), and this script
-does the same for a local run: it takes the links away and adds ours, from the static folder the app
-serves (``enableStaticServing`` in ``.streamlit/config.toml``), with an ``apple-touch-icon`` too.
+container image replaces Streamlit's own ``favicon.png`` and writes our links into the head
+(``Dockerfile.dashboard``, ``dashboard_head.py``); this script keeps them there, and does the same
+for a local run: it takes foreign links away, keeps ours and adds what is missing, from the static
+folder the app serves (``enableStaticServing`` in ``.streamlit/config.toml``), with an
+``apple-touch-icon`` too.
 """
 
 import hashlib
@@ -27,13 +29,19 @@ _SCRIPT: Final = """
     link.dataset.dwIcon = '1';
     document.head.appendChild(link);
   };
+  // an icon that points into the static folder is ours, whoever wrote the link (the head of the
+  // page, see dashboard_head.py, or this script): it stays, so the tab never swaps it for another
+  const ours = (link) => link.dataset.dwIcon
+    || (link.getAttribute('href') || '').includes('/app/static/');
   const apply = () => {
     // anything that is not ours (Streamlit's own, or the one it adds again after a rerun) goes
-    const ours = 'link[rel~="icon"], link[rel~="shortcut"], link[rel="apple-touch-icon"]';
-    document.head.querySelectorAll(ours)
-      .forEach((link) => { if (!link.dataset.dwIcon) link.remove(); });
-    if (!document.head.querySelector('link[data-dw-icon]')) {
+    const foreign = 'link[rel~="icon"], link[rel~="shortcut"], link[rel="apple-touch-icon"]';
+    document.head.querySelectorAll(foreign)
+      .forEach((link) => { if (!ours(link)) link.remove(); });
+    if (!document.head.querySelector('link[rel~="icon"]')) {
       add('icon', 'favicon.png', '%(icon)dx%(icon)d');
+    }
+    if (!document.head.querySelector('link[rel="apple-touch-icon"]')) {
       add('apple-touch-icon', 'apple-touch-icon.png', '%(apple)dx%(apple)d');
     }
   };

@@ -14,11 +14,14 @@ on the "about the data" page.
 
 ## Pages
 
-Twelve pages in a sidebar under the pixel logo, grouped by what you are doing: Головна, Вакансії
-(Каталог, Для мене, Збережені), Розвиток (Навчання, Практика), Аналітика, Система. The sidebar is part of
-the layout and cannot be collapsed; **the menu scrolls on its own and the avatar stays pinned below it**, so
-no page is out of reach on a short window. **You are the avatar at its foot** (the frog in a frame, a name, a level bar): the whole card opens the profile, so
-there is no "Профіль" in the menu (the page exists; its menu link is hidden). Tabs inside a page split one
+Twelve pages in a sidebar under the pixel logo, with plain names and **no group headings**: a gap
+separates the groups (Головна / Вакансії, Вакансії для мене, Збережені вакансії / План навчання, Практика
+співбесід / Ринок праці, Навички у вакансіях, Зарплати / Стан системи, Про проєкт; the public site has
+seven of them). The sidebar is part of the layout and cannot be collapsed; **the menu scrolls on its own
+and the avatar stays pinned below it**, so no page is out of reach on a short window. **You are the
+avatar at its foot** (the frog in a frame, a name, a level bar): the whole card opens the profile, so
+there is no "Мій профіль" in the menu (the page exists; its menu link is hidden). The open page is a
+squarish block (10 px corners) of bold white text on a quiet grey, with no colour. Tabs inside a page split one
 topic into views. Filters live on the page, in a bar above the list, never in the sidebar.
 
 | Page | Tabs | Shows | Reads |
