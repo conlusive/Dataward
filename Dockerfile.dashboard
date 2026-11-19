@@ -15,7 +15,7 @@ ENV UV_FROZEN=1 UV_LINK_MODE=copy UV_COMPILE_BYTECODE=1 PATH="/app/.venv/bin:$PA
 # Bytecode is compiled here (UV_COMPILE_BYTECODE, compileall below): the packages belong to root and the
 # server runs as `app`, which cannot write .pyc files, so without this every start compiles them again.
 # Only what the dashboard needs: the main dependencies and the `dashboard` group (no dbt, no dev tools).
-COPY pyproject.toml uv.lock README.md ./
+COPY pyproject.toml uv.lock README.md LICENSE ./
 RUN uv sync --no-dev --group dashboard --no-install-project
 COPY src ./src
 RUN uv sync --no-dev --group dashboard

@@ -1,0 +1,30 @@
+Copyright (c) 2026 conlusive. All rights reserved.
+
+This repository is public so that it can be read, as a portfolio piece. It is NOT open source, and
+nothing in it is licensed for reuse.
+
+What you may do
+  - Read the source code and the documentation.
+  - Use GitHub's own features as GitHub's Terms of Service describe for public repositories (view the
+    repository, and fork it on GitHub to propose a change to it).
+
+What you may not do without the prior written permission of the copyright holder
+  - Copy, reproduce, modify, merge, publish, distribute, sublicense or sell this software, or any
+    substantial part of it, in source or any other form.
+  - Host, deploy or run it as a service, or use it, its structure or its code to build a product,
+    service or portfolio of your own.
+  - Use it, or the text of its documentation, to train a machine-learning model.
+  - Remove or change this notice.
+
+Third parties
+  - The dependencies keep their own licences (see uv.lock and each package).
+  - The vacancy listings, exchange rates and survey data that the pipeline reads belong to their
+    authors and publishers. This licence grants no rights to them.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
+LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
+NO EVENT SHALL THE COPYRIGHT HOLDER BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR ITS USE.
+
+To ask for permission, open an issue on https://github.com/conlusive/Dataward or contact the owner of
+that account.

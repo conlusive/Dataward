@@ -172,3 +172,9 @@ make dashboard        # http://localhost:8501
 A quick smoke run that scrapes one listing page per category: `SCRAPE_MAX_LIST_PAGES=1 make pipeline`.
 Docker: `make docker-pipeline`. Every command, step by step: [docs/operations.md](docs/operations.md).
 Checks: `make lint test` (about 725 tests, including real dbt runs on made-up data).
+
+## License
+
+Copyright (c) 2026 conlusive. **All rights reserved.** The repository is public to be read, not to be
+copied or reused: see [LICENSE](LICENSE). Third-party data (vacancy listings, rates, the DOU survey) belongs
+to its authors and is not covered by it.

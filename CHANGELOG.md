@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+### Added (a licence)
+- `LICENSE`: all rights reserved. The code and the documentation may be read, and forked on GitHub to
+  propose a change (as GitHub's terms say of a public repository); copying, reusing, hosting, building
+  on it or training a model on it needs written permission. `pyproject.toml` and the README say so.
+
 ### Changed (the phone menu: solid, with bare icons)
 - The burger and the cross that closes the menu were icons in rounded boxes with an outline. They are now
   bare drawn icons of one size on the same centre line as the mark, with a tap area that lights up when
