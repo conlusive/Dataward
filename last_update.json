@@ -1,0 +1,60 @@
+{
+  "exported_at": "2026-11-21T21:20:33+00:00",
+  "tables": {
+    "dim_skill": {
+      "bytes": 10579,
+      "rows": 493,
+      "sha256": "1f209e347e067372cbd124a2b8896be05272729f36cdbe452e53f4b0414f0e98"
+    },
+    "fct_market_daily": {
+      "bytes": 34257,
+      "rows": 9387,
+      "sha256": "56e0d10b2dd782404c1592092a077e6d53f6ea56e93c7ab9f5da8c9ad5db2fb4"
+    },
+    "fct_salary_by_skill": {
+      "bytes": 4519,
+      "rows": 163,
+      "sha256": "c889a6d2cfb88e9a7de747b57f798dddf516b97d5b5312df17ec1f2e0639937f"
+    },
+    "fct_salary_survey": {
+      "bytes": 6413,
+      "rows": 334,
+      "sha256": "d54e2d5cdc5e1bcc51d32f78770172e5e54f6f65f4c830ac788e86d9bea43918"
+    },
+    "fct_skill_demand_monthly": {
+      "bytes": 17618,
+      "rows": 904,
+      "sha256": "741ebaf246d4d9d1a951c27e6f8511241f2483bd582f6819cd5db7c70f2e6a70"
+    },
+    "fct_skill_pairs": {
+      "bytes": 618279,
+      "rows": 20501,
+      "sha256": "7f8fdaedd841d5ffc508f6fde6071172afda3b4f3f57422f16dd5a4d8311632f"
+    },
+    "fct_vacancy_catalog": {
+      "bytes": 725937,
+      "rows": 9195,
+      "sha256": "7ac84a116ae74c9a502f60300b0c9ea4a583f34e8fe511c96100438d0b959fcf"
+    },
+    "fct_vacancy_daily": {
+      "bytes": 792804,
+      "rows": 109088,
+      "sha256": "993e2bc828b4ef230a4098b162a11cb1020616d5d2caadcbe7693d4cdd3f89c8"
+    },
+    "fct_vacancy_lifetime": {
+      "bytes": 919,
+      "rows": 6,
+      "sha256": "660be62013ef84ebc97cc293e651dd1ae0904cfe455f60e20108ed6fd1c09c23"
+    },
+    "ml_features_salary": {
+      "bytes": 1073496,
+      "rows": 288775,
+      "sha256": "0ff222782ca0ddd49b6f71f0e3c94db201458b9d45fe9f788c68ee58acc18019"
+    },
+    "skill_clusters": {
+      "bytes": 4652,
+      "rows": 409,
+      "sha256": "bc03486cd7a1136117ca5a4f14f55a9843688534e31a92ab04106dba27e1883e"
+    }
+  }
+}
