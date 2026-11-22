@@ -29,6 +29,10 @@ class Step:
     timeout_s: int = 1800
     retries: int = 0  # extra attempts after the first one (a step must be idempotent to have any)
     retry_delay_s: float = 60.0
+    # A failure is recorded and shown, but it is not the run's failure: nothing needs this step and
+    # what it brings changes seldom, so a bad hour of someone else's server must not turn the run
+    # red, flood the inbox and count against the 95% of runs that succeed.
+    optional: bool = False
 
 
 @dataclass(frozen=True)
@@ -38,6 +42,7 @@ class StepResult:
     attempts: int
     seconds: float
     detail: str = ""
+    optional: bool = False
 
 
 Runner = Callable[[Step, dict[str, str]], int]
@@ -49,7 +54,13 @@ def daily_steps() -> list[Step]:
     """Scrape -> silver -> silver checks -> gold -> gold checks -> export."""
     return [
         Step("scrape", ("make", "scrape"), timeout_s=150 * 60, retries=1),
-        Step("scrape_surveys", ("make", "scrape-surveys"), timeout_s=20 * 60, retries=1),
+        Step(
+            "scrape_surveys",
+            ("make", "scrape-surveys"),
+            timeout_s=20 * 60,
+            retries=1,
+            optional=True,
+        ),
         Step("parse", ("make", "parse"), needs=("scrape",), timeout_s=40 * 60),
         Step("dq_silver", ("make", "dq-silver"), needs=("parse",), timeout_s=5 * 60),
         Step("dbt", ("make", "dbt-build"), needs=("dq_silver",), timeout_s=30 * 60),
@@ -164,7 +175,7 @@ def _pipeline_start(db_path: Path, flow: str, run_date: date) -> str:
 
 
 def _pipeline_finish(db_path: Path, run_id: str, results: Sequence[StepResult]) -> None:
-    failed = [r.name for r in results if r.status == "failed"]
+    failed = [r.name for r in results if r.status == "failed" and not r.optional]
     ops = OpsStore(db_path)
     try:
         ops.finish_pipeline(run_id, "failed" if failed else "success", failed)
@@ -197,7 +208,7 @@ def _run_step(
     status = "success" if code == 0 else "failed"
     detail = "" if code == 0 else f"exit code {code}"
     logger.info("step {} {} in {:.0f} s", step.name, status, seconds)
-    return StepResult(step.name, status, attempt, seconds, detail)
+    return StepResult(step.name, status, attempt, seconds, detail, step.optional)
 
 
 def _record_start(db_path: Path, step: Step, run_date: date) -> str:
@@ -223,11 +234,16 @@ def _record_finish(db_path: Path, run_id: str, code: int) -> None:
         ops.close()
 
 
+def succeeded(results: Sequence[StepResult]) -> bool:
+    """Did the run succeed? An optional step that failed does not count against it."""
+    return all(r.status == "success" or r.optional for r in results)
+
+
 def summarize(flow: str, run_date: date, results: Sequence[StepResult]) -> str:
     """A few lines for the log and for the Telegram message."""
-    ok = all(r.status == "success" for r in results)
-    lines = [f"{'OK' if ok else 'FAILED'}: {flow} {run_date}"]
+    lines = [f"{'OK' if succeeded(results) else 'FAILED'}: {flow} {run_date}"]
     for r in results:
         extra = f" ({r.detail})" if r.detail else ""
+        extra += " (optional)" if r.optional and r.status != "success" else ""
         lines.append(f"{r.status:>8}  {r.name}  {r.seconds:.0f}s{extra}")
     return "\n".join(lines)

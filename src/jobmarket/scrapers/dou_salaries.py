@@ -5,10 +5,12 @@ Surveys are published twice a year, so this source is run manually, not in the d
 
 import asyncio
 import json
+import os
 from collections import defaultdict
 from collections.abc import Iterable
 from typing import Any, ClassVar
 
+import httpx
 from loguru import logger
 
 from jobmarket.scrapers.base import BaseScraper
@@ -37,11 +39,32 @@ def select_survey_files(names: Iterable[str]) -> list[str]:
     return selected
 
 
+GITHUB_API_HOST = "api.github.com"
+
+
 class DouSalariesScraper(BaseScraper):
     source: ClassVar[str] = "dou_salaries"
     respect_robots: ClassVar[bool] = False  # GitHub API and raw files, not a crawled site
 
+    def _authorise_api(self) -> None:
+        """Call the GitHub API with the run's own token when there is one.
+
+        An anonymous caller gets 60 requests an hour per address, and the addresses of the hosted
+        runners are shared by many: the listing answered 403 three times on 2026-11-20. With the
+        token the limit is 5 000 an hour. The token goes to the API host only, never to the raw
+        file host."""
+        token = os.environ.get("GITHUB_TOKEN")
+        if not token:
+            return
+
+        async def add_token(request: httpx.Request) -> None:
+            if request.url.host == GITHUB_API_HOST:
+                request.headers["Authorization"] = f"Bearer {token}"
+
+        self._client.event_hooks["request"].append(add_token)
+
     async def run(self, *, refetch: bool = False) -> None:
+        self._authorise_api()
         listing = await self.fetch(LISTING_URL, refetch=refetch, suffix=".json")
         if listing is None or listing.status != 200:
             logger.error("cannot list DOU survey files (status {})", listing and listing.status)

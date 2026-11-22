@@ -93,3 +93,23 @@ def test_a_merge_can_ask_the_host_to_deploy_without_leaking_the_hook() -> None:
     assert "github.ref == 'refs/heads/main'" in job
     assert "secrets.RENDER_DEPLOY_HOOK_URL" in job and 'echo "$HOOK"' not in job
     assert "-o /dev/null" in job  # the answer names the deploy; keep it out of a public log
+
+
+def test_the_pipeline_step_gets_the_runs_read_only_token_and_the_push_is_tried_again() -> None:
+    import yaml
+
+    text = (ROOT / ".github" / "workflows" / "pipeline-daily.yml").read_text(encoding="utf-8")
+    workflow = yaml.safe_load(text)
+    run_step = next(
+        s for s in workflow["jobs"]["scrape"]["steps"] if s.get("name") == "Run the pipeline"
+    )
+    push = next(
+        s
+        for s in workflow["jobs"]["publish-data"]["steps"]
+        if "Push the export" in s.get("name", "")
+    )
+
+    assert run_step["env"]["GITHUB_TOKEN"] == "${{ github.token }}"
+    assert workflow["permissions"] == {"contents": "read"}  # so that token cannot write
+    assert "for wait in 0 15 45 90" in push["run"]  # a 403 of GitHub now and then: try again
+    assert "exit 1" in push["run"]  # and a push that never works still fails the run

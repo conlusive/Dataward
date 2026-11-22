@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+### Fixed (the run no longer goes red for what is not its fault)
+- Of the five failed runs in a week, three (2026-11-20) were the DOU survey listing answered with a 403 by
+  the GitHub API (60 requests an hour for an anonymous caller on a shared address) and one (2026-11-21) a 403
+  on the push of the export. The survey step is now **optional** (a failure is shown, the run is a
+  success) and calls the API with the run's read-only token; the push is tried up to four times.
+  See `docs/orchestration.md`.
+
 ### Added (a licence)
 - `LICENSE`: all rights reserved. The code and the documentation may be read, and forked on GitHub to
   propose a change (as GitHub's terms say of a public repository); copying, reusing, hosting, building

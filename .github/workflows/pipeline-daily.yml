@@ -70,6 +70,10 @@ jobs:
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          # the run's own token (read-only here: `permissions: contents: read`), so that the GitHub
+          # API (the DOU survey listing) is called with the limit of a signed-in caller, not the
+          # 60 an hour of a shared address
+          GITHUB_TOKEN: ${{ github.token }}
         run: make "$FLOW_TARGET"
 
       # Save even when a step failed: what was scraped and parsed is still valid.
@@ -148,7 +152,15 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add -A
           git commit -q -m "Public export of $(date -u +%F)"
-          git push -q --force "https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}.git" data
+          # GitHub answers a push with a 403 now and then (2026-11-21 23:19); the next try works
+          for wait in 0 15 45 90; do
+            sleep "$wait"
+            if git push -q --force "https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}.git" data; then
+              exit 0
+            fi
+            echo "push failed, trying again"
+          done
+          exit 1
 
   # GitHub starts the hourly `schedule` when it has room (for this repository about every four to six
   # hours), so the chain does it: the run waits for the next :17 and starts the next one itself with

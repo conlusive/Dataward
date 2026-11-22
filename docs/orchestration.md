@@ -137,3 +137,20 @@ Set it up once, with a free scheduler such as cron-job.org:
 
 The token can only start workflows of this one repository; it cannot read the code's secrets. Keep it out
 of the repository and of chat.
+
+## What may fail without turning the run red
+
+Since 2026-11-22 a hosted run tolerates the two failures that were not the pipeline's fault:
+
+- **The DOU survey listing** (`scrape_surveys`) is an *optional* step (`Step.optional`): nothing needs
+  it and the surveys change twice a year. If it fails (on 2026-11-20 GitHub answered its listing with a 403
+  three times, because an anonymous caller of the GitHub API gets 60 requests an hour per address and the
+  runners' addresses are shared) the step is still shown as `failed` in the log, in `ops_task_runs` and in
+  Telegram with "(optional)", but the run is `success`: the exit code is 0, the run record does not name
+  it and it does not count against the 95% SLO. The run's own `GITHUB_TOKEN` (read-only) is also sent to
+  the GitHub API host, so the limit is 5 000 an hour; the token is never sent to the raw-file host.
+- **The push of the export to `data`** is tried up to four times (after 0, 15, 45 and 90 seconds): GitHub
+  answered one push with a 403 (2026-11-21 23:19) and the next one would have worked. A push that never
+  works still fails the run.
+
+Everything else still fails the run on purpose: a failed scrape, a silver or gold check, dbt, the export.

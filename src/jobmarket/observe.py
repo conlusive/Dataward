@@ -12,7 +12,7 @@ from typing import Any
 
 import duckdb
 
-from jobmarket.flow import StepResult
+from jobmarket.flow import StepResult, succeeded
 from jobmarket.ops import OpsStore
 from jobmarket.silver.store import SilverStore
 
@@ -202,8 +202,7 @@ def render_message(
 ) -> str:
     """The Telegram text: a headline, what changed, the checks, the cost and a link; on a failure
     also which steps failed and which checks said why."""
-    ok = all(r.status == "success" for r in results)
-    lines = [f"{'OK' if ok else 'FAILED'}: {flow} {run_date}"]
+    lines = [f"{'OK' if succeeded(results) else 'FAILED'}: {flow} {run_date}"]
     for r in results:
         if r.status != "success":
             lines.append(f"  {r.status} {r.name}" + (f" ({r.detail})" if r.detail else ""))

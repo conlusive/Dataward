@@ -16,6 +16,7 @@ from jobmarket.flow import (
     fresh_steps,
     run_flow,
     subprocess_runner,
+    succeeded,
     summarize,
 )
 from jobmarket.notify import send_telegram
@@ -278,3 +279,55 @@ def test_the_full_parse_goes_over_the_last_days_again_so_an_hourly_run_cannot_hi
     assert "parse-recent:" in makefile and "timedelta" in makefile
     assert "for n in (2, 1, 0)" in makefile  # today and the two days before it
     assert "|| exit 1" in makefile  # a day that fails to parse fails the step, not silently
+
+
+# ---- an optional step: its failure is shown, but it is not the run's failure ------------------
+def test_the_survey_step_is_optional_and_nothing_needs_it() -> None:
+    steps = {step.name: step for step in daily_steps()}
+
+    assert steps["scrape_surveys"].optional
+    assert not any("scrape_surveys" in step.needs for step in steps.values())
+    assert not any(step.optional for name, step in steps.items() if name != "scrape_surveys")
+
+
+def test_a_survey_step_that_fails_leaves_the_run_a_success(tmp_path: Path) -> None:
+    runner = FakeRunner({"scrape_surveys": [2, 2]})  # the attempt and its retry (the 403 of GitHub)
+
+    results = _flow(tmp_path, runner)
+
+    assert _status(results)["scrape_surveys"] == "failed"  # shown, not hidden
+    assert succeeded(results)  # but the run is green
+    assert summarize("daily", DAY, results).startswith("OK: daily")
+    assert "(optional)" in summarize("daily", DAY, results)
+    con = duckdb.connect(str(tmp_path / "t.duckdb"), read_only=True)
+    row = con.execute("SELECT status, failed_steps FROM ops_pipeline_runs").fetchone()
+    con.close()
+    assert row == ("success", None)  # the run record does not count it against the 95%
+
+
+def test_a_required_step_that_fails_still_fails_the_run_next_to_an_optional_one(
+    tmp_path: Path,
+) -> None:
+    runner = FakeRunner({"scrape_surveys": [2, 2], "dq_silver": [2]})
+
+    results = _flow(tmp_path, runner)
+
+    assert not succeeded(results)
+    con = duckdb.connect(str(tmp_path / "t.duckdb"), read_only=True)
+    row = con.execute("SELECT status, failed_steps FROM ops_pipeline_runs").fetchone()
+    con.close()
+    assert row == ("failed", "dq_silver")  # only the required step is named
+
+
+def test_the_command_exits_0_when_only_an_optional_step_failed(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setenv("DUCKDB_PATH", str(tmp_path / "t.duckdb"))
+    results = [
+        StepResult("scrape", "success", 1, 1.0),
+        StepResult("scrape_surveys", "failed", 2, 1.0, "exit code 2", optional=True),
+    ]
+    monkeypatch.setattr("jobmarket.cli.run_flow", lambda *a, **k: results)
+    monkeypatch.setattr("jobmarket.cli._publish_run", lambda *a, **k: None)
+
+    assert main(["flow", "daily", "--run-date", "2026-11-09"]) == 0

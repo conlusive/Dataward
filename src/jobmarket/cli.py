@@ -24,6 +24,7 @@ from jobmarket.flow import (
     fresh_steps,
     run_flow,
     run_url_from_env,
+    succeeded,
     summarize,
 )
 from jobmarket.gold import SHEET_FILE, sheet_ids
@@ -354,7 +355,7 @@ def _flow(args: argparse.Namespace) -> int:
         return 2
     logger.info("flow summary\n{}", summarize(args.name, run_date, results))
     _publish_run(args.name, run_date, results, Settings.from_env().duckdb_path)
-    return 0 if all(r.status == "success" for r in results) else 1
+    return 0 if succeeded(results) else 1
 
 
 def _publish_run(flow: str, run_date: date, results: list[StepResult], db_path: Path) -> None:
